@@ -31,7 +31,7 @@ class synapse():
                     self.add_time_constant(kwargs['time_constant'])
         else:
             if self.loop_temporal_form == 'exponential':
-                _tau_default = 100e-9
+                _tau_default = 100e-9 #units of seconds
                 self.add_time_constant(_tau_default)
         
         if 'power_law_exponent' in kwargs:
@@ -63,15 +63,22 @@ class synapse():
                      self.synaptic_bias_current = kwargs['synaptic_bias_current']
         else:
             _synaptic_bias_current_default = 35e-6 #units of amps
-            self.synaptic_bias_current = _synaptic_bias_current_default           
+            self.synaptic_bias_current = _synaptic_bias_current_default
+                            
+        if 'loop_bias_current' in kwargs:
+            if type(kwargs['loop_bias_current']) == int or type(kwargs['loop_bias_current']) == float:
+                if kwargs['loop_bias_current'] < 0:
+                    raise ValueError('[soens_sim] loop_bias_current associated with synaptic integration loop must be a real number between zero and infinity (units of henries)')
+                else:
+                     self.loop_bias_current = kwargs['loop_bias_current']
+        else:
+            _loop_bias_current_default = 30e-6 #units of amps
+            self.loop_bias_current = _loop_bias_current_default            
         
         # self.neuronal_connections = {} #[unique_label (input_neuron or input_signal), unique_label (output_neuron)] (label of neurons from which synapse receives and to which synapse connects)
         # self.input_spike_times = {} #list of real numbers (obtained from spike_times of neuronal_connection)
-        
-
-        # self.synaptic_bias_current = {} #real, possibly function of time (I_sy, amps)
-        # self.loop_bias_current = {} # real, possibly function of time (I_b, amps)
         # self.loop_integrated_current = {} #real function of time (I_si, amps; output variable)
+
         self.uid = synapse._next_uid
         
         self.unique_label = 's'+str(self.uid)
