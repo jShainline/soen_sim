@@ -17,6 +17,9 @@ synapse_2 = synapse('test_synapse__power_law', loop_temporal_form = 'power_law',
                     synaptic_bias_current = 37e-6, loop_bias_current = 33e-6)
 
 
-
+#%%
+# aa = 4*\
+#     6
+    
 # synapse_2 = synapse('test_name_2')
 # synapse_2.add_time_constant(tau = 51e-9)
