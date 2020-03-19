@@ -3,7 +3,7 @@ import numpy as np
 # import copy
 # import time
 
-from f__physical_constants import physical_constants
+# from f__physical_constants import physical_constants
 
 from soen_sim import synapse
 
