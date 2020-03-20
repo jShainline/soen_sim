@@ -45,9 +45,9 @@ synapse_2 = synapse('test_synapse__power_law', loop_temporal_form = 'power_law',
 
 #%% set up neuron
 
-neuron_1 = neuron('test_neuron', input_connections = {'s0','s1'}, input_inductances = [[10e-12,0.5],[10e-12,0.5]],
+neuron_1 = neuron('test_neuron', input_connections = {'s0','s1'}, input_inductances = [[10e-12,0.5],[10e-12,0.5],[10e-12,0.5]],
                   thresholding_junction_critical_current = 40e-6, threshold_bias_current = 35e-6, 
-                  refractory_temporal_form = 'exponential', )
+                  refractory_temporal_form = 'exponential', refractory_loop_self_inductance = 1e-9, refractory_loop_output_inductance = 200e-12)
 
 # for obj in neuron.get_instances():
 #     print(obj.colloquial_name)

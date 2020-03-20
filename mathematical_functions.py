@@ -1,5 +1,22 @@
 import numpy as np
 
+def synaptic_time_stepper(time_vec,present_time_index,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
+    
+    _pti = present_time_index
+    _pt = time_vec[_pti] #present time
+    I_si = 0
+    for ii in range(len(input_spike_times)):
+        if _pt > input_spike_times[ii]:
+            if _pt-input_spike_times[ii] <= tau_rise:
+                I_si += synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si,tau_rise,tau_fall)*\
+                    ( (1/tau_rise**gamma3)*(_pt - input_spike_times[ii])**gamma3 )*\
+                        np.exp(tau_rise/tau_fall)*np.exp(-(_pt-input_spike_times[ii])/tau_fall)
+            else:
+                I_si += synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si,tau_rise,tau_fall)*\
+                    np.exp(tau_rise/tau_fall)*np.exp(-(_pt-input_spike_times[ii])/tau_fall)
+                    
+    return I_si*1e-6
+
 def synaptic_response_function(time_vec,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
 
     I_si_mat = np.zeros([len(time_vec),len(input_spike_times)])
