@@ -320,7 +320,7 @@ class neuron():
         refractory_loop.unique_label = self.unique_label+'_rs'
         refractory_loop.input_spike_times = []
         neuron.refractory_loop = refractory_loop
-        self.input_connections.add(refractory_loop.colloquial_name)
+        self.input_connections.add(refractory_loop.unique_label)
         self.spike_times = [] #list of real numbers (times cell_body_circulating_current crossed threshold current with positive derivative; the main dynamical variable and output of the neuron)
                 
         # print('neuron created')
@@ -347,11 +347,11 @@ class neuron():
         self.synapses = []
         for obj in synapse.get_instances():
             # print('synapse {} has time constant = {}'.format(obj.unique_label,obj.time_constant))
-            if obj.colloquial_name in self.input_connections:
+            if obj.unique_label in self.input_connections:
                 self.synapses.append(obj)
                 
-        # for ii in range(len(self.synapses)):
-        #     print(len(self.synapses[ii].input_spike_times))
+        for ii in range(len(self.synapses)):
+            print(len(self.synapses[ii].input_spike_times))
                 
         
         return self
@@ -360,7 +360,7 @@ class neuron():
 
         self.add_synapses_to_neuron()
         
-        # print('simulating neuron with {} synapses\n\n'.format(len(self.synapses)))
+        print('simulating neuron with {} synapses\n\n'.format(len(self.synapses)))
         
         self.receiving_loop_total_inductance = self.receiving_loop_self_inductance
         
