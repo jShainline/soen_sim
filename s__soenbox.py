@@ -18,7 +18,7 @@ synapse_2 = synapse('test_synapse__power_law', loop_temporal_form = 'power_law',
                     synaptic_bias_current = 37e-6, loop_bias_current = 33e-6)
 
 # for obj in synapse.get_instances():
-#     print(obj.colloquial_name)
+#     print(obj.name)
 
 #%% propagate in time
 # t0 = 0
@@ -50,12 +50,12 @@ neuron_1 = neuron('test_neuron', input_connections = {'s0','s1'}, input_inductan
                   refractory_temporal_form = 'exponential', refractory_loop_self_inductance = 1e-9, refractory_loop_output_inductance = 200e-12)
 
 # for obj in neuron.get_instances():
-#     print(obj.colloquial_name)
+#     print(obj.name)
     
 # for obj in synapse.get_instances():
-#     # print(obj.colloquial_name)
+#     # print(obj.name)
 #     if obj.unique_label in neuron_1.input_connections:
-#         print(obj.unique_label+'; '+obj.colloquial_name)
+#         print(obj.unique_label+'; '+obj.name)
 
 #%% propagate in time
 t0 = 0

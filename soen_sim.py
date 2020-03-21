@@ -1,23 +1,24 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from pylab import *
-import weakref
+# import weakref
 # from matplotlib import rc
 # rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 # rc('text', usetex=True)
 
-from mathematical_functions import synaptic_response_function,synaptic_time_stepper
+from _functions import synaptic_response_function, synaptic_time_stepper
 
 class synapse():
     #example_synapse = synapse('test_synapse__exp', loop_temporal_form = 'exponential',time_constant = 200e-9, integration_loop_inductance = 10e-9,synaptic_bias_current = 34e-6, loop_bias_current = 31e-6)
 
     _next_uid = 0
     _instances = set()
+    synapses = dict()
     
     def __init__(self, *args, **kwargs):
 
         #make new synapse
-        self._instances.add(weakref.ref(self))
+        # self._instances.add(weakref.ref(self))
         self.uid = synapse._next_uid
         self.unique_label = 's'+str(self.uid)
         synapse._next_uid += 1
@@ -29,19 +30,21 @@ class synapse():
                 _name = str(args[0])
         else:
             _name = 'unnamed_synapse'
-        self.colloquial_name = _name
+        self.name = _name
 
         if 'loop_temporal_form' in kwargs:
             if kwargs['loop_temporal_form'] == 'exponential' or kwargs['loop_temporal_form'] == 'power_law':
                 _temporal_form = kwargs['loop_temporal_form']
             else:
-                raise ValueError('[soens_sim] Tried to assign an invalid loop temporal form to synapse %s (unique_label = %s)\nThe allowed values of loop_temporal_form are ''exponential'' and ''power_law''' % (self.colloquial_name, self.unique_label))
+                raise ValueError('[soens_sim] Tried to assign an invalid loop temporal form to synapse %s (unique_label = %s)\nThe allowed values of loop_temporal_form are ''exponential'' and ''power_law''' % (self.name, self.unique_label))
         else:
             _temporal_form = 'exponential'
         self.loop_temporal_form =  _temporal_form #'exponential' or 'power_law'; 'exponential' by default
 
         if 'time_constant' in kwargs:
-            if type(kwargs['time_constant']) == int or type(kwargs['time_constant']) == float:
+            # print(type(kwargs['time_constant']))
+            # print(kwargs['time_constant'])
+            if type(kwargs['time_constant']) == int or type(kwargs['time_constant']) == float or type(kwargs['time_constant']) == np.float64:
                 if kwargs['time_constant'] < 0:
                     raise ValueError('[soens_sim] time_constant associated with synaptic decay must be a real number between zero and infinity')
                 else:
@@ -105,6 +108,8 @@ class synapse():
         
         # print('synapse created')
         
+        synapse.synapses[self.name] = self
+        
         return
 
     def __del__(self):
@@ -124,16 +129,16 @@ class synapse():
     #         self.power_law_exponent = gamma
     #     else:
     #         raise ValueError('[soens_sim] Tried to assign a power-law exponent to a synapse without power-law leak in synapse %s (unique_label = %s)' % (self.name, self.unique_label))
-    @classmethod
-    def get_instances(cls):
-        dead = set()
-        for ref in cls._instances:
-            obj = ref()
-            if obj is not None:
-                yield obj
-            else:
-                dead.add(ref)
-        cls._instances -= dead
+    # @classmethod
+    # def get_instances(cls):
+    #     dead = set()
+    #     for ref in cls._instances:
+    #         obj = ref()
+    #         if obj is not None:
+    #             yield obj
+    #         else:
+    #             dead.add(ref)
+    #     cls._instances -= dead
         
     # @classmethod
     def run_sim(self,time_vec):
@@ -187,7 +192,7 @@ class synapse():
 
         axes.legend(loc='best')
         grid(True,which='both')
-        title('Synapse: '+self.colloquial_name+' ('+self.unique_label+')'+\
+        title('Synapse: '+self.name+' ('+self.unique_label+')'+\
               '\nI_sy = '+str(self.synaptic_bias_current*1e6)+' uA'+\
               '; tau_si = '+str(self.time_constant*1e9)+' ns'+\
               '; L_si = '+str(self.integration_loop_total_inductance*1e9)+' nH')
@@ -217,7 +222,7 @@ class neuron():
         #make new neuron
         self.uid = neuron._next_uid
         self.unique_label = 'n'+str(self.uid)
-        self._instances.add(weakref.ref(self))
+        # self._instances.add(weakref.ref(self))
         neuron._next_uid += 1
 
         if len(args) > 0:
@@ -227,7 +232,7 @@ class neuron():
                 _name = str(args[0])
         else:
             _name = 'unnamed_neuron'
-        self.colloquial_name = _name
+        self.name = _name
 
         if 'receiving_loop_self_inductance' in kwargs:
             if type(kwargs['receiving_loop_self_inductance']) == float:
@@ -277,7 +282,7 @@ class neuron():
             if kwargs['refractory_temporal_form'] == 'exponential' or kwargs['refractory_temporal_form'] == 'power_law':
                 _temporal_form = kwargs['refractory_temporal_form']
             else:
-                raise ValueError('[soens_sim] Tried to assign an invalid loop temporal form to neuron %s (unique_label = %s)\nThe allowed values of loop_temporal_form are ''exponential'' and ''power_law''' % (self.colloquial_name, self.unique_label))
+                raise ValueError('[soens_sim] Tried to assign an invalid loop temporal form to neuron %s (unique_label = %s)\nThe allowed values of loop_temporal_form are ''exponential'' and ''power_law''' % (self.name, self.unique_label))
         else:
             _temporal_form = 'exponential'
         self.refractory_temporal_form =  _temporal_form #'exponential' or 'power_law'; 'exponential' by default
@@ -313,15 +318,14 @@ class neuron():
         #set up refractory loop as synapse
         refractory_synaptic_bias_current = 39e-6 #default for now; want it to saturate with each spike
         refractory_loop_bias_current = 31e-6 #doesn't matter now as synapse saturation is independent of bias; will matter with future updates, I hope
-        refractory_loop = synapse(self.colloquial_name+'__refractory_suppression_synapse', loop_temporal_form = 'exponential', time_constant = self.refractory_time_constant,
+        refractory_loop = synapse(self.name+'__refractory_suppression_synapse', loop_temporal_form = 'exponential', time_constant = self.refractory_time_constant,
                     integration_loop_self_inductance = self.refractory_loop_self_inductance, integration_loop_output_inductance = self.refractory_loop_output_inductance, 
                     synaptic_bias_current = refractory_synaptic_bias_current, loop_bias_current = refractory_loop_bias_current)
         
         refractory_loop.unique_label = self.unique_label+'_rs'
         refractory_loop.input_spike_times = []
         neuron.refractory_loop = refractory_loop
-        self.input_connections.add(refractory_loop.colloquial_name)
-        self.spike_times = [] #list of real numbers (times cell_body_circulating_current crossed threshold current with positive derivative; the main dynamical variable and output of the neuron)
+        self.input_connections.add(refractory_loop.name)        
                 
         # print('neuron created')
         
@@ -331,24 +335,29 @@ class neuron():
         # print('neuron deleted')
         return
     
-    @classmethod
-    def get_instances(cls):
-        dead = set()
-        for ref in cls._instances:
-            obj = ref()
-            if obj is not None:
-                yield obj
-            else:
-                dead.add(ref)
-        cls._instances -= dead
+    # @classmethod
+    # def get_instances(cls):
+    #     dead = set()
+    #     for ref in cls._instances:
+    #         obj = ref()
+    #         if obj is not None:
+    #             yield obj
+    #         else:
+    #             dead.add(ref)
+    #     cls._instances -= dead
     
     def add_synapses_to_neuron(self):
         
         self.synapses = []
-        for obj in synapse.get_instances():
-            # print('synapse {} has time constant = {}'.format(obj.unique_label,obj.time_constant))
-            if obj.colloquial_name in self.input_connections:
-                self.synapses.append(obj)
+        for name in self.input_connections:
+            self.synapses.append(synapse.synapses[name])
+                            
+        
+        # self.synapses = []
+        # for obj in synapse.get_instances():
+        #     # print('synapse {} has time constant = {}'.format(obj.unique_label,obj.time_constant))
+        #     if obj.name in self.input_connections:
+        #         self.synapses.append(obj)
                 
         # for ii in range(len(self.synapses)):
         #     print(len(self.synapses[ii].input_spike_times))
@@ -382,12 +391,17 @@ class neuron():
         I_si_sat__rs_loop = 100
 
         for ii in range(len(self.synapses)):
-            _I_sy = self.synapses[ii].synaptic_bias_current
+            _I_sy = 1e6*self.synapses[ii].synaptic_bias_current
+            # print('I_sy = {} uA'.format(_I_sy))
             self.synapses[ii].tau_rise = (1.294*_I_sy-43.01)*1e-9
+            # print('tau_rise = {} ns'.format(self.synapses[ii].tau_rise*1e9))
             _scale_factor = _reference_inductance/self.synapses[ii].integration_loop_total_inductance
+            # print('_scale_factor = {}'.format(_scale_factor))
             self.synapses[ii].I_0 = (0.06989*_I_sy**2-3.948*_I_sy+53.73)*_scale_factor
+            # print('I_0 = {} uA'.format(self.synapses[ii].I_0))
             mutual_inductance = self.input_inductances[ii][1]*np.sqrt(self.input_inductances[ii][0]*self.synapses[ii].integration_loop_output_inductance)
             self.synapses[ii].coupling_factor = mutual_inductance/self.receiving_loop_total_inductance
+            # print('coupling_Factor = {}\n\n'.format(self.synapses[ii].coupling_factor))
             self.synapses[ii].I_si = np.zeros([len(time_vec),1])
           
         #find index of refractory suppresion loop
@@ -398,6 +412,7 @@ class neuron():
         self.cell_body_circulating_current = self.threshold_bias_current*np.ones([len(time_vec),1])
         self.state = 'sub_threshold'
         self.spike_vec = np.zeros([len(time_vec),1])
+        self.spike_times = []#np.array([]) #list of real numbers (times cell_body_circulating_current crossed threshold current with positive derivative; the main dynamical variable and output of the neuron)
         for ii in range(len(time_vec)):
             for jj in range(len(self.synapses)):
                 if jj == rs_index:
@@ -434,7 +449,7 @@ class neuron():
         fig.suptitle('Current in the neuronal receiving loop versus time', fontsize = title_font_size)
         
         #upper panel, total I_nr
-        axs[0].plot(time_vec*1e6,self.cell_body_circulating_current*1e6, 'o-', linewidth = 1, markersize = 3, label = 'Neuron: '+self.colloquial_name+' ('+self.unique_label+')'.format())        
+        axs[0].plot(time_vec*1e6,self.cell_body_circulating_current*1e6, 'o-', linewidth = 1, markersize = 3, label = 'Neuron: '+self.name+' ('+self.unique_label+')'.format())        
         #spike times
         ylim = axs[0].get_ylim()
         for ii in range(len(self.spike_times)):
@@ -442,6 +457,9 @@ class neuron():
                 axs[0].plot([self.spike_times[ii]*1e6, self.spike_times[ii]*1e6], [ylim[0], ylim[1]], 'r-', linewidth = 0.5, label = 'spike times'.format())
             else:
                 axs[0].plot([self.spike_times[ii]*1e6, self.spike_times[ii]*1e6], [ylim[0], ylim[1]], 'r-', linewidth = 0.5)
+        #threshold
+        xlim = axs[0].get_xlim()
+        axs[0].plot([xlim[0],xlim[1]], [self.thresholding_junction_critical_current*1e6,self.thresholding_junction_critical_current*1e6], 'g-', linewidth = 0.5)
         axs[0].set_xlabel(r'Time [$\mu$s]', fontsize = axes_labels_font_size)
         axs[0].set_ylabel(r'$I_{nr}$ [uA]', fontsize = axes_labels_font_size)
         axs[0].tick_params(axis='both', which='major', labelsize = tick_labels_font_size)
@@ -451,7 +469,7 @@ class neuron():
 
         #lower panel, scaled contributions from each synapse
         for ii in range(len(self.synapses)): 
-            axs[1].plot(time_vec*1e6,self.synapses[ii].coupling_factor*self.synapses[ii].I_si*1e6, 'o-', linewidth = 1, markersize = 3, label = self.synapses[ii].unique_label.format())#'Synapse: '+self.synapses[ii].colloquial_name+' ('+self.synapses[ii].unique_label+')'.format()
+            axs[1].plot(time_vec*1e6,self.synapses[ii].coupling_factor*self.synapses[ii].I_si*1e6, 'o-', linewidth = 1, markersize = 3, label = self.synapses[ii].unique_label.format())#'Synapse: '+self.synapses[ii].name+' ('+self.synapses[ii].unique_label+')'.format()
         axs[1].set_xlabel(r'Time [$\mu$s]', fontsize = axes_labels_font_size)
         axs[1].set_ylabel(r'Contribution to $I_{nr}$ [uA]', fontsize = axes_labels_font_size)
         axs[1].tick_params(axis='both', which='major', labelsize = tick_labels_font_size)
@@ -460,7 +478,7 @@ class neuron():
         axs[1].grid(b = True, which='major', axis='both')        
         
         plt.show()
-        save_str = 'I_nr__'+self.colloquial_name        
+        save_str = 'I_nr__'+self.name        
         fig.savefig(save_str)
 
         return
@@ -483,7 +501,7 @@ class neuron():
         fig.suptitle('Fourier transform of spike vec', fontsize = title_font_size)
         
         #upper panel, spike vec
-        axs[0].plot(time_vec*1e6,_sv, 'o-', linewidth = 1, markersize = 3, label = 'Neuron: '+self.colloquial_name+' ('+self.unique_label+')'.format())        
+        axs[0].plot(time_vec*1e6,_sv, 'o-', linewidth = 1, markersize = 3, label = 'Neuron: '+self.name+' ('+self.unique_label+')'.format())        
         axs[0].set_xlabel(r'Time [$\mu$s]', fontsize = axes_labels_font_size)
         axs[0].set_ylabel(r'Spikes [binary]', fontsize = axes_labels_font_size)
         axs[0].tick_params(axis='both', which='major', labelsize = tick_labels_font_size)
@@ -492,7 +510,7 @@ class neuron():
         axs[0].grid(b = True, which='major', axis='both')
         
         #lower panel, fourier transform
-        axs[1].plot(temp_vec,_sv_ft, 'o-', linewidth = 1, markersize = 3, label = 'Neuron: '+self.colloquial_name+' ('+self.unique_label+')'.format())        
+        axs[1].plot(temp_vec,_sv_ft, 'o-', linewidth = 1, markersize = 3, label = 'Neuron: '+self.name+' ('+self.unique_label+')'.format())        
         axs[1].set_xlabel(r'frequency', fontsize = axes_labels_font_size)
         axs[1].set_ylabel(r'amplitude', fontsize = axes_labels_font_size)
         axs[1].tick_params(axis='both', which='major', labelsize = tick_labels_font_size)
@@ -501,7 +519,7 @@ class neuron():
         axs[1].grid(b = True, which='major', axis='both')
                 
         plt.show()
-        save_str = 'spike_vec_fourier_transform__'+self.colloquial_name        
+        save_str = 'spike_vec_fourier_transform__'+self.name        
         fig.savefig(save_str)
 
         return self

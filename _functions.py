@@ -6,16 +6,19 @@ def synaptic_time_stepper(time_vec,present_time_index,input_spike_times,I_0,I_si
     _pt = time_vec[_pti] #present time
     I_si = 0
     if len(input_spike_times) > 0:
-        idx_start = (np.abs(_pt-5*tau_fall-input_spike_times)).argmin()
+        num_tau_retain = 5
+        idx_start = (np.abs(input_spike_times-(_pt-num_tau_retain*tau_fall))).argmin()
+        # idx_start = 0
         for ii in range(len(input_spike_times[idx_start:])):
-            if _pt > input_spike_times[ii]:
-                if _pt-input_spike_times[ii] <= tau_rise:
+            qq = ii+idx_start
+            if _pt > input_spike_times[qq]:
+                if _pt-input_spike_times[qq] <= tau_rise:
                     I_si += synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si,tau_rise,tau_fall)*\
-                        ( (1/tau_rise**gamma3)*(_pt - input_spike_times[ii])**gamma3 )*\
-                            np.exp(tau_rise/tau_fall)*np.exp(-(_pt-input_spike_times[ii])/tau_fall)
+                        ( (1/tau_rise**gamma3)*(_pt - input_spike_times[qq])**gamma3 )*\
+                            np.exp(tau_rise/tau_fall)*np.exp(-(_pt-input_spike_times[qq])/tau_fall)
                 else:
                     I_si += synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si,tau_rise,tau_fall)*\
-                        np.exp(tau_rise/tau_fall)*np.exp(-(_pt-input_spike_times[ii])/tau_fall)
+                        np.exp(tau_rise/tau_fall)*np.exp(-(_pt-input_spike_times[qq])/tau_fall)
                     
     return I_si*1e-6
 
