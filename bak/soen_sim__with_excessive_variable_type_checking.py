@@ -1,6 +1,10 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from pylab import *
+# import weakref
+# from matplotlib import rc
+# rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+# rc('text', usetex=True)
 import time
 
 from _functions import synaptic_response_function, synaptic_time_stepper, plot_params
@@ -44,13 +48,16 @@ class input_signal():
                 self.spike_times = kwargs['spike_times']
             elif self.input_temporal_form == 'constant_rate': # in this case, pulse_times has the form [rate,time_of_last_spike]
                 isi = 1/kwargs['spike_times'][0]
+                # print('isi = {}'.format(isi))
                 self.spike_times = np.arange(0,kwargs['spike_times'][1],isi)
                 
         input_signal.input_signals[self.name] = self
             
-class synapse():    
+class synapse():
+    #example_synapse = synapse('test_synapse__exp', loop_temporal_form = 'exponential',time_constant = 200e-9, integration_loop_inductance = 10e-9,synaptic_bias_current = 34e-6, loop_bias_current = 31e-6)
 
     _next_uid = 0
+    _instances = set()
     synapses = dict()
     
     def __init__(self, *args, **kwargs):
@@ -82,60 +89,60 @@ class synapse():
         if 'time_constant' in kwargs:
             # print(type(kwargs['time_constant']))
             # print(kwargs['time_constant'])
-            # if type(kwargs['time_constant']) == int or type(kwargs['time_constant']) == float or type(kwargs['time_constant']) == np.float64:
-            if kwargs['time_constant'] < 0:
-                raise ValueError('[soens_sim] time_constant associated with synaptic decay must be a real number between zero and infinity')
-            else:
-                self.time_constant = kwargs['time_constant']
+            if type(kwargs['time_constant']) == int or type(kwargs['time_constant']) == float or type(kwargs['time_constant']) == np.float64:
+                if kwargs['time_constant'] < 0:
+                    raise ValueError('[soens_sim] time_constant associated with synaptic decay must be a real number between zero and infinity')
+                else:
+                    self.time_constant = kwargs['time_constant']
         else:
             if self.loop_temporal_form == 'exponential':
                 self.time_constant = 200e-9 #default time constant units of seconds
         
         if 'power_law_exponent' in kwargs:
-            # if type(kwargs['power_law_exponent']) == int or type(kwargs['power_law_exponent']) == float:
-            if kwargs['power_law_exponent'] > 0:
-                raise ValueError('[soens_sim] power_law_exponent associated with synaptic decay must be a real number between negative infinity and zero')
-            else:
-                 self.power_law_exponent = kwargs['power_law_exponent']
+            if type(kwargs['power_law_exponent']) == int or type(kwargs['power_law_exponent']) == float:
+                if kwargs['power_law_exponent'] > 0:
+                    raise ValueError('[soens_sim] power_law_exponent associated with synaptic decay must be a real number between negative infinity and zero')
+                else:
+                     self.power_law_exponent = kwargs['power_law_exponent']
         else:
             if self.loop_temporal_form == 'power_law':                
                 self.power_law_exponent = -1 #default power law exponent
 
         if 'integration_loop_self_inductance' in kwargs:
-            # if type(kwargs['integration_loop_self_inductance']) == int or type(kwargs['integration_loop_self_inductance']) == float:
-            if kwargs['integration_loop_self_inductance'] < 0:
-                raise ValueError('[soens_sim] Integration loop self inductance associated with synaptic integration loop must be a real number between zero and infinity (units of henries)')
-            else:
-                 self.integration_loop_self_inductance = kwargs['integration_loop_self_inductance']
+            if type(kwargs['integration_loop_self_inductance']) == int or type(kwargs['integration_loop_self_inductance']) == float:
+                if kwargs['integration_loop_self_inductance'] < 0:
+                    raise ValueError('[soens_sim] Integration loop self inductance associated with synaptic integration loop must be a real number between zero and infinity (units of henries)')
+                else:
+                     self.integration_loop_self_inductance = kwargs['integration_loop_self_inductance']
         else: 
             self.integration_loop_self_inductance = 10e-9 #default value, units of henries
                         
         if 'integration_loop_output_inductance' in kwargs:
-            # if type(kwargs['integration_loop_output_inductance']) == int or type(kwargs['integration_loop_output_inductance']) == float:
-            if kwargs['integration_loop_output_inductance'] < 0:
-                raise ValueError('[soens_sim] Integration loop output inductance associated with coupling between synaptic integration loop and dendrite or neuron must be a real number between zero and infinity (units of henries)')
-            else:
-                 self.integration_loop_output_inductance = kwargs['integration_loop_output_inductance']
+            if type(kwargs['integration_loop_output_inductance']) == int or type(kwargs['integration_loop_output_inductance']) == float:
+                if kwargs['integration_loop_output_inductance'] < 0:
+                    raise ValueError('[soens_sim] Integration loop output inductance associated with coupling between synaptic integration loop and dendrite or neuron must be a real number between zero and infinity (units of henries)')
+                else:
+                     self.integration_loop_output_inductance = kwargs['integration_loop_output_inductance']
         else: 
             self.integration_loop_output_inductance = 200e-12 #default value, units of henries
         self.integration_loop_total_inductance = self.integration_loop_self_inductance+self.integration_loop_output_inductance
 
         if 'synaptic_bias_current' in kwargs:
-            # if type(kwargs['synaptic_bias_current']) == int or type(kwargs['synaptic_bias_current']) == float or type(kwargs['synaptic_bias_current']) == np.float64:
-            if kwargs['synaptic_bias_current'] < 34e-6 or kwargs['synaptic_bias_current'] > 39e-6:
-                raise ValueError('[soens_sim] synaptic_bias_current associated with synaptic integration loop must be a real number between 34e-6 and 39e-6 (units of amps)')
-            else:
-                 self.synaptic_bias_current = kwargs['synaptic_bias_current']
+            if type(kwargs['synaptic_bias_current']) == int or type(kwargs['synaptic_bias_current']) == float or type(kwargs['synaptic_bias_current']) == np.float64:
+                if kwargs['synaptic_bias_current'] < 34e-6 or kwargs['synaptic_bias_current'] > 39e-6:
+                    raise ValueError('[soens_sim] synaptic_bias_current associated with synaptic integration loop must be a real number between 34e-6 and 39e-6 (units of amps)')
+                else:
+                     self.synaptic_bias_current = kwargs['synaptic_bias_current']
         else:
             _synaptic_bias_current_default = 35e-6 #units of amps
             self.synaptic_bias_current = _synaptic_bias_current_default
 
         if 'loop_bias_current' in kwargs:
-            # if type(kwargs['loop_bias_current']) == int or type(kwargs['loop_bias_current']) == float:
-            if kwargs['loop_bias_current'] < 0:
-                raise ValueError('[soens_sim] loop_bias_current associated with synaptic integration loop must be a real number between xx and yy (units of amps)')
-            else:
-                 self.loop_bias_current = kwargs['loop_bias_current']
+            if type(kwargs['loop_bias_current']) == int or type(kwargs['loop_bias_current']) == float:
+                if kwargs['loop_bias_current'] < 0:
+                    raise ValueError('[soens_sim] loop_bias_current associated with synaptic integration loop must be a real number between xx and yy (units of amps)')
+                else:
+                     self.loop_bias_current = kwargs['loop_bias_current']
         else:
             _loop_bias_current_default = 30e-6 #units of amps
             self.loop_bias_current = _loop_bias_current_default
@@ -263,6 +270,7 @@ class synapse():
 class neuron():
 
     _next_uid = 0
+    _instances = set()
 
     def __init__(self, *args, **kwargs):
 
@@ -282,22 +290,22 @@ class neuron():
         self.name = _name
 
         if 'receiving_loop_self_inductance' in kwargs:
-            # if type(kwargs['receiving_loop_self_inductance']) == float:
-            if kwargs['receiving_loop_self_inductance'] > 0:
-                self.receiving_loop_self_inductance = kwargs['receiving_loop_self_inductance']
+            if type(kwargs['receiving_loop_self_inductance']) == float:
+                if kwargs['receiving_loop_self_inductance'] > 0:
+                    self.receiving_loop_self_inductance = kwargs['receiving_loop_self_inductance']
             else:
                 raise ValueError('[soens_sim] Receiving loop self inductance is a real number greater than zero with units of henries. This includes the total inductance of the neuronal receiving loop excluding any input mutual inductors.')
         else:
             self.receiving_loop_self_inductance = 20e-12
             
         if 'input_connections' in kwargs:
-            # if type(kwargs['input_connections']) == set:
-            #     if all(isinstance(x, str) for x in kwargs['input_connections']):
-                self.input_connections = kwargs['input_connections']
-            # else:
-            #     raise ValueError('[soens_sim] Input connections to neurons are specified as a set of strings referencing the synapse/dendrite unique labels')
+            if type(kwargs['input_connections']) == set:
+                if all(isinstance(x, str) for x in kwargs['input_connections']):
+                    self.input_connections = kwargs['input_connections']
+            else:
+                raise ValueError('[soens_sim] Input connections to neurons are specified as a set of strings referencing the synapse/dendrite unique labels')
         else:
-            self.input_connections = [[{}]]        
+            self.input_connections = {}        
 
         if 'input_inductances' in kwargs:
             if type(kwargs['input_inductances']) == list:
@@ -308,19 +316,19 @@ class neuron():
             self.input_inductances =  [[]]
 
         if 'thresholding_junction_critical_current' in kwargs:
-            # if type(kwargs['thresholding_junction_critical_current']) == float:
-            _Ic = kwargs['thresholding_junction_critical_current']
-            # else:
-                # raise ValueError('[soens_sim] Thresholding junction critical current must be a real number with units of amps')
+            if type(kwargs['thresholding_junction_critical_current']) == float:
+                _Ic = kwargs['thresholding_junction_critical_current']
+            else:
+                raise ValueError('[soens_sim] Thresholding junction critical current must be a real number with units of amps')
         else:
             _Ic = 40e-6 #default J_th Ic = 40 uA
         self.thresholding_junction_critical_current =  _Ic
             
         if 'threshold_bias_current' in kwargs:
-            # if type(kwargs['threshold_bias_current']) == float:
-            _Ib = kwargs['threshold_bias_current']
-            # else:
-                # raise ValueError('[soens_sim] Thresholding junction bias current must be a real number with units of amps')
+            if type(kwargs['threshold_bias_current']) == float:
+                _Ib = kwargs['threshold_bias_current']
+            else:
+                raise ValueError('[soens_sim] Thresholding junction bias current must be a real number with units of amps')
         else:
             _Ib = 35e-6 #default J_th Ic = 40 uA
         self.threshold_bias_current =  _Ib
@@ -335,30 +343,30 @@ class neuron():
         self.refractory_temporal_form =  _temporal_form #'exponential' or 'power_law'; 'exponential' by default
                 
         if 'refractory_time_constant' in kwargs:
-            # if type(kwargs['refractory_time_constant']) == int or type(kwargs['refractory_time_constant']) == float:
-            if kwargs['refractory_time_constant'] < 0:
-                raise ValueError('[soens_sim] time_constant associated with neuronal refraction must be a real number between zero and infinity')
-            else:
-                self.refractory_time_constant = kwargs['refractory_time_constant']
+            if type(kwargs['refractory_time_constant']) == int or type(kwargs['refractory_time_constant']) == float:
+                if kwargs['refractory_time_constant'] < 0:
+                    raise ValueError('[soens_sim] time_constant associated with neuronal refraction must be a real number between zero and infinity')
+                else:
+                    self.refractory_time_constant = kwargs['refractory_time_constant']
         else:
             if self.refractory_temporal_form == 'exponential':
                 self.refractory_time_constant = 50e-9 #default time constant, units of seconds
         
         if 'refractory_loop_self_inductance' in kwargs:
-            # if type(kwargs['refractory_loop_self_inductance']) == int or type(kwargs['refractory_loop_self_inductance']) == float:
-            if kwargs['refractory_loop_self_inductance'] < 0:
-                raise ValueError('[soens_sim] Refractory loop self inductance associated with refractory suppression loop must be a real number between zero and infinity (units of henries)')
-            else:
-                 self.refractory_loop_self_inductance = kwargs['refractory_loop_self_inductance']
+            if type(kwargs['refractory_loop_self_inductance']) == int or type(kwargs['refractory_loop_self_inductance']) == float:
+                if kwargs['refractory_loop_self_inductance'] < 0:
+                    raise ValueError('[soens_sim] Refractory loop self inductance associated with refractory suppression loop must be a real number between zero and infinity (units of henries)')
+                else:
+                     self.refractory_loop_self_inductance = kwargs['refractory_loop_self_inductance']
         else: 
             self.refractory_loop_self_inductance = 1e-9 #default value, units of henries
                         
         if 'refractory_loop_output_inductance' in kwargs:
-            # if type(kwargs['refractory_loop_output_inductance']) == int or type(kwargs['refractory_loop_output_inductance']) == float:
-            if kwargs['refractory_loop_output_inductance'] < 0:
-                raise ValueError('[soens_sim] Refractory loop output inductance associated with coupling between refractory suppression loop and neuron must be a real number between zero and infinity (units of henries)')
-            else:
-                 self.refractory_loop_output_inductance = kwargs['refractory_loop_output_inductance']
+            if type(kwargs['refractory_loop_output_inductance']) == int or type(kwargs['refractory_loop_output_inductance']) == float:
+                if kwargs['refractory_loop_output_inductance'] < 0:
+                    raise ValueError('[soens_sim] Refractory loop output inductance associated with coupling between refractory suppression loop and neuron must be a real number between zero and infinity (units of henries)')
+                else:
+                     self.refractory_loop_output_inductance = kwargs['refractory_loop_output_inductance']
         else: 
             self.refractory_loop_output_inductance = 200e-12 #default value, units of henries       
                  
@@ -372,7 +380,7 @@ class neuron():
         refractory_loop.unique_label = self.unique_label+'_rs'
         refractory_loop.input_spike_times = []
         neuron.refractory_loop = refractory_loop
-        self.input_connections.append(refractory_loop.name)        
+        self.input_connections.add(refractory_loop.name)        
                 
         # print('neuron created')
         
@@ -457,15 +465,10 @@ class neuron():
             # print('coupling_Factor = {}\n\n'.format(self.synapses[ii].coupling_factor))
             self.synapses[ii].I_si = np.zeros([len(time_vec),1])
             if hasattr(self.synapses[ii],'input_signal'):
-                # cc = self.sim_params['num_tau_sim']*self.synapses[ii].time_constant
-                self.synapses[ii].input_spike_times = self.synapses[ii].input_signal.spike_times+t_obs-num_dt_pre*dt
+                self.synapses[ii].input_spike_times = self.synapses[ii].input_signal.spike_times+num_dt_pre*dt
             else:
-                self.synapses[ii].input_spike_times = []            
-            self.synapses[ii].spike_vec = np.zeros([len(time_vec),1])
-            for jj in range(len(self.synapses[ii].input_spike_times)):
-                spike_ind = (np.abs(np.asarray(time_vec)-self.synapses[ii].input_spike_times[jj])).argmin()
-                self.synapses[ii].spike_vec[spike_ind] = 1
-                          
+                self.synapses[ii].input_spike_times = []
+          
         #find index of refractory suppresion loop
         for ii in range(len(self.synapses)):
             if self.synapses[ii].unique_label == self.unique_label+'_rs':
@@ -503,8 +506,6 @@ class neuron():
         idx_obs_start = (np.abs(time_vec-t_obs)).argmin()
         idx_obs_end = (np.abs(time_vec-t_sim_total)).argmin()
         self.num_spikes = sum(self.spike_vec[idx_obs_start:idx_obs_end+1])
-        for ii in range(len(self.synapses)):
-            self.synapses[ii].num_spikes = sum(self.synapses[ii].spike_vec[idx_obs_start:idx_obs_end+1])
         if len(self.spike_times) > 1:
             idx_avg_start = (np.abs(np.asarray(self.spike_times)-t_obs)).argmin()
             idx_avg_end = (np.abs(np.asarray(self.spike_times)-t_sim_total)).argmin()            
@@ -514,10 +515,7 @@ class neuron():
         self.idx_obs_start = idx_obs_start
         return self
     
-    def plot_receiving_loop_current(self,plot_save_string = ''):
-    
-        tt = time.time()   
-        save_str = 'receiving_loop_current__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))+'.png'
+    def plot_receiving_loop_current(self):
         
         time_vec = self.time_vec
         plt.rcParams['figure.figsize'] = pp['fig_size']
@@ -536,7 +534,7 @@ class neuron():
                 axs[0].plot([self.spike_times[ii]*1e6, self.spike_times[ii]*1e6], [ylim[0], ylim[1]], 'r-', linewidth = 0.5)
         #threshold
         xlim = axs[0].get_xlim()
-        axs[0].plot([xlim[0],xlim[1]], [self.thresholding_junction_critical_current*1e6,self.thresholding_junction_critical_current*1e6], 'g-', linewidth = 1.5, label = 'Threshold')
+        axs[0].plot([xlim[0],xlim[1]], [self.thresholding_junction_critical_current*1e6,self.thresholding_junction_critical_current*1e6], 'g-', linewidth = 0.5, label = 'Threshold')
         axs[0].plot([self.time_vec[self.idx_obs_start]*1e6, self.time_vec[self.idx_obs_start]*1e6], [ylim[0], ylim[1]], 'b-', linewidth = 0.5, label = 'Begin observation')
         axs[0].set_xlabel(r'Time [$\mu$s]', fontsize = pp['axes_labels_font_size'])
         axs[0].set_ylabel(r'$I_{nr}$ [uA]', fontsize = pp['axes_labels_font_size'])
@@ -555,106 +553,37 @@ class neuron():
         axs[1].legend(loc = 'best')
         axs[1].grid(b = True, which='major', axis='both')        
         
-        plt.show()       
+        plt.show()
+        save_str = 'I_nr__'+self.name        
         fig.savefig(save_str)
 
         return
     
     def plot_rate_transfer_function(self,plot_save_string = ''):
         
+        pp = plot_params()
         tt = time.time()        
-        save_str = 'rate_transfer_function__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))+'__no_lines.png'
-        # print(save_str)
-        
-        #nrows=1, ncols=1, sharex=False, sharey=False, squeeze=True, subplot_kw=None, gridspec_kw=None, **fig_kw
-        fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
-        fig.suptitle('Output rate versus input rate\n'+plot_save_string, fontsize = pp['title_font_size'])
-        
-        for qq in range(len(self.tau_ref_vec)):
-            for jj in range(len(self.I_sy_vec)):
-                for ii in range(len(self.tau_si_vec)):
-                    # ax.plot(rate_vec*1e-6,1e-6*num_spikes_mat[:,ii]/observation_duration, 'o-', linewidth = 1, markersize = 3, label = 'num_spikes rate; tau_si = '+str(tau_si_vec[ii]*1e9)+' ns'.format())            
-                    # ax.plot(rate_vec*1e-6,1e-6*1/isi_output_mat[:,ii], 'o-', linewidth = 1, markersize = 3, label = 'last two spikes rate; tau_si = '+str(tau_si_vec[ii]*1e9)+' ns'.format())            
-                    ax.plot(self.rate_vec*1e-6,1e-6*1/self.isi_output_avg_mat[:,ii,jj,qq], 'o-', linewidth = 1, markersize = 3, label = 'mean firing rate; tau_si = {:2.2f}ns, tau_ref = {:2.2f}ns, I_sy = {:2.2f}uA'.format(self.tau_si_vec[ii]*1e9,self.tau_ref_vec[qq]*1e9,self.I_sy_vec[jj]*1e6))
-        ylim = ax.get_ylim()
-        # print(ylim)
-        ax.plot(self.rate_vec*1e-6,self.rate_vec*1e-6, '-', linewidth = 0.5, label = 'rate-out equals rate-in')        
-        ax.plot(self.rate_vec*1e-6,self.rate_vec*1e-6/2, '-', linewidth = 0.5, label = 'rate-out equals rate-in/2')        
-        ax.plot(self.rate_vec*1e-6,self.rate_vec*1e-6/3, '-', linewidth = 0.5, label = 'rate-out equals rate-in/3')        
-        ax.plot(self.rate_vec*1e-6,self.rate_vec*1e-6/4, '-', linewidth = 0.5, label = 'rate-out equals rate-in/4')        
-        # ylim = ax.get_ylim()
-        ax.set_xlabel(r'Input rate [MHz]', fontsize = pp['axes_labels_font_size'])
-        ax.set_ylabel(r'Output rate [MHz]', fontsize = pp['axes_labels_font_size'])
-        ax.tick_params(axis='both', which='major', labelsize = pp['tick_labels_font_size'])
-        # ax.set_title('Total current in NR loop')
-        ax.legend(loc = 'best')
-        ax.grid(b = True, which='major', axis='both')        
-        ax.set_ylim([ylim[0],ylim[1]])
-        
-        plt.show()
-        fig.savefig('figures/'+save_str)
-        
-        fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
-        fig.suptitle('Output rate versus input rate\n'+plot_save_string, fontsize = pp['title_font_size'])
-        
-        for jj in range(len(self.I_sy_vec)):
-            for ii in range(len(self.tau_si_vec)):
-                # ax.plot(rate_vec*1e-6,1e-6*num_spikes_mat[:,ii]/observation_duration, 'o-', linewidth = 1, markersize = 3, label = 'num_spikes rate; tau_si = '+str(tau_si_vec[ii]*1e9)+' ns'.format())            
-                # ax.plot(rate_vec*1e-6,1e-6*1/isi_output_mat[:,ii], 'o-', linewidth = 1, markersize = 3, label = 'last two spikes rate; tau_si = '+str(tau_si_vec[ii]*1e9)+' ns'.format())            
-                ax.plot(self.rate_vec*1e-6,1e-6*1/self.isi_output_avg_mat[:,ii,jj], 'o-', linewidth = 1, markersize = 3, label = 'mean firing rate; tau_si = {:2.2f}ns, I_sy = {:2.2f}uA'.format(self.tau_si_vec[ii]*1e9,self.I_sy_vec[jj]*1e6))        
-        ax.set_xlabel(r'Input rate [MHz]', fontsize = pp['axes_labels_font_size'])
-        ax.set_ylabel(r'Output rate [MHz]', fontsize = pp['axes_labels_font_size'])
-        ax.tick_params(axis='both', which='major', labelsize = pp['tick_labels_font_size'])
-        ax.legend(loc = 'best')
-        ax.grid(b = True, which='major', axis='both')        
-        ax.set_ylim([ylim[0],ylim[1]])
-        
-        plt.show()
         save_str = 'rate_transfer_function__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))+'.png'
-        fig.savefig('figures/'+save_str)  
-
-        return
-    
-    def plot_num_spikes(self,plot_save_string = ''):
-        
-        tt = time.time()        
-        save_str = 'num_spikes_transfer_function__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))+'.png'
         # print(save_str)
         
         #nrows=1, ncols=1, sharex=False, sharey=False, squeeze=True, subplot_kw=None, gridspec_kw=None, **fig_kw
-        fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)   
+        fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
         fig.suptitle('Output rate versus input rate\n'+plot_save_string, fontsize = pp['title_font_size'])
         
-        #upper panel, rate_out vs rate_in
-        for jj in range(len(self.I_sy_vec)):
-            for ii in range(len(self.tau_si_vec)):
-                axs[0].plot(self.rate_vec*1e-6,1e-6*1/self.isi_output_avg_mat[:,ii,jj], 'o-', linewidth = 1, markersize = 3, label = 'mean firing rate; tau_si = {:2.2f}ns, I_sy = {:2.2f}uA'.format(self.tau_si_vec[ii]*1e9,self.I_sy_vec[jj]*1e6))
-        ylim = axs[0].get_ylim()
-        axs[0].plot(self.rate_vec*1e-6,self.rate_vec*1e-6, 'o-', linewidth = 0.5, markersize = 3, label = 'rate-out equals rate-in')
-        axs[0].set_xlabel(r'Input rate [MHz]', fontsize = pp['axes_labels_font_size'])
-        axs[0].set_ylabel(r'Output rate [MHz]', fontsize = pp['axes_labels_font_size'])
-        axs[0].tick_params(axis='both', which='major', labelsize = pp['tick_labels_font_size'])
-        # ax.set_title('Total current in NR loop')
-        axs[0].legend(loc = 'best')
-        axs[0].grid(b = True, which='major', axis='both')
-        axs[0].set_ylim([ylim[0],ylim[1]])
-        
-        #lower panel, num_spikes_out vs num_spikes_in
         for jj in range(len(self.I_sy_vec)):
             for ii in range(len(self.tau_si_vec)):
                 # ax.plot(rate_vec*1e-6,1e-6*num_spikes_mat[:,ii]/observation_duration, 'o-', linewidth = 1, markersize = 3, label = 'num_spikes rate; tau_si = '+str(tau_si_vec[ii]*1e9)+' ns'.format())            
                 # ax.plot(rate_vec*1e-6,1e-6*1/isi_output_mat[:,ii], 'o-', linewidth = 1, markersize = 3, label = 'last two spikes rate; tau_si = '+str(tau_si_vec[ii]*1e9)+' ns'.format())            
-                axs[1].plot(self.rate_vec*1e-6,self.num_spikes_in_mat[:,ii,jj], 'o-', linewidth = 1, markersize = 3, label = 'num_spikes_in')
-                axs[1].plot(self.rate_vec*1e-6,self.num_spikes_out_mat[:,ii,jj], 'o-', linewidth = 1, markersize = 3, label = 'num_spikes_out; tau_si = {:2.2f}ns, I_sy = {:2.2f}uA'.format(self.tau_si_vec[ii]*1e9,self.I_sy_vec[jj]*1e6))        
-        axs[1].set_xlabel(r'Input rate [MHz]', fontsize = pp['axes_labels_font_size'])
-        axs[1].set_ylabel(r'Number of spikes', fontsize = pp['axes_labels_font_size'])
-        axs[1].tick_params(axis='both', which='major', labelsize = pp['tick_labels_font_size'])
+                ax.plot(self.rate_vec*1e-6,1e-6*1/self.isi_output_avg_mat[:,ii,jj], 'o-', linewidth = 1, markersize = 3, label = 'mean firing rate; tau_si = {:2.2f}ns, I_sy = {:2.2f}uA'.format(self.tau_si_vec[ii]*1e9,self.I_sy_vec[jj]*1e6))            
+        ax.set_xlabel(r'Input rate [MHz]', fontsize = pp['axes_labels_font_size'])
+        ax.set_ylabel(r'Output rate [MHz]', fontsize = pp['axes_labels_font_size'])
+        ax.tick_params(axis='both', which='major', labelsize = pp['tick_labels_font_size'])
         # ax.set_title('Total current in NR loop')
-        axs[1].legend(loc = 'best')
-        axs[1].grid(b = True, which='major', axis='both')
+        ax.legend(loc = 'best')
+        ax.grid(b = True, which='major', axis='both')
         
         plt.show()
-        fig.savefig('figures/'+save_str)
+        fig.savefig(save_str)
 
         return
     
@@ -662,7 +591,7 @@ class neuron():
         
         pp = plot_params()
         tt = time.time()        
-        save_str = 'rate_and_isi__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))+'.png'
+        save_str = 'rate_and_isi__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
         # print(save_str)
         
         #nrows=1, ncols=1, sharex=False, sharey=False, squeeze=True, subplot_kw=None, gridspec_kw=None, **fig_kw
@@ -695,51 +624,9 @@ class neuron():
         axs[1].grid(b = True, which='major', axis='both')        
                 
         plt.show()
-        fig.savefig('figures/'+save_str)
+        fig.savefig(save_str)
 
-        return 
-    
-    def plot_spike_train(self,plot_save_string):
-        
-        pp = plot_params()
-        tt = time.time()        
-        save_str = 'spike_train__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))+'.png'
-        # print(save_str)
-        time_vec = self.time_vec
-        
-        #nrows=1, ncols=1, sharex=False, sharey=False, squeeze=True, subplot_kw=None, gridspec_kw=None, **fig_kw
-        fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = False, sharey = False)   
-        fig.suptitle('Input and output spike trains', fontsize = pp['title_font_size'])
-        
-        #upper panel, total I_nr
-        axs[0].plot(time_vec*1e6,self.cell_body_circulating_current*1e6, 'o-', linewidth = 1, markersize = 3, label = 'Neuron: '+self.name+' ('+self.unique_label+')'.format())        
-
-        #threshold
-        xlim = axs[0].get_xlim()
-        ylim = axs[0].get_ylim()
-        axs[0].plot([xlim[0],xlim[1]], [self.thresholding_junction_critical_current*1e6,self.thresholding_junction_critical_current*1e6], 'g-', linewidth = 0.5, label = 'Threshold')
-        axs[0].plot([self.time_vec[self.idx_obs_start]*1e6, self.time_vec[self.idx_obs_start]*1e6], [ylim[0], ylim[1]], 'b-', linewidth = 0.5, label = 'Begin observation')
-        axs[0].set_xlabel(r'Time [$\mu$s]', fontsize = pp['axes_labels_font_size'])
-        axs[0].set_ylabel(r'$I_{nr}$ [uA]', fontsize = pp['axes_labels_font_size'])
-        axs[0].tick_params(axis='both', which='major', labelsize = pp['tick_labels_font_size'])
-        axs[0].set_title('Total current in NR loop')
-        axs[0].legend(loc = 'best')
-        axs[0].grid(b = True, which='major', axis='both')
-                
-        #lower panel, synaptic input spikes, neuronal output spikes
-        axs[1].plot(time_vec*1e6,self.spike_vec,linewidth = 1, label = 'neuronal spike times'.format())
-        axs[1].plot(time_vec*1e6,self.synapses[0].spike_vec,linewidth = 1, label = 'synaptic spike times'.format())        
-        axs[1].set_xlabel(r'Time [$\mu$s]', fontsize = pp['axes_labels_font_size'])
-        axs[1].set_ylabel(r'Spikes [a.u.]', fontsize = pp['axes_labels_font_size'])
-        axs[1].tick_params(axis='both', which='major', labelsize = pp['tick_labels_font_size'])
-        axs[1].set_title('Synaptic and neuronal spiking')
-        axs[1].legend(loc = 'best')
-        axs[1].grid(b = True, which='major', axis='both')        
-                
-        plt.show()
-        fig.savefig('figures/'+save_str)
-        
-        return
+        return    
     
     def plot_fourier_transform(self,time_vec):
         
@@ -778,7 +665,7 @@ class neuron():
                 
         plt.show()
         save_str = 'spike_vec_fourier_transform__'+self.name        
-        fig.savefig('figures/'+save_str)
+        fig.savefig(save_str)
 
         return self
         
