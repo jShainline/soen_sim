@@ -7,6 +7,8 @@ from _functions import synaptic_response_function, synaptic_time_stepper, plot_p
 pp = plot_params()
 plt.rcParams['figure.figsize'] = pp['fig_size']
 
+import pickle
+
 class input_signal():
     
     _next_uid = 0
@@ -46,6 +48,23 @@ class input_signal():
                 isi = 1/kwargs['spike_times'][0]
                 self.spike_times = np.arange(0,kwargs['spike_times'][1],isi)
                 
+        if 'stochasticity' in kwargs:
+            if kwargs['stochasticity'] == 'gaussian' or kwargs['stochasticity'] == 'none':
+                self.stochasticity = kwargs['stochasticity']
+            else: 
+                raise ValueError('[soens_sim] Tried to assign an invalid stochasticity type to input {} (unique label {}). Available stochasticity forms are presently: ''gaussian'' or ''none''' % (self.name, self.unique_label))
+        else:
+            self.stochasticity = 'none'
+        
+        if 'jitter_params' in kwargs:
+            if self.stochasticity == 'gaussian':
+                self.jitter_params = kwargs['jitter_params'] #[center of gaussian, width of gaussian (standard deviation)]
+                if len(self.jitter_params) == 2:
+                    for ii in range(len(self.spike_times)):
+                        self.spike_times[ii] += np.random.normal(self.jitter_params[0],self.jitter_params[1],1)
+                else:
+                    raise ValueError('[soens_sim] With gaussian stochasticity, jitter_params must be a two-element list of the form: [center of gaussian, width of gaussian (standard deviation)]')
+            
         input_signal.input_signals[self.name] = self
             
 class synapse():    
@@ -141,7 +160,8 @@ class synapse():
             self.loop_bias_current = _loop_bias_current_default
             
         if 'input_signal_name' in kwargs:
-            self.input_signal_name = kwargs['input_signal_name']
+            if kwargs['input_signal_name'] != '':
+                self.input_signal_name = kwargs['input_signal_name']
             
         # attach external input signals to synapse
         if hasattr(self, 'input_signal_name'):
@@ -458,7 +478,7 @@ class neuron():
             self.synapses[ii].I_si = np.zeros([len(time_vec),1])
             if hasattr(self.synapses[ii],'input_signal'):
                 # cc = self.sim_params['num_tau_sim']*self.synapses[ii].time_constant
-                self.synapses[ii].input_spike_times = self.synapses[ii].input_signal.spike_times+t_obs-num_dt_pre*dt
+                self.synapses[ii].input_spike_times = self.synapses[ii].input_signal.spike_times+num_dt_pre*dt
             else:
                 self.synapses[ii].input_spike_times = []            
             self.synapses[ii].spike_vec = np.zeros([len(time_vec),1])
@@ -537,7 +557,7 @@ class neuron():
         #threshold
         xlim = axs[0].get_xlim()
         axs[0].plot([xlim[0],xlim[1]], [self.thresholding_junction_critical_current*1e6,self.thresholding_junction_critical_current*1e6], 'g-', linewidth = 1.5, label = 'Threshold')
-        axs[0].plot([self.time_vec[self.idx_obs_start]*1e6, self.time_vec[self.idx_obs_start]*1e6], [ylim[0], ylim[1]], 'b-', linewidth = 0.5, label = 'Begin observation')
+        axs[0].plot([self.time_vec[self.idx_obs_start]*1e6, self.time_vec[self.idx_obs_start]*1e6], [ylim[0], ylim[1]], 'b-', linewidth = 1.5, label = 'Begin observation')
         axs[0].set_xlabel(r'Time [$\mu$s]', fontsize = pp['axes_labels_font_size'])
         axs[0].set_ylabel(r'$I_{nr}$ [uA]', fontsize = pp['axes_labels_font_size'])
         axs[0].tick_params(axis='both', which='major', labelsize = pp['tick_labels_font_size'])
@@ -556,19 +576,20 @@ class neuron():
         axs[1].grid(b = True, which='major', axis='both')        
         
         plt.show()       
-        fig.savefig(save_str)
+        fig.savefig('figures/'+save_str)
 
         return
     
     def plot_rate_transfer_function(self,plot_save_string = ''):
         
         tt = time.time()        
-        save_str = 'rate_transfer_function__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))+'__no_lines.png'
+        save_str = 'rate_transfer_function__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))+'.png'
         # print(save_str)
         
         #nrows=1, ncols=1, sharex=False, sharey=False, squeeze=True, subplot_kw=None, gridspec_kw=None, **fig_kw
         fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
-        fig.suptitle('Output rate versus input rate\n'+plot_save_string, fontsize = pp['title_font_size'])
+        fig.suptitle('Output rate versus input rate', fontsize = pp['title_font_size'])
+        plt.title(plot_save_string, fontsize = pp['subtitle_font_size'])
         
         for qq in range(len(self.tau_ref_vec)):
             for jj in range(len(self.I_sy_vec)):
@@ -594,8 +615,16 @@ class neuron():
         plt.show()
         fig.savefig('figures/'+save_str)
         
+        return
+    
+    def plot_rate_transfer_function__no_lines(self,plot_save_string = ''):
+        
+        tt = time.time()        
+        save_str = 'rate_transfer_function__'+plot_save_string+'__no_lines__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))+'.png'
+        
         fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
-        fig.suptitle('Output rate versus input rate\n'+plot_save_string, fontsize = pp['title_font_size'])
+        fig.suptitle('Output rate versus input rate', fontsize = pp['title_font_size'])
+        plt.title(plot_save_string, fontsize = pp['subtitle_font_size'])
         
         for jj in range(len(self.I_sy_vec)):
             for ii in range(len(self.tau_si_vec)):
@@ -606,11 +635,9 @@ class neuron():
         ax.set_ylabel(r'Output rate [MHz]', fontsize = pp['axes_labels_font_size'])
         ax.tick_params(axis='both', which='major', labelsize = pp['tick_labels_font_size'])
         ax.legend(loc = 'best')
-        ax.grid(b = True, which='major', axis='both')        
-        ax.set_ylim([ylim[0],ylim[1]])
+        ax.grid(b = True, which='major', axis='both')    
         
         plt.show()
-        save_str = 'rate_transfer_function__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))+'.png'
         fig.savefig('figures/'+save_str)  
 
         return
@@ -780,6 +807,42 @@ class neuron():
         save_str = 'spike_vec_fourier_transform__'+self.name        
         fig.savefig('figures/'+save_str)
 
+        return self
+        
+    def plot_rate_vs_num_active_synapses(self,plot_save_string = ''):
+        
+        tt = time.time()        
+        save_str = 'rate_vs_num_active_synapses__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))+'.png'
+        # print(save_str)
+        
+        #nrows=1, ncols=1, sharex=False, sharey=False, squeeze=True, subplot_kw=None, gridspec_kw=None, **fig_kw
+        fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
+        fig.suptitle('Output rate versus input rate', fontsize = pp['title_font_size'])
+        plt.title(plot_save_string, fontsize = pp['subtitle_font_size'])
+        
+        ax.plot(self.num_active_synapses_vec,1e-6*1/self.isi_output_avg_vec[:], 'o-', linewidth = 1, markersize = 3, label = 'mean firing rate; input_rate = {:2.2f}MHz, tau_si = {:2.2f}ns, tau_ref = {:2.2f}ns, I_sy = {:2.2f}uA'.format(self.rate*1e-6,self.tau_si*1e9,self.tau_ref*1e9,self.I_sy*1e6))
+
+        ax.set_xlabel(r'Number of active synapses', fontsize = pp['axes_labels_font_size'])
+        ax.set_ylabel(r'Output rate [MHz]', fontsize = pp['axes_labels_font_size'])
+        ax.tick_params(axis='both', which='major', labelsize = pp['tick_labels_font_size'])
+        # ax.set_title('Total current in NR loop')
+        ax.legend(loc = 'best')
+        ax.grid(b = True, which='major', axis='both')      
+        
+        plt.show()
+        fig.savefig('figures/'+save_str)
+        
+        return
+    
+    def save_neuron_data(self,save_string):
+        
+        tt = time.time()     
+        s_str = 'neuron_data__'+save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))+'.dat'
+        self.save_string = s_str
+        
+        with open('data/'+s_str, 'wb') as data_file:
+            pickle.dump(self, data_file)
+  
         return self
         
         #neuron.is_output_neuron = True or False (whether or not the neuron communicates to the outside world)
