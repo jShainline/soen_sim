@@ -1,8 +1,5 @@
 import numpy as np
 import pickle
-    
-# from matplotlib import pyplot as plt
-# from pylab import *
 
 def synaptic_time_stepper(time_vec,present_time_index,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
     
@@ -64,26 +61,6 @@ def synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si,tau_rise,tau_fal
 
     return I_prefactor
 
-# def jitter_factor(sigma):
-    
-#     center = 0
-#     vec_length = 100
-#     x_vec = np.linspace(1,vec_length,vec_length)
-#     y_vec = np.random.normal(center,sigma,vec_length)
-    
-#     fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
-#     fig.suptitle('Normal Distribution')
-    
-#     ax.plot(x_vec,y_vec, 'o-', linewidth = 1, markersize = 3, label = 'center = {}, sigma = {}, vec_length = {}'.format(center,sigma,vec_length))
-#     ax.set_xlabel(r'Sample')
-#     ax.set_ylabel(r'Value')
-#     ax.tick_params(axis='both', which='major')
-#     ax.legend(loc = 'best')  
-        
-#     plt.show()    
-    
-#     return
-
 def physical_constants():
 
     p = dict(h = 6.62606957e-34,#Planck's constant in kg m^2/s
@@ -100,18 +77,7 @@ def physical_constants():
          Phi0 = 6.62606957e-34/(2*1.60217657e-19)#flux quantum
          )
 
-    return p
-
-def plot_params():
-    
-    pp = dict()
-    pp['title_font_size'] = 20
-    pp['subtitle_font_size'] = 14
-    pp['axes_labels_font_size'] = 16
-    pp['tick_labels_font_size'] = 12
-    pp['fig_size'] = (20,16)
-    
-    return pp    
+    return p   
 
 def load_neuron_data(load_string):
         
