@@ -55,7 +55,7 @@ for qq in range(len(tau_ref_vec)):
                 
                 #initialize neuron
                 name__n = 'rate_encoding_neuron__{}'.format(ii*len(rate_vec)+jj)
-                neuron_1 = neuron(name__n, input_connections = [name__s], input_inductances = [[10e-12,0.5],[10e-12,0.5]],
+                neuron_1 = neuron(name__n, input_synaptic_connections = [name__s], input_synaptic_inductances = [[10e-12,0.5],[10e-12,0.5]],
                                   thresholding_junction_critical_current = 40e-6, thresholding_junction_bias_current = 35e-6, 
                                   refractory_temporal_form = 'exponential', refractory_time_constant = tau_ref_vec[qq], 
                                   refractory_loop_self_inductance = 10e-9, refractory_loop_output_inductance = 200e-12)

@@ -60,7 +60,7 @@ for kk in range(len(I_sy_vec)):
         #initialize neuron
         input_inductances.append([20e-12,1])
         name__n = 'burst_neuron__{:d}'.format(num_id)
-        neuron_1 = neuron(name__n, input_connections = input_synapses, input_inductances = input_inductances,
+        neuron_1 = neuron(name__n, input_synaptic_connections = input_synapses, input_synaptic_inductances = input_inductances,
                           thresholding_junction_critical_current = 40e-6, thresholding_junction_bias_current = I_th, 
                           refractory_temporal_form = 'exponential', refractory_time_constant = tau_ref, 
                           refractory_loop_self_inductance = 1e-9, refractory_loop_output_inductance = 200e-12,

@@ -482,12 +482,14 @@ class neuron():
                  
         #set up refractory loop as synapse
         refractory_loop_bias_current = 31e-6 #doesn't matter now as synapse saturation is independent of bias; will matter with future updates, I hope
-        refractory_loop = synapse(self.name+'__refractory_suppression_synapse', loop_temporal_form = 'exponential', 
-                                  time_constant = self.refractory_time_constant,
+        refractory_loop = synapse(self.name+'__refractory_suppression_synapse', 
+                                  inhibitory_or_excitatory = 'inhibitory',
+                                  integration_loop_temporal_form = 'exponential', 
+                                  integration_time_constant = self.refractory_time_constant,
                                   integration_loop_self_inductance = self.refractory_loop_self_inductance,
                                   integration_loop_output_inductance = self.refractory_loop_output_inductance,
                                   synaptic_bias_current = self.refractory_synaptic_bias_current,
-                                  loop_bias_current = refractory_loop_bias_current)
+                                  integration_loop_bias_current = refractory_loop_bias_current)
         
         refractory_loop.unique_label = self.unique_label+'_rs'
         refractory_loop.input_spike_times = []
@@ -522,6 +524,14 @@ class neuron():
             self.synapses.append(synapse.synapses[name])
             
         return self
+    
+    def configure_synapses(self):
+        
+        return self
+        
+    def configure_dendrites(self):
+        
+        return self    
         
     def run_sim(self):
         
@@ -555,6 +565,10 @@ class neuron():
         I_si_sat__rs_loop = self.refractory_loop_saturation_current*1e6
 
         for ii in range(len(self.synapses)):
+            if self.synapses[ii].inhibitory_or_excitatory == 'excitatory':
+                _inh = 1
+            elif self.synapses[ii].inhibitory_or_excitatory == 'inhibitory':
+                _inh = -1
             _I_sy = 1e6*self.synapses[ii].synaptic_bias_current
             self.synapses[ii].tau_rise = (1.294*_I_sy-43.01)*1e-9
             _scale_factor = _reference_inductance/self.synapses[ii].integration_loop_total_inductance
@@ -583,15 +597,9 @@ class neuron():
         self.t_obs = t_obs
         self.time_vec = time_vec
         for ii in range(len(time_vec)):
-            for jj in range(len(self.synapses)):
-                if jj == rs_index:
-                    I_si_sat = I_si_sat__rs_loop
-                    _inh = -1
-                else:
-                    I_si_sat = I_si_sat__nom
-                    _inh = 1                       
+            for jj in range(len(self.synapses)):                       
                 self.synapses[jj].I_si[ii] = synaptic_time_stepper(time_vec,ii,self.synapses[jj].input_spike_times,self.synapses[jj].I_0,I_si_sat,gamma1,gamma2,gamma3,self.synapses[jj].tau_rise,self.synapses[jj].time_constant)
-                self.cell_body_circulating_current[ii] += _inh*self.synapses[jj].coupling_factor*self.synapses[jj].I_si[ii]
+                self.cell_body_circulating_current[ii] += self.synapses[jj]._inh*self.synapses[jj].coupling_factor*self.synapses[jj].I_si[ii]
             if ii > 0:
                 if (self.cell_body_circulating_current[ii] > self.thresholding_junction_critical_current 
                     and self.cell_body_circulating_current[ii-1] < self.thresholding_junction_critical_current 

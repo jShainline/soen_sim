@@ -62,7 +62,7 @@ for rr in range(len(num_synapses_vec)):
                         name__s = 'input_synapse__{:d}_{:d}'.format(num_id,pp)
                         synapse_1 = synapse(name__s, integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si_vec[ii], 
                                             integration_loop_self_inductance = 50e-9, integration_loop_output_inductance = 200e-12, 
-                                            synaptic_bias_current = I_sy_vec[kk], loop_bias_current = 31e-6,
+                                            synaptic_bias_current = I_sy_vec[kk], integration_loop_bias_current = 31e-6,
                                             input_signal_name = name__i)
                         
                         input_synapses.append(name__s)
@@ -72,7 +72,7 @@ for rr in range(len(num_synapses_vec)):
                     #initialize neuron
                     input_inductances.append([10e-12,0.5])
                     name__n = 'rate_encoding_neuron__{:d}'.format(num_id)
-                    neuron_1 = neuron(name__n, input_connections = input_synapses, input_inductances = input_inductances,
+                    neuron_1 = neuron(name__n, input_synaptic_connections = input_synapses, input_synaptic_inductances = input_inductances,
                                       thresholding_junction_critical_current = 40e-6, thresholding_junction_bias_current = 35e-6, 
                                       refractory_temporal_form = 'exponential', refractory_time_constant = tau_ref_vec[qq], 
                                       refractory_loop_self_inductance = 10e-9, refractory_loop_output_inductance = 200e-12)
