@@ -69,7 +69,7 @@ for kk in range(len(I_sy_vec)):
         # propagate in time                         
         sim_params = dict()
         sim_params['dt'] = dt
-        sim_params['pre_observation_duration'] = num_tau_sim*synapse_1.time_constant
+        sim_params['pre_observation_duration'] = num_tau_sim*synapse_1.integration_loop_time_constant
         sim_params['observation_duration'] = observation_duration
         sim_params['num_tau_sim'] = num_tau_sim
         neuron_1.sim_params = sim_params
@@ -78,7 +78,7 @@ for kk in range(len(I_sy_vec)):
         # plot temporal response
         plot_save_string = 'I_sy={:2.2f}uA__tau_ref={:04.2f}ns__tau_si={:04.2f}ns__I_th={:2.2f}uA__dt={:04.2f}ns__obs={:04.2f}us__jitter={}ns'.format(1e6*I_sy_vec[kk],1e9*tau_ref,1e9*tau_si,I_th,1e9*dt,observation_duration*1e6,jitter_params[1])
         plot_receiving_loop_current(neuron_1,plot_save_string)
-        plt.close('all')
+        # plt.close('all')
         
         # fill observation matrices                
         num_spikes_out_mat[kk,rr] = neuron_1.num_spikes

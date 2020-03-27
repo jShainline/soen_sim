@@ -406,8 +406,8 @@ def plot_neuronal_response__single_synaptic_pulse(neuron_instance,plot_save_stri
         tn = max1/max2
     else:
         tn = 1
-    axs[1].plot(time_vec*1e6,neuron_instance.synapses[0].coupling_factor*neuron_instance.synapses[0].I_si*1e6, '-', color = colors['green_3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = neuron_instance.synapses[0].unique_label+' ($tau_{si}$ = '+'{:3.0f}ns)'.format(neuron_instance.synapses[0].time_constant*1e9))
-    axs[1].plot(time_vec*1e6,tn*neuron_instance.synapses[1].coupling_factor*neuron_instance.synapses[1].I_si*1e6, '-', color = colors['yellow_3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = neuron_instance.synapses[1].unique_label+' ($tau_{ref}$ = '+'{:4.0f}ns)'.format(neuron_instance.synapses[1].time_constant*1e9))
+    axs[1].plot(time_vec*1e6,neuron_instance.synapses[0].coupling_factor*neuron_instance.synapses[0].I_si*1e6, '-', color = colors['green_3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = neuron_instance.synapses[0].unique_label+' ($tau_{si}$ = '+'{:3.0f}ns)'.format(neuron_instance.synapses[0].integration_loop_time_constant*1e9))
+    axs[1].plot(time_vec*1e6,tn*neuron_instance.synapses[1].coupling_factor*neuron_instance.synapses[1].I_si*1e6, '-', color = colors['yellow_3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = neuron_instance.synapses[1].unique_label+' ($tau_{ref}$ = '+'{:4.0f}ns)'.format(neuron_instance.synapses[1].integration_loop_time_constant*1e9))
     axs[1].set_xlabel(r'Time [$\mu$s]')
     axs[1].set_ylabel(r'Contribution to $I_{nr}$ [$\mu$A]')
     axs[1].set_title('Contribution from each synapse')

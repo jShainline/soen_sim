@@ -97,7 +97,7 @@ class synapse():
         
         if 'integration_loop_temporal_form' in kwargs:
             if kwargs['integration_loop_temporal_form'] == 'exponential' or kwargs['integration_loop_temporal_form'] == 'power_law':
-                _temporal_form = kwargs['loop_temporal_form']
+                _temporal_form = kwargs['integration_loop_temporal_form']
             else:
                 raise ValueError('[soens_sim] Tried to assign an invalid integration loop temporal form to synapse %s (unique_label = %s)\nThe allowed values of loop_temporal_form are ''exponential'' and ''power_law''' % (self.name, self.unique_label))
         else:
@@ -105,9 +105,6 @@ class synapse():
         self.integration_loop_temporal_form =  _temporal_form #'exponential' or 'power_law'; 'exponential' by default
 
         if 'integration_loop_time_constant' in kwargs:
-            # print(type(kwargs['time_constant']))
-            # print(kwargs['time_constant'])
-            # if type(kwargs['time_constant']) == int or type(kwargs['time_constant']) == float or type(kwargs['time_constant']) == np.float64:
             if kwargs['integration_loop_time_constant'] < 0:
                 raise ValueError('[soens_sim] time_constant associated with synaptic integration loop decay must be a real number between zero and infinity')
             else:
@@ -485,7 +482,7 @@ class neuron():
         refractory_loop = synapse(self.name+'__refractory_suppression_synapse', 
                                   inhibitory_or_excitatory = 'inhibitory',
                                   integration_loop_temporal_form = 'exponential', 
-                                  integration_time_constant = self.refractory_time_constant,
+                                  integration_loop_time_constant = self.refractory_time_constant,
                                   integration_loop_self_inductance = self.refractory_loop_self_inductance,
                                   integration_loop_output_inductance = self.refractory_loop_output_inductance,
                                   synaptic_bias_current = self.refractory_synaptic_bias_current,
@@ -494,7 +491,7 @@ class neuron():
         refractory_loop.unique_label = self.unique_label+'_rs'
         refractory_loop.input_spike_times = []
         neuron.refractory_loop = refractory_loop
-        self.input_connections.append(refractory_loop.name)        
+        self.input_synaptic_connections.append(refractory_loop.name)        
                 
         # print('neuron created')
         
@@ -551,7 +548,7 @@ class neuron():
         
         for ii in range(len(self.synapses)):
             # print(self.synapses[ii].unique_label)
-            self.receiving_loop_total_inductance += self.input_inductances[ii][0]
+            self.receiving_loop_total_inductance += self.input_synaptic_inductances[ii][0]
             
         #info for synaptic response        
         #these values obtained by fitting to spice simulations
@@ -563,12 +560,17 @@ class neuron():
         #I_si_sat is actually a function of I_b (loop_current_bias). The fit I_si_sat(I_b) has not yet been performed (20200319)
         I_si_sat__nom = 13
         I_si_sat__rs_loop = self.refractory_loop_saturation_current*1e6
-
+                          
+        #find index of refractory suppresion loop
+        for ii in range(len(self.synapses)):
+            if self.synapses[ii].unique_label == self.unique_label+'_rs':
+                rs_index = ii
+                
         for ii in range(len(self.synapses)):
             if self.synapses[ii].inhibitory_or_excitatory == 'excitatory':
-                _inh = 1
+                self.synapses[ii]._inh = 1
             elif self.synapses[ii].inhibitory_or_excitatory == 'inhibitory':
-                _inh = -1
+                self.synapses[ii]._inh = -1
             _I_sy = 1e6*self.synapses[ii].synaptic_bias_current
             self.synapses[ii].tau_rise = (1.294*_I_sy-43.01)*1e-9
             _scale_factor = _reference_inductance/self.synapses[ii].integration_loop_total_inductance
@@ -576,6 +578,10 @@ class neuron():
             mutual_inductance = self.input_synaptic_inductances[ii][1]*np.sqrt(self.input_synaptic_inductances[ii][0]*self.synapses[ii].integration_loop_output_inductance)
             self.synapses[ii].coupling_factor = mutual_inductance/self.receiving_loop_total_inductance
             self.synapses[ii].I_si = np.zeros([len(time_vec),1])
+            if ii == rs_index:
+                self.synapses[ii].I_si_sat = I_si_sat__rs_loop
+            else:
+                self.synapses[ii].I_si_sat = I_si_sat__nom                
             if hasattr(self.synapses[ii],'input_signal'):
                 self.synapses[ii].input_spike_times = self.synapses[ii].input_signal.spike_times+num_dt_pre*dt
             else:
@@ -584,13 +590,9 @@ class neuron():
             for jj in range(len(self.synapses[ii].input_spike_times)):
                 spike_ind = (np.abs(np.asarray(time_vec)-self.synapses[ii].input_spike_times[jj])).argmin()
                 self.synapses[ii].spike_vec[spike_ind] = 1
-                          
-        #find index of refractory suppresion loop
-        for ii in range(len(self.synapses)):
-            if self.synapses[ii].unique_label == self.unique_label+'_rs':
-                rs_index = ii
+
         
-        self.cell_body_circulating_current = self.threshold_bias_current*np.ones([len(time_vec),1])
+        self.cell_body_circulating_current = self.thresholding_junction_bias_current*np.ones([len(time_vec),1])
         self.state = 'sub_threshold'
         self.spike_vec = np.zeros([len(time_vec),1])
         self.spike_times = []#np.array([]) #list of real numbers (times cell_body_circulating_current crossed threshold current with positive derivative; the main dynamical variable and output of the neuron)        
@@ -598,7 +600,7 @@ class neuron():
         self.time_vec = time_vec
         for ii in range(len(time_vec)):
             for jj in range(len(self.synapses)):                       
-                self.synapses[jj].I_si[ii] = synaptic_time_stepper(time_vec,ii,self.synapses[jj].input_spike_times,self.synapses[jj].I_0,I_si_sat,gamma1,gamma2,gamma3,self.synapses[jj].tau_rise,self.synapses[jj].time_constant)
+                self.synapses[jj].I_si[ii] = synaptic_time_stepper(time_vec,ii,self.synapses[jj].input_spike_times,self.synapses[jj].I_0,self.synapses[jj].I_si_sat,gamma1,gamma2,gamma3,self.synapses[jj].tau_rise,self.synapses[jj].integration_loop_time_constant)
                 self.cell_body_circulating_current[ii] += self.synapses[jj]._inh*self.synapses[jj].coupling_factor*self.synapses[jj].I_si[ii]
             if ii > 0:
                 if (self.cell_body_circulating_current[ii] > self.thresholding_junction_critical_current 

@@ -11,11 +11,11 @@ plt.close('all')
 
 #%% temporal
 num_tau_sim = 0
-observation_duration = 4e-6
-dt = 5e-9
+observation_duration = 1e-6
+dt = 1e-9
 
-tau_ref_vec = [25e-9,50e-9,100e-9]#[100e-9]#
-tau_si_vec = [200e-9,500e-9,1000e-9,2000e-9]#np.linspace(200e-9,1000e-9,5)#[3000e-9]#
+tau_ref_vec = [25e-9]#[25e-9,50e-9,100e-9]#[100e-9]#
+tau_si_vec = [750e-9]#[200e-9,500e-9,1000e-9,2000e-9]#np.linspace(200e-9,1000e-9,5)#[3000e-9]#
 I_sy = 37e-6
 I_th = 35e-6
 
@@ -53,7 +53,7 @@ for ii in range(len(tau_ref_vec)):
         neuron_1 = neuron(name__n, input_synaptic_connections = [name__s], input_synaptic_inductances = [[10e-12,0.5],[10e-12,0.5]],
                           thresholding_junction_critical_current = 40e-6, thresholding_junction_bias_current = I_th, 
                           refractory_temporal_form = 'exponential', refractory_time_constant = tau_ref_vec[ii], 
-                          refractory_loop_self_inductance = 1e-9, refractory_loop_output_inductance = 200e-12,
+                          refractory_loop_self_inductance = 2e-9, refractory_loop_output_inductance = 200e-12,
                           refractory_loop_synaptic_bias_current = 39e-6, refractory_loop_saturation_current = 50e-6)
                
         # propagate in time                         
@@ -67,7 +67,7 @@ for ii in range(len(tau_ref_vec)):
         # plot temporal response
         plot_save_string = 'I_th={:2.2f}uA__I_sy={:2.2f}uA__tau_ref={:04.2f}ns__tau_si={:04.2f}ns__dt={:04.2f}ns__obs={:04.2f}us'.format(1e6*I_th,1e6*I_sy,1e9*tau_ref_vec[ii],1e9*tau_si_vec[jj],1e9*dt,observation_duration*1e6)
         plot_neuronal_response__single_synaptic_pulse(neuron_1,plot_save_string)
-        plt.close('all')
+        # plt.close('all')
         
         # fill observation matrix                
         num_spikes_out_mat[ii,jj] = neuron_1.num_spikes
