@@ -4,20 +4,20 @@ from matplotlib import pyplot as plt
 from pylab import *
 
 from soen_sim import input_signal, synapse, neuron
-from _plotting import plot_rate_transfer_function, plot_rate_transfer_function__no_lines
+from _plotting import plot_rate_transfer_function, plot_rate_transfer_function__no_lines, plot_receiving_loop_current
 
 plt.close('all')
 
 #%% temporal
 num_tau_sim = 5
-observation_duration = 40e-6
+observation_duration = 10e-6
 dt = 5e-9
 
 tau_ref_vec = [50e-9]#[25e-9,50e-9,100e-9]#
 I_sy_vec = [37e-6]#np.linspace(34e-6,39e-6,6)#
-tau_si_vec = np.linspace(250e-9,1000e-9,4)#[500e-9]#
-rate_vec = np.linspace(2e5,20e6,50)#np.array([1e6])#np.logspace(np.log10(2e5),np.log10(2e7),10)#[9.6e6]#
-jitter_params = [0,25e-9]#[gaussian center, gaussian deviation]
+tau_si_vec = [1000e-9]#np.linspace(250e-9,1000e-9,4)#[500e-9]#
+rate_vec = np.linspace(2e6,20e6,10)#np.array([1e6])#np.logspace(np.log10(2e5),np.log10(2e7),10)#[9.6e6]#
+jitter_params = [0,0]#[0,25e-9]#[gaussian center, gaussian deviation]
 
 num_spikes_in_mat = np.zeros([len(rate_vec),len(tau_si_vec),len(I_sy_vec),len(tau_ref_vec)])
 num_spikes_out_mat = np.zeros([len(rate_vec),len(tau_si_vec),len(I_sy_vec),len(tau_ref_vec)])
@@ -63,15 +63,15 @@ for qq in range(len(tau_ref_vec)):
                 # propagate in time                         
                 sim_params = dict()
                 sim_params['dt'] = dt
-                sim_params['pre_observation_duration'] = num_tau_sim*synapse_1.time_constant
+                sim_params['pre_observation_duration'] = num_tau_sim*synapse_1.integration_loop_time_constant
                 sim_params['observation_duration'] = observation_duration
                 sim_params['num_tau_sim'] = num_tau_sim
                 neuron_1.sim_params = sim_params
                 neuron_1.run_sim()
                 
                 # plot temporal response
-                # plot_save_string = 'I_sy={:2.2f}uA__tau_si={:04.2f}ns__rate_in={:04.2f}MHz__dt={:04.2f}ns__obs={:04.2f}us'.format(1e6*I_sy_vec[kk],1e9*tau_si_vec[ii],1e-6*rate_vec[jj],1e-6*rate_vec[-1],1e9*dt,observation_duration*1e6)
-                # neuron_1.plot_receiving_loop_current(plot_save_string)            
+                plot_save_string = 'I_sy={:2.2f}uA__tau_si={:04.2f}ns__rate_in={:04.2f}MHz__dt={:04.2f}ns__obs={:04.2f}us'.format(1e6*I_sy_vec[kk],1e9*tau_si_vec[ii],1e-6*rate_vec[jj],1e-6*rate_vec[-1],1e9*dt,observation_duration*1e6)
+                plot_receiving_loop_current(neuron_1,plot_save_string)            
                 # neuron_1.plot_spike_train(plot_save_string)
                 
                 #calculate output rate in various ways by looking at spikes in observation_duration
