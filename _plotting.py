@@ -441,3 +441,31 @@ def plot_burst_size_vs_num_active_synapses(neuron_instance,plot_save_string = ''
     fig.savefig('figures/'+save_str+'.png')  
 
     return
+
+def plot_dendritic_drive(time_vec, input_signal__dd):
+        
+    fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
+    fig.suptitle('Dendritic drive signal')
+    # plt.title(plot_save_string)
+    
+    ax.plot(time_vec*1e6,input_signal__dd*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'])        
+    ax.set_xlabel(r'Time [$\mu$s]')
+    ax.set_ylabel(r'Dendritic drive [$\mu$A]')    
+    
+    plt.show() 
+
+    return
+
+def plot_dendritic_integration_loop_current(dendrite_instance):
+        
+    fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
+    fig.suptitle('Current in dendritic integration loop')
+    # plt.title(plot_save_string)
+    
+    ax.plot(dendrite_instance.time_vec*1e6,dendrite_instance.I_di*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'])        
+    ax.set_xlabel(r'Time [$\mu$s]')
+    ax.set_ylabel(r'$I_{di}$ [$\mu$A]')    
+    
+    plt.show() 
+
+    return
