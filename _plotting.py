@@ -4,6 +4,7 @@ from pylab import *
 import time
 
 from util import color_dictionary
+# from _functions import read_wr_data
 colors = color_dictionary()
 
 
@@ -425,7 +426,6 @@ def plot_burst_size_vs_num_active_synapses(neuron_instance,plot_save_string = ''
     tt = time.time()        
     save_str = 'burst_vs_num_active__'+plot_save_string+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
     
-    plt.rcParams['figure.figsize'] = pp['fig_size']
     fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
     fig.suptitle('Number of spikes in output burst')
     plt.title(plot_save_string)
@@ -468,4 +468,27 @@ def plot_dendritic_integration_loop_current(dendrite_instance):
     
     plt.show() 
 
+    return
+
+def plot_wr_data(data_dict,data_to_plot,plot_save_string):
+    
+    tt = time.time()    
+    save_str = 'wr__'+plot_save_string+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    
+    fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
+    fig.suptitle('Number of spikes in output burst')
+    plt.title(plot_save_string)
+
+    color_list = ['blue_3','red_3','green_3','yellow_3']
+    for ii in range(len(data_to_plot)):
+        ax.plot(data_dict['time']*1e9,data_dict[data_to_plot[ii]]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = data_to_plot[ii])        
+    ax.set_xlabel(r'Time [ns]')
+    ax.set_ylabel(r'Current [$\mu$A]')
+    ax.legend()    
+    
+    plt.show()
+    fig.savefig('figures/'+save_str+'.png') 
+    
+    
+    
     return

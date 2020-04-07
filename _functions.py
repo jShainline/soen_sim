@@ -1,5 +1,7 @@
 import numpy as np
 import pickle
+from matplotlib import pyplot as plt
+from pylab import *
 
 from _plotting import plot_dendritic_drive
 
@@ -63,17 +65,35 @@ def synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si,tau_rise,tau_fal
 
     return I_prefactor
 
-def dendritic_time_stepper(time_vec,A_prefactor,I_drive,I_b,I_th,I_di_sat,tau_di,mu_1,mu_2,mu_3,mu_4):
-    
+def dendritic_time_stepper(time_vec,A_prefactor,I_drive,I_b,I_th,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,I_di_sat,tau_di,mu_1,mu_2,mu_3,mu_4):
+    # print('A_prefactor = {}'.format(A_prefactor))
     I_di_vec = np.zeros([len(time_vec),1])
     for ii in range(len(time_vec)-1):
         dt = time_vec[ii+1]-time_vec[ii]
-        if I_drive[ii+1]+I_b > I_th:
-            factor_1 = ( ( ((I_drive[ii+1]+I_b)/I_th)**mu_1-1)**mu_2 )
+        I_dr = dendrite_current_splitting(I_th,I_drive[ii+1],I_b[0],I_b[1],I_b[2],M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3)        
+        # if time_vec[ii+1] > 3e-9:
+        #     print('I_dr = {}'.format(I_dr))
+        #     print('I_th = {}'.format(I_th))
+        if I_dr > I_th:
+            factor_1 = ( (I_dr/I_th)**mu_1 - 1 )**mu_2            
         else:
             factor_1 = 0
-        factor_2 = ( 1-(I_di_vec[ii]/I_di_sat)**mu_3 )**mu_4
-        I_di_vec[ii+1] = dt * A_prefactor * factor_1 * factor_2 + (1-dt/tau_di)*I_di_vec[ii]        
+        # print('I_di_vec[ii] = {}'.format(I_di_vec[ii]))
+        # print('I_di_sat = {}'.format(I_di_sat))
+        # print('mu_3 = {}'.format(mu_3))
+        # print('mu_4 = {}'.format(mu_4))
+        if I_di_vec[ii] <= I_di_sat:
+            factor_2 = ( 1-(I_di_vec[ii]/I_di_sat)**mu_3 )**mu_4
+        else:
+            factor_2 = 0
+        I_di_vec[ii+1] = dt * A_prefactor * factor_1 * factor_2 + (1-dt/tau_di)*I_di_vec[ii]
+        # if nan in I_di_vec[ii+1]:            
+        #     print('I_dr = {}'.format(I_dr))
+        #     print('I_di_vec[ii] = {}'.format(I_di_vec[ii]))
+        #     print('I_di_sat = {}'.format(I_di_sat))
+        #     print('mu_3 = {}'.format(mu_3))
+        #     print('mu_4 = {}'.format(mu_4))
+        #     break
     
     return I_di_vec
 
@@ -82,6 +102,32 @@ def dendritic_drive__step_function(time_vec, amplitude = 5e-6, time_on = 5e-9):
     t_on_ind = (np.abs(np.asarray(time_vec)-time_on)).argmin()
     input_signal__dd = np.zeros([len(time_vec),1])
     input_signal__dd[t_on_ind:] = amplitude
+    
+    return input_signal__dd
+
+def dendritic_drive__piecewise_linear(time_vec,pwl):
+    
+    input_signal__dd = np.zeros([len(time_vec),1])
+    for ii in range(len(pwl)-1):
+        t1_ind = (np.abs(np.asarray(time_vec)-pwl[ii][0])).argmin()
+        t2_ind = (np.abs(np.asarray(time_vec)-pwl[ii+1][0])).argmin()
+        slope = (pwl[ii+1][1]-pwl[ii][1])/(pwl[ii+1][0]-pwl[ii][0])
+        partial_time_vec = time_vec[t1_ind:t2_ind+1]
+        for jj in range(len(partial_time_vec)):
+            time = partial_time_vec[jj]
+            input_signal__dd[t1_ind+jj] = (time-time_vec[t1_ind])*slope
+    input_signal__dd[t2_ind:] = input_signal__dd[t2_ind]*np.ones([len(time_vec)-t2_ind,1])
+    
+    return input_signal__dd
+
+def dendritic_drive__linear_ramp(time_vec, time_on = 5e-9, slope = 1e-6/1e-9):
+    
+    t_on_ind = (np.abs(np.asarray(time_vec)-time_on)).argmin()
+    input_signal__dd = np.zeros([len(time_vec),1])
+    partial_time_vec = time_vec[t_on_ind:]
+    for ii in range(len(partial_time_vec)):
+        time = partial_time_vec[ii]
+        input_signal__dd[t_on_ind+ii] = (time-time_on)*slope
     
     return input_signal__dd
 
@@ -100,9 +146,9 @@ def dendrite_current_splitting(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3):
     Idr1_next = Ib1/2
     Idr2_next = Ib1/2
     num_it = 1
-    while abs((Idr2_next-Idr2_prev)/Idr2_next) > 1e-5:
+    while abs((Idr2_next-Idr2_prev)/Idr2_next) > 1e-4:
         
-        print('num_it = {:d}'.format(num_it))
+        # print('num_it = {:d}'.format(num_it))
         num_it += 1
         
         Idr1_prev = Idr1_next
@@ -140,7 +186,7 @@ def dendrite_current_splitting(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3):
                         *(Ldr1+Ljdr1+Lm2))) )
                                             
         if num_it > 10:
-            print('dendrite_current_splitting _ num_it > 10 _ convergence unlikely')
+            # print('dendrite_current_splitting _ num_it > 10 _ convergence unlikely\nIdr2_prev = {}, Idr2_next = {}\n\n'.format(Idr2_prev,Idr2_next))
             break
                                             
     Idr = Idr2_next
@@ -153,6 +199,122 @@ def Ljj(critical_current,current):
     L = (3.2910596281416393e-16/critical_current)*np.arcsin(norm_current)/(norm_current)
     
     return L
+
+def amp_fitter(time_vec,I_di):
+    
+    time_pts = [10,15,20,25,30,35,40,45,50]
+    target_vals = [22.7608,37.0452,51.0996,65.3609,79.6264,93.8984,107.963,122.233,136.493]
+    actual_vals = np.zeros([len(time_pts),1])
+    
+    for ii in range(len(time_pts)):
+        ind = (np.abs(time_vec*1e9-time_pts[ii])).argmin()
+        actual_vals[ii] = I_di[ind]
+    
+    error = 0
+    for ii in range(len(time_pts)):
+        error += abs( target_vals[ii]-actual_vals[ii]*1e9 )**2
+    
+    return error
+
+def mu_fitter(data_dict,time_vec,I_di,mu1,mu2,amp):
+    
+    time_vec_spice = data_dict['time']
+    target_vec = data_dict['L9#branch']
+
+    # fig, ax = plt.subplots(nrows = 1, ncols = 1)   
+    # fig.suptitle('Comparing WR and soen_sim')
+    # plt.title('amp = {}; mu1 = {}; mu2 = {}'.format(amp,mu1,mu2))
+    
+    # ax.plot(time_vec_spice*1e9,target_vec*1e9,'o-', label = 'WR')        
+    # ax.plot(time_vec*1e9,I_di*1e9,'o-', label = 'soen_sim')    
+    # ax.legend()
+    # ax.set_xlabel(r'Time [ns]')
+    # ax.set_ylabel(r'$I_{di} [nA]$') 
+    
+    error = 0
+    norm = 0
+    for ii in range(len(time_vec)):
+        ind = (np.abs(time_vec_spice-time_vec[ii])).argmin()
+        error += abs( target_vec[ind]-I_di[ii] )**2
+        norm += abs( target_vec[ind] )**2
+    
+    error = error/norm
+    
+    return error
+
+def mu_fitter_3_4(data_dict,time_vec,I_di,mu3,mu4):
+    
+    time_vec_spice = data_dict['time']
+    target_vec = data_dict['L9#branch']
+
+    # fig, ax = plt.subplots(nrows = 1, ncols = 1)   
+    # fig.suptitle('Comparing WR and soen_sim')
+    # plt.title('amp = {}; mu1 = {}; mu2 = {}'.format(amp,mu1,mu2))
+    
+    # ax.plot(time_vec_spice*1e9,target_vec*1e9,'o-', label = 'WR')        
+    # ax.plot(time_vec*1e9,I_di*1e9,'o-', label = 'soen_sim')    
+    # ax.legend()
+    # ax.set_xlabel(r'Time [ns]')
+    # ax.set_ylabel(r'$I_{di} [nA]$') 
+    
+    error = 0
+    norm = 0
+    for ii in range(len(time_vec)):
+        ind = (np.abs(time_vec_spice-time_vec[ii])).argmin()
+        error += abs( target_vec[ind]-I_di[ii] )**2
+        norm += abs( target_vec[ind] )**2
+    
+    error = error/norm
+    
+    return error
+
+def read_wr_data(file_path):
+    
+    f = open(file_path, 'rt')
+    
+    file_lines = f.readlines()
+    
+    counter = 0
+    for line in file_lines:
+        counter += 1
+        if line.find('No. Variables:') != -1:
+            ind_start = line.find('No. Variables:')
+            num_vars = int(line[ind_start+15:])
+        if line.find('No. Points:') != -1:
+            ind_start = line.find('No. Points:')
+            num_pts = int(line[ind_start+11:])
+        if str(line) == 'Variables:\n':            
+            break    
+
+    var_list = []
+    for jj in range(num_vars):
+        var_list.append(file_lines[counter+jj][3:-3]) 
+
+    data_mat = np.zeros([num_pts,num_vars])
+    tn = counter+num_vars+1
+    for ii in range(num_pts):
+        # print('\n\nii = {}\n'.format(ii))
+        for jj in range(num_vars):
+            ind_start = file_lines[tn+jj].find('\t')
+            # print('tn+jj = {}'.format(tn+jj))
+            data_mat[ii,jj] = float(file_lines[tn+jj][ind_start+1:])
+            # print('data_mat[ii,jj] = {}'.format(data_mat[ii,jj]))
+        tn += num_vars
+    
+    f.close
+    
+    data_dict = dict()
+    for ii in range(num_vars):
+        data_dict[var_list[ii]] = data_mat[:,ii]
+    
+    return data_dict
+
+def omega_LRC(L,R,C):
+    
+    omega_r = np.sqrt( (L*C)**(-1) - 0.25*(R/L)**(2) )
+    omega_i = R/(2*L)
+    
+    return omega_r, omega_i
 
 def physical_constants():
 

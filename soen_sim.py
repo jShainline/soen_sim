@@ -4,7 +4,7 @@ from pylab import *
 import time
 import pickle
 
-from _functions import synaptic_response_function, synaptic_time_stepper, dendritic_drive__step_function, dendritic_time_stepper
+from _functions import synaptic_response_function, synaptic_time_stepper, dendritic_drive__step_function, dendritic_drive__linear_ramp, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj
 from _plotting import plot_dendritic_drive, plot_dendritic_integration_loop_current
 
 class input_signal():
@@ -77,14 +77,13 @@ class input_signal():
                 self.time_vec = np.arange(0,tf+dt,dt)
             if 'amplitude' in kwargs:
                 self.amplitude = kwargs['amplitude']
-            else:
-                self.amplitude = 5e-6 #current in uA
+            if 'slope' in kwargs:
+                self.slope = kwargs['slope']
             if 'time_on' in kwargs:
                 self.time_on = kwargs['time_on']
-            else:
-                self.time_on = 2e-9
-            self.dendritic_drive = dendritic_drive__step_function(self.time_vec, self.amplitude, self.time_on)
-        
+            if 'piecewise_linear' in kwargs:
+                self.piecewise_linear = kwargs['piecewise_linear']
+            
         input_signal.input_signals[self.name] = self
             
 class synapse():    
@@ -308,13 +307,13 @@ class dendrite():
         else:
             self.input_direct_inductances =  [[]] 
                     
-        if 'receiving_loop_self_inductances' in kwargs:
-            if type(kwargs['receiving_loop_self_inductances']) == list and len(kwargs['receiving_loop_self_inductances']) == 3:
-                self.receiving_loop_self_inductances = kwargs['receiving_loop_self_inductances']
+        if 'circuit_inductances' in kwargs:
+            if type(kwargs['circuit_inductances']) == list and len(kwargs['circuit_inductances']) == 4:
+                self.circuit_inductances = kwargs['circuit_inductances']
             else:
-                raise ValueError('[soens_sim] receiving_loop_self_inductances is a list of three real numbers greater than zero with units of henries. The first element is the self inductance of the left branch of the DR loop, excluding the JJ and any mutual inductor inputs. The second element is the right branch of the DR loop, excluding the JJ and any mutual inductor inputs. The third element is the inductor to the right of the DR loop that goes to the JTL. All other contributions to DR loop inductance (JJs and MIs) will be handled separately.')
+                raise ValueError('[soens_sim] circuit_inductances is a list of four real numbers greater than zero with units of henries. The first element is the self inductance of the left branch of the DR loop, excluding the JJ and any mutual inductor inputs. The second element is the right branch of the DR loop, excluding the JJ and any mutual inductor inputs. The third element is the inductor to the right of the DR loop that goes to the JTL. The fourth element is the inductor in the JTL. All other contributions to DR loop inductance (JJs and MIs) will be handled separately, as will the inductance of the DI loop.')
         else:
-            self.receiving_loop_self_inductances = [20e-12, 20e-12, 200e-12]            
+            self.circuit_inductances = [20e-12, 20e-12, 200e-12, 77.5e-12]            
 
         if 'thresholding_junction_critical_current' in kwargs:
             _Ic = kwargs['thresholding_junction_critical_current']
@@ -324,11 +323,11 @@ class dendrite():
             _Ic = 40e-6 #default J_th Ic = 40 uA
         self.thresholding_junction_critical_current =  _Ic
             
-        if 'thresholding_junction_bias_current' in kwargs:
-            _Ib = kwargs['thresholding_junction_bias_current']
+        if 'bias_currents' in kwargs:
+            _Ib = kwargs['bias_currents']
         else:
-            _Ib = 35e-6 #default J_th Ic = 40 uA
-        self.thresholding_junction_bias_current =  _Ib
+            _Ib = [72e-6, 29e-6, 35e-6] #[bias to DR loop (J_th), bias to JTL, bias to DI loop]
+        self.bias_currents =  _Ib
             
         if 'integration_loop_self_inductance' in kwargs:
             # if type(kwargs['integration_loop_self_inductance']) == int or type(kwargs['integration_loop_self_inductance']) == float:
@@ -384,15 +383,7 @@ class dendrite():
         else:
             if self.integration_loop_temporal_form == 'power_law':                
                 self.integration_loop_power_law_exponent = -1 #default power law exponent
-                
-        if 'integration_loop_bias_current' in kwargs:
-            if kwargs['integration_loop_bias_current'] < 0:
-                raise ValueError('[soens_sim] integration_loop_bias_current associated with dendritic integration loop must be a real number between xx and yy (units of amps)')
-            else:
-                 self.integration_loop_bias_current = kwargs['integration_loop_bias_current']
-        else:            
-            self.integration_loop_bias_current = 30e-6 #units of amps 
-
+ 
         dendrite.dendrites[self.name] = self
             
         # print('dendrite created')        
@@ -429,35 +420,53 @@ class dendrite():
         # print('simulating dendrite with {:d} synapses, {:d} dendrites, and {:d} direct connections\n\n'.format(len(self.synapses),len(self.dendrites),len(self.direct_connections)))
         
         # calculate receiving loop inductance
-        self.receiving_loop_total_inductance = self.receiving_loop_self_inductance
+        # self.receiving_loop_total_inductance = self.circuit_inductances[0]+self.circuit_inductances[1]
         
-        for ii in range(len(self.synapses)):
-            self.receiving_loop_total_inductance += self.input_synaptic_inductances[ii][0]
+        # for ii in range(len(self.synapses)):
+        #     self.receiving_loop_total_inductance += self.input_synaptic_inductances[ii][0]
         
-        for ii in range(len(self.dendrites)):
-            self.receiving_loop_total_inductance += self.input_dendritic_inductances[ii][0]
+        # for ii in range(len(self.dendrites)):
+        #     self.receiving_loop_total_inductance += self.input_dendritic_inductances[ii][0]
                             
-        for ii in range(len(self.direct_connections)):
-            self.receiving_loop_total_inductance += self.input_direct_inductances[ii][0]
+        # for ii in range(len(self.direct_connections)):
+        #     self.receiving_loop_total_inductance += self.input_direct_inductances[ii][0]
             
         self.time_vec = time_vec
-        dendritic_drive = dendritic_drive__step_function(time_vec, amplitude = 7e-6, time_on = 2e-9)
-        plot_dendritic_drive(time_vec, dendritic_drive)
         
-        I_b = self.thresholding_junction_bias_current
+        if hasattr(self.direct_connections[0],'piecewise_linear'):
+            dendritic_drive = dendritic_drive__piecewise_linear(time_vec,self.direct_connections[0].piecewise_linear)
+        if hasattr(self.direct_connections[0],'slope'):
+            dendritic_drive = dendritic_drive__linear_ramp(time_vec, time_on = self.direct_connections[0].time_on, slope = self.direct_connections[0].slope)
+        # dendritic_drive = dendritic_drive__step_function(time_vec, amplitude = self.direct_connections[0].amplitude, time_on = self.direct_connections[0].time_on)
+        # 
+        # plot_dendritic_drive(time_vec, dendritic_drive)
+        
+        I_b = self.bias_currents
         I_th = self.thresholding_junction_critical_current
         I_di_sat = self.integration_loop_saturation_current
         tau_di = self.integration_loop_time_constant
-        mu_1 = 1
-        mu_2 = 1
-        mu_3 = 1
-        mu_4 = 1
-        A_prefactor = 1e3
-        I_di_vec = dendritic_time_stepper(time_vec,A_prefactor,dendritic_drive,I_b,I_th,I_di_sat,tau_di,mu_1,mu_2,mu_3,mu_4)
+        mu_1 = 1.92758621#self.sim_params['mu1']
+        mu_2 = 0.45344828#self.sim_params['mu2']
+        mu_3 = 0.87959184#self.sim_params['mu3']
+        mu_4 = 0.59591837#self.sim_params['mu4']
+        # print('mu1 = {}'.format(mu_1))
+        # print('mu2 = {}'.format(mu_2))
+        # print('mu3 = {}'.format(mu_3))
+        # print('mu4 = {}'.format(mu_4))
+        M_direct = self.input_direct_inductances[0][1]*np.sqrt(self.input_direct_inductances[0][0]*self.direct_connections[0].output_inductance)
+        Lm2 = self.input_direct_inductances[0][0]
+        Ldr1 = self.circuit_inductances[0]
+        Ldr2 = self.circuit_inductances[1]
+        L1 = self.circuit_inductances[2]
+        L2 = self.circuit_inductances[3]
+        L3 = self.integration_loop_self_inductance+self.integration_loop_output_inductance
+        L_reference = 10e-6
+        A_prefactor = 9.27586207*L_reference/L3#self.sim_params['A']*L_reference/L3 #
+        # print(A_prefactor)
+        tau_di = self.integration_loop_time_constant
+        I_di_vec = dendritic_time_stepper(time_vec,A_prefactor,dendritic_drive,I_b,I_th,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,I_di_sat,tau_di,mu_1,mu_2,mu_3,mu_4)
         
-        self.I_di = I_di_vec
-        
-        plot_dendritic_integration_loop_current(self)
+        self.I_di = I_di_vec        
         
         return self
 
