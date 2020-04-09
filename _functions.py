@@ -1,5 +1,6 @@
 import numpy as np
 import pickle
+import time
 from matplotlib import pyplot as plt
 from pylab import *
 
@@ -66,16 +67,28 @@ def synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si,tau_rise,tau_fal
     return I_prefactor
 
 def dendritic_time_stepper(time_vec,A_prefactor,I_drive,I_b,I_th,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,I_di_sat,tau_di,mu_1,mu_2,mu_3,mu_4):
+    
     # print('A_prefactor = {}'.format(A_prefactor))
+    
+    #initial approximations
+    Lj0 = Ljj(I_th,0)
+    Iflux = 0
+    Idr2_prev = ((Lm2+Ldr1+Lj0)*I_b[0]+M_direct*Iflux)/( Lm2+Ldr1+Ldr2+2*Lj0 + (Lm2+Ldr1+Lj0)*(Ldr2+Lj0)/L1 )
+    Idr1_prev = I_b[0]-( 1 + (Ldr2+Lj0)/L1 )*Idr2_prev
+    
     I_di_vec = np.zeros([len(time_vec),1])
     for ii in range(len(time_vec)-1):
         dt = time_vec[ii+1]-time_vec[ii]
-        I_dr = dendrite_current_splitting(I_th,I_drive[ii+1],I_b[0],I_b[1],I_b[2],M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3)        
+                               # dendrite_current_splitting(Ic,  Iflux,        Ib1,   Ib2,   Ib3,   M,       Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev)
+        Idr1_next, Idr2_next = dendrite_current_splitting(I_th,I_drive[ii+1],I_b[0],I_b[1],I_b[2],M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev) 
+        # I_dr = dendrite_current_splitting__old(I_th,I_drive[ii+1],I_b[0],I_b[1],I_b[2],M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3) 
+        # if ii == 0:
+            # print('I_dr = {}'.format(I_dr))
         # if time_vec[ii+1] > 3e-9:
         #     print('I_dr = {}'.format(I_dr))
         #     print('I_th = {}'.format(I_th))
-        if I_dr > I_th:
-            factor_1 = ( (I_dr/I_th)**mu_1 - 1 )**mu_2            
+        if Idr2_next > I_th:
+            factor_1 = ( (Idr2_next/I_th)**mu_1 - 1 )**mu_2            
         else:
             factor_1 = 0
         # print('I_di_vec[ii] = {}'.format(I_di_vec[ii]))
@@ -87,6 +100,8 @@ def dendritic_time_stepper(time_vec,A_prefactor,I_drive,I_b,I_th,M_direct,Lm2,Ld
         else:
             factor_2 = 0
         I_di_vec[ii+1] = dt * A_prefactor * factor_1 * factor_2 + (1-dt/tau_di)*I_di_vec[ii]
+        if I_di_vec[ii+1] > I_di_sat:
+            I_di_vec[ii+1] = I_di_sat
         # if nan in I_di_vec[ii+1]:            
         #     print('I_dr = {}'.format(I_dr))
         #     print('I_di_vec[ii] = {}'.format(I_di_vec[ii]))
@@ -94,6 +109,8 @@ def dendritic_time_stepper(time_vec,A_prefactor,I_drive,I_b,I_th,M_direct,Lm2,Ld
         #     print('mu_3 = {}'.format(mu_3))
         #     print('mu_4 = {}'.format(mu_4))
         #     break
+        Idr1_prev = Idr1_next
+        Idr2_prev = Idr2_next
     
     return I_di_vec
 
@@ -112,6 +129,8 @@ def dendritic_drive__piecewise_linear(time_vec,pwl):
         t1_ind = (np.abs(np.asarray(time_vec)-pwl[ii][0])).argmin()
         t2_ind = (np.abs(np.asarray(time_vec)-pwl[ii+1][0])).argmin()
         slope = (pwl[ii+1][1]-pwl[ii][1])/(pwl[ii+1][0]-pwl[ii][0])
+        # print('t1_ind = {}'.format(t1_ind))
+        # print('t2_ind = {}'.format(t2_ind))
         partial_time_vec = time_vec[t1_ind:t2_ind+1]
         for jj in range(len(partial_time_vec)):
             time = partial_time_vec[jj]
@@ -131,7 +150,74 @@ def dendritic_drive__linear_ramp(time_vec, time_on = 5e-9, slope = 1e-6/1e-9):
     
     return input_signal__dd
 
-def dendrite_current_splitting(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3):
+def dendrite_current_splitting(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev):
+    # print('Ic = {}'.format(Ic))
+    # print('Iflux = {}'.format(Iflux))
+    # print('Ib1 = {}'.format(Ib1))
+    # print('Ib2 = {}'.format(Ib2))
+    # print('Ib3 = {}'.format(Ib3))
+    # print('M = {}'.format(M))
+    # print('Lm2 = {}'.format(Lm2))
+    # print('Ldr1 = {}'.format(Ldr1))
+    # print('Ldr2 = {}'.format(Ldr2))
+    # print('L1 = {}'.format(L1))
+    # print('L2 = {}'.format(L2))
+    # print('L3 = {}'.format(L3))
+    # pause(10)
+    #see pgs 74, 75 in green lab notebook from 2020_04_01
+    
+    Lj0 = Ljj(Ic,0)
+    Lj2 = Ljj(Ic,Ib2)#approximation; current passing through jj2 is not exactly Ib2
+    Lj3 = Ljj(Ic,Ib3)#approximation; current passing through jj3 is not exactly Ib3
+        
+    Ljdr1 = Ljj(Ic,Idr1_prev)
+    Ljdr2 = Ljj(Ic,Idr2_prev)
+    
+    Idr1_next = ( -((-Lj2*(-Ib3*L3*Lj3-Ib2*(L3*Lj3+L2*(L3+Lj3)))
+                    +Ib1*(-Lj2*(-L3*Lj3-L2*(L3+Lj3))
+                    +L1*(L3*Lj3+L2*(L3+Lj3)+Lj2*(L3+Lj3))))
+                    *(-Ldr2-Ljdr2)-Iflux*(Lj2*(-L3*Lj3-L2*(L3+Lj3))
+                    -L1*(L3*Lj3+L2*(L3+Lj3)+Lj2*(L3+Lj3))
+                    -(L3*Lj3+L2*(L3+Lj3)+Lj2*(L3+Lj3))*(Ldr2+Ljdr2))*M)
+                    /((Lj2*(-L3*Lj3-L2*(L3+Lj3))
+                    -L1*(L3*Lj3+L2*(L3+Lj3)+Lj2*(L3+Lj3)))
+                    *(-Ldr2-Ljdr2)-(Lj2*(-L3*Lj3-L2*(L3+Lj3))
+                    -L1*(L3*Lj3+L2*(L3+Lj3)+Lj2*(L3+Lj3))
+                    -(L3*Lj3+L2*(L3+Lj3)+Lj2*(L3+Lj3))*(Ldr2+Ljdr2))
+                    *(Ldr1+Ljdr1+Lm2)) )
+                 
+    Idr2_next = ( (Iflux*M)/(Ldr2+Ljdr2)+((Ldr1+Ljdr1+Lm2)
+                    *((-Lj2*(-Ib3*L3*Lj3-Ib2*(L3*Lj3+L2*(L3+Lj3)))
+                    +Ib1*(-Lj2*(-L3*Lj3-L2*(L3+Lj3))
+                    +L1*(L3*Lj3+L2*(L3+Lj3)+Lj2*(L3+Lj3))))
+                    *(-Ldr2-Ljdr2)-Iflux*(Lj2*(-L3*Lj3-L2*(L3+Lj3))
+                    -L1*(L3*Lj3+L2*(L3+Lj3)+Lj2*(L3+Lj3))
+                    -(L3*Lj3+L2*(L3+Lj3)+Lj2*(L3+Lj3))
+                    *(Ldr2+Ljdr2))*M))/((-Ldr2-Ljdr2)
+                    *((Lj2*(-L3*Lj3-L2*(L3+Lj3))
+                    -L1*(L3*Lj3+L2*(L3+Lj3)+Lj2*(L3+Lj3)))
+                    *(-Ldr2-Ljdr2)-(Lj2*(-L3*Lj3-L2*(L3+Lj3))
+                    -L1*(L3*Lj3+L2*(L3+Lj3)+Lj2*(L3+Lj3))
+                    -(L3*Lj3+L2*(L3+Lj3)+Lj2*(L3+Lj3))*(Ldr2+Ljdr2))
+                    *(Ldr1+Ljdr1+Lm2))) )
+    
+    return Idr1_next, Idr2_next
+
+
+def dendrite_current_splitting__old(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3):
+    # print('Ic = {}'.format(Ic))
+    # print('Iflux = {}'.format(Iflux))
+    # print('Ib1 = {}'.format(Ib1))
+    # print('Ib2 = {}'.format(Ib2))
+    # print('Ib3 = {}'.format(Ib3))
+    # print('M = {}'.format(M))
+    # print('Lm2 = {}'.format(Lm2))
+    # print('Ldr1 = {}'.format(Ldr1))
+    # print('Ldr2 = {}'.format(Ldr2))
+    # print('L1 = {}'.format(L1))
+    # print('L2 = {}'.format(L2))
+    # print('L3 = {}'.format(L3))
+    # pause(10)
     #see pgs 74, 75 in green lab notebook from 2020_04_01
     
     Lj0 = Ljj(Ic,0)
@@ -268,6 +354,19 @@ def mu_fitter_3_4(data_dict,time_vec,I_di,mu3,mu4):
     
     return error
 
+def chi_squared_error(target_data,actual_data):
+    
+    error = 0
+    norm = 0
+    for ii in range(len(actual_data[0,:])):
+        ind = (np.abs(target_data[0,:]-actual_data[0,ii])).argmin()        
+        error += abs( target_data[1,ind]-actual_data[1,ii] )**2
+        norm += abs( target_data[1,ind] )**2
+    
+    error = error/norm    
+    
+    return error
+
 def read_wr_data(file_path):
     
     f = open(file_path, 'rt')
@@ -336,8 +435,23 @@ def physical_constants():
 
 def load_neuron_data(load_string):
         
-        with open('data/'+load_string, 'rb') as data_file: 
-            
-            neuron_imported = pickle.load(data_file)
+    with open('data/'+load_string, 'rb') as data_file:         
+        neuron_imported = pickle.load(data_file)
     
-        return neuron_imported
+    return neuron_imported
+    
+def save_session_data(data_array = [],save_string = 'soen_sim'):
+    
+    tt = time.time()     
+    s_str = 'session_data__'+save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))+'.dat'
+    with open('soen_sim_data/'+s_str, 'wb') as data_file:
+            pickle.dump(data_array, data_file)
+            
+    return
+
+def load_session_data(load_string):
+        
+    with open('soen_sim_data/'+load_string, 'rb') as data_file:         
+        data_array_imported = pickle.load(data_file)
+
+    return data_array_imported

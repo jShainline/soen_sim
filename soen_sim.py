@@ -383,6 +383,19 @@ class dendrite():
         else:
             if self.integration_loop_temporal_form == 'power_law':                
                 self.integration_loop_power_law_exponent = -1 #default power law exponent
+                
+        if 'dendrite_model_params' in kwargs:
+            self.dendrite_model_params = kwargs['dendrite_model_params']                 
+        else:
+            sim_params = dict()
+            sim_params['amp'] = 9.27586207
+            sim_params['mu1'] = 1.92758621
+            sim_params['mu2'] = 0.45344828
+            sim_params['mu3'] = 0.87959184
+            sim_params['mu4'] = 0.59591837
+            sim_params['dt'] = 0.1e-9
+            sim_params['tf'] = 1e-6
+            self.dendrite_model_params = sim_params
  
         dendrite.dendrites[self.name] = self
             
@@ -411,8 +424,8 @@ class dendrite():
     def run_sim(self):
         
         # set up time vec
-        dt = self.sim_params['dt']
-        tf = self.sim_params['tf']
+        dt = self.dendrite_model_params['dt']
+        tf = self.dendrite_model_params['tf']
         time_vec = np.arange(0,tf+dt,dt)
         
         # attach synapses, dendrites, and direct connections to dendrite
@@ -440,15 +453,16 @@ class dendrite():
         # dendritic_drive = dendritic_drive__step_function(time_vec, amplitude = self.direct_connections[0].amplitude, time_on = self.direct_connections[0].time_on)
         # 
         # plot_dendritic_drive(time_vec, dendritic_drive)
+        self.dendritic_drive = dendritic_drive
         
         I_b = self.bias_currents
         I_th = self.thresholding_junction_critical_current
         I_di_sat = self.integration_loop_saturation_current
         tau_di = self.integration_loop_time_constant
-        mu_1 = 1.92758621#self.sim_params['mu1']
-        mu_2 = 0.45344828#self.sim_params['mu2']
-        mu_3 = 0.87959184#self.sim_params['mu3']
-        mu_4 = 0.59591837#self.sim_params['mu4']
+        mu_1 = self.dendrite_model_params['mu1']
+        mu_2 = self.dendrite_model_params['mu2']
+        mu_3 = self.dendrite_model_params['mu3']
+        mu_4 = self.dendrite_model_params['mu4']
         # print('mu1 = {}'.format(mu_1))
         # print('mu2 = {}'.format(mu_2))
         # print('mu3 = {}'.format(mu_3))
@@ -461,7 +475,7 @@ class dendrite():
         L2 = self.circuit_inductances[3]
         L3 = self.integration_loop_self_inductance+self.integration_loop_output_inductance
         L_reference = 10e-6
-        A_prefactor = 9.27586207*L_reference/L3#self.sim_params['A']*L_reference/L3 #
+        A_prefactor = self.dendrite_model_params['amp']*L_reference/L3 #9.27586207*L_reference/L3#self.sim_params['A']*L_reference/L3 #
         # print(A_prefactor)
         tau_di = self.integration_loop_time_constant
         I_di_vec = dendritic_time_stepper(time_vec,A_prefactor,dendritic_drive,I_b,I_th,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,I_di_sat,tau_di,mu_1,mu_2,mu_3,mu_4)
