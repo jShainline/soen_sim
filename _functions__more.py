@@ -7,7 +7,7 @@ from _functions import save_session_data, read_wr_data, chi_squared_error
 from _plotting import plot_dendritic_drive, plot_wr_comparison, plot_error_mat
 
 #%%
-def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt,tf,drive_info,amp_vec,mu1_vec,mu2_vec,mu3_vec,mu4_vec,master_error_plot_name):
+def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt_vec,tf_vec,drive_info,amp_vec,mu1_vec,mu2_vec,mu3_vec,mu4_vec,master_error_plot_name):
     
     best_params = dict()
     best_params['amp_mu12'] = []
@@ -40,6 +40,9 @@ def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt,tf,dri
     for ii in range(num_sims):
         print('\n\ndata_file {} of {}\n'.format(ii+1,num_sims))
         plt.close('all')
+        
+        dt = dt_vec[ii]
+        tf = tf_vec[ii]
         
         # WR data
         file_name = data_file_list[ii]+'.dat'
