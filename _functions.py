@@ -139,6 +139,49 @@ def dendritic_drive__piecewise_linear(time_vec,pwl):
     
     return input_signal__dd
 
+def dendritic_drive__exponential(time_vec,exp_params):
+        
+    input_signal__dd = np.zeros([len(time_vec),1])
+    for ii in range(len(time_vec)):
+        time = time_vec[ii]
+        if time < exp_params['t_rise']:
+            input_signal__dd[ii] = exp_params['value_off']
+        if time >= exp_params['t_rise'] and time < exp_params['t_fall']:
+            input_signal__dd[ii] = exp_params['value_off']+(exp_params['value_on']-exp_params['value_off'])*(1-np.exp(-(time-exp_params['t_rise'])/exp_params['tau_rise']))
+        if time >= exp_params['t_fall']:
+            input_signal__dd[ii] = exp_params['value_off']+(exp_params['value_on']-exp_params['value_off'])*(1-np.exp(-(time-exp_params['t_rise'])/exp_params['tau_rise']))
+            +(exp_params['value_off']-exp_params['value_on'])*(1-np.exp(-(time-exp_params['t_fall'])/exp_params['tau_fall']))
+    
+    return input_signal__dd
+
+def dendritic_drive__square_pulse_train(time_vec,sq_pls_trn_params):
+    
+    input_signal__dd = np.zeros([len(time_vec),1])
+    dt = time_vec[1]-time_vec[0]
+    t_start = sq_pls_trn_params['t_start']
+    t_rise = sq_pls_trn_params['t_rise']
+    t_pulse = sq_pls_trn_params['t_pulse']
+    t_fall = sq_pls_trn_params['t_fall']
+    t_period = sq_pls_trn_params['t_period']
+    value_off = sq_pls_trn_params['value_off']
+    value_on = sq_pls_trn_params['value_on']
+    
+    tf_sub = t_rise+t_pulse+t_fall
+    time_vec_sub = np.arange(0,tf_sub+dt,dt)
+    pwl = [[0,value_off],[t_rise,value_on],[t_rise+t_pulse,value_on],[t_rise+t_pulse+t_fall,value_off]]
+    
+    pulse = dendritic_drive__piecewise_linear(time_vec_sub,pwl)    
+    num_pulses = np.floor((time_vec[-1]-t_start)/t_period)        
+    ind_start = (np.abs(np.asarray(time_vec)-t_start)).argmin()
+    ind_pulse_end = (np.abs(np.asarray(time_vec)-t_start-t_rise-t_pulse-t_fall)).argmin()
+    ind_per_end = (np.abs(np.asarray(time_vec)-t_start-t_period)).argmin()
+    num_ind_pulse = ind_pulse_end-ind_start
+    num_ind_per = ind_per_end-ind_start
+    for ii in range(num_pulses):
+        input_signal__dd[ind_start+ii*num_ind_per:ind_start+ii*num_ind_per+num_ind_pulse] = pulse[:]
+           
+    return input_signal__dd
+
 def dendritic_drive__linear_ramp(time_vec, time_on = 5e-9, slope = 1e-6/1e-9):
     
     t_on_ind = (np.abs(np.asarray(time_vec)-time_on)).argmin()
