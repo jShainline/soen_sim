@@ -83,6 +83,10 @@ class input_signal():
                 self.time_on = kwargs['time_on']
             if 'piecewise_linear' in kwargs:
                 self.piecewise_linear = kwargs['piecewise_linear']
+            if 'square_pulse_train' in kwargs:
+                self.sq_pls_trn_params = kwargs['square_pulse_train'] 
+            if 'exponential' in kwargs:
+                self.exp_params = kwargs['exponential'] 
             
         input_signal.input_signals[self.name] = self
             

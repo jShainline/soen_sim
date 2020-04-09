@@ -131,26 +131,32 @@ def dendritic_drive__piecewise_linear(time_vec,pwl):
         slope = (pwl[ii+1][1]-pwl[ii][1])/(pwl[ii+1][0]-pwl[ii][0])
         # print('t1_ind = {}'.format(t1_ind))
         # print('t2_ind = {}'.format(t2_ind))
+        # print('slope = {}'.format(slope))
         partial_time_vec = time_vec[t1_ind:t2_ind+1]
-        for jj in range(len(partial_time_vec)):
-            time = partial_time_vec[jj]
-            input_signal__dd[t1_ind+jj] = (time-time_vec[t1_ind])*slope
+        for jj in range(len(partial_time_vec)-1):
+            input_signal__dd[t1_ind+jj+1] = input_signal__dd[t1_ind+jj]+(partial_time_vec[jj+1]-partial_time_vec[jj])*slope
     input_signal__dd[t2_ind:] = input_signal__dd[t2_ind]*np.ones([len(time_vec)-t2_ind,1])
     
     return input_signal__dd
 
 def dendritic_drive__exponential(time_vec,exp_params):
         
+    t_rise = exp_params['t_rise']
+    t_fall = exp_params['t_fall']
+    tau_rise = exp_params['tau_rise']
+    tau_fall = exp_params['tau_fall']
+    value_on = exp_params['value_on']
+    value_off = exp_params['value_off']
+    
     input_signal__dd = np.zeros([len(time_vec),1])
     for ii in range(len(time_vec)):
         time = time_vec[ii]
-        if time < exp_params['t_rise']:
-            input_signal__dd[ii] = exp_params['value_off']
-        if time >= exp_params['t_rise'] and time < exp_params['t_fall']:
-            input_signal__dd[ii] = exp_params['value_off']+(exp_params['value_on']-exp_params['value_off'])*(1-np.exp(-(time-exp_params['t_rise'])/exp_params['tau_rise']))
-        if time >= exp_params['t_fall']:
-            input_signal__dd[ii] = exp_params['value_off']+(exp_params['value_on']-exp_params['value_off'])*(1-np.exp(-(time-exp_params['t_rise'])/exp_params['tau_rise']))
-            +(exp_params['value_off']-exp_params['value_on'])*(1-np.exp(-(time-exp_params['t_fall'])/exp_params['tau_fall']))
+        if time < t_rise:
+            input_signal__dd[ii] = value_off
+        if time >= t_rise and time < t_fall:
+            input_signal__dd[ii] = value_off+(value_on-value_off)*(1-np.exp(-(time-t_rise)/tau_rise))
+        if time >= t_fall:
+            input_signal__dd[ii] = value_off+(value_on-value_off)*(1-np.exp(-(time-t_rise)/tau_rise))*np.exp(-(time-t_fall)/tau_fall)
     
     return input_signal__dd
 
@@ -171,15 +177,22 @@ def dendritic_drive__square_pulse_train(time_vec,sq_pls_trn_params):
     pwl = [[0,value_off],[t_rise,value_on],[t_rise+t_pulse,value_on],[t_rise+t_pulse+t_fall,value_off]]
     
     pulse = dendritic_drive__piecewise_linear(time_vec_sub,pwl)    
-    num_pulses = np.floor((time_vec[-1]-t_start)/t_period)        
+    num_pulses = np.floor((time_vec[-1]-t_start)/t_period).astype(int)        
     ind_start = (np.abs(np.asarray(time_vec)-t_start)).argmin()
     ind_pulse_end = (np.abs(np.asarray(time_vec)-t_start-t_rise-t_pulse-t_fall)).argmin()
     ind_per_end = (np.abs(np.asarray(time_vec)-t_start-t_period)).argmin()
     num_ind_pulse = ind_pulse_end-ind_start
     num_ind_per = ind_per_end-ind_start
     for ii in range(num_pulses):
-        input_signal__dd[ind_start+ii*num_ind_per:ind_start+ii*num_ind_per+num_ind_pulse] = pulse[:]
-           
+        input_signal__dd[ind_start+ii*num_ind_per:ind_start+ii*num_ind_per+num_ind_pulse+1] = pulse[:]
+        
+    if t_start+num_pulses*t_period <= time_vec[-1] and t_start+(num_pulses+1)*t_period >= time_vec[-1]:
+        'here1'
+        ind_final = (np.abs(np.asarray(time_vec)-t_start-num_pulses*t_period)).argmin()
+        ind_end = (np.abs(np.asarray(time_vec)-t_start-num_pulses*t_period-t_rise-t_pulse-t_fall)).argmin()
+        num_ind = ind_end-ind_final
+        input_signal__dd[ind_final:ind_end] = pulse[0:num_ind]
+        
     return input_signal__dd
 
 def dendritic_drive__linear_ramp(time_vec, time_on = 5e-9, slope = 1e-6/1e-9):

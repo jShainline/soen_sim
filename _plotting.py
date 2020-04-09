@@ -493,19 +493,19 @@ def plot_wr_data(data_dict,data_to_plot,plot_save_string):
         
     return
 
-def plot_wr_comparison(target_data,actual_data,plot_string):
+def plot_wr_comparison(target_data,actual_data,main_title,sub_title,y_axis_label):
     
     tt = time.time()    
-    save_str = 'wr_cmpr__'+plot_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    save_str = main_title+sub_title+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
     
     fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
-    fig.suptitle('Current in dendritic integration loop')
-    plt.title(plot_string)
+    fig.suptitle(main_title)
+    plt.title(sub_title)
     
     ax.plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim')   
     ax.plot(target_data[0,:]*1e6,target_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
     ax.set_xlabel(r'Time [$\mu$s]')
-    ax.set_ylabel(r'$I_{di}$ [$\mu$A]')
+    ax.set_ylabel(r'{}'.format(y_axis_label))
     ax.legend()    
     
     plt.show()
