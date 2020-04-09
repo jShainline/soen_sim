@@ -199,6 +199,7 @@ def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt_vec,tf
         print('\n\namp_best_mu34 = {}'.format(amp_best_mu34))
         print('mu3_best = {}'.format(mu3_best))
         print('mu4_best = {}'.format(mu4_best))
+        best_params['amp_mu34'].append(amp_best_mu34)
         best_params['mu3'].append(mu3_best)
         best_params['mu4'].append(mu4_best)
         data_array['error_mat__mu3_mu4'] = error_mat_2
