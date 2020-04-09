@@ -4,7 +4,7 @@ import time
 from matplotlib import pyplot as plt
 from pylab import *
 
-from _plotting import plot_dendritic_drive
+from _plotting import plot_dendritic_drive, plot_wr_comparison, plot_error_mat
 
 def synaptic_time_stepper(time_vec,present_time_index,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
     
@@ -202,7 +202,6 @@ def dendrite_current_splitting(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr
                     *(Ldr1+Ljdr1+Lm2))) )
     
     return Idr1_next, Idr2_next
-
 
 def dendrite_current_splitting__old(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3):
     # print('Ic = {}'.format(Ic))
