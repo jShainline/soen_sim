@@ -109,7 +109,7 @@ def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt,tf,dri
         data_array['error_mat__amp_mu1_mu2'] = error_mat_1
         
         #plot errors
-        title_string = '{}; amp_best_mu12 = {:2.2f}, mu1_best = {:1.4f}, mu2_best = {:1.4f}'.format(data_file_list[ii],amp_best_mu12,mu1_best,mu2_best)
+        title_string = '{}; amp_best_mu12 = {:2.2f}, mu1_best = {:1.2f}, mu2_best = {:1.2f}'.format(data_file_list[ii],amp_best_mu12,mu1_best,mu2_best)
         save_str = '{}__error__amp_mu1_mu2'.format(data_file_list[ii])
         for aa in range(len(amp_vec)):    
             plot_error_mat(error_mat_1[aa,:,:],mu1_vec,mu2_vec,'mu1','mu2','amp = {}'.format(amp_vec[aa]),title_string,save_str)
