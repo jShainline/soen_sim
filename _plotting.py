@@ -4,6 +4,7 @@ from pylab import *
 import time
 
 from util import color_dictionary
+# from _functions import read_wr_data
 colors = color_dictionary()
 
 
@@ -69,6 +70,8 @@ plt.rcParams['ytick.major.width'] = pp['major_tick_width']
 plt.rcParams['ytick.minor.visible'] = True
 plt.rcParams['ytick.minor.size'] = pp['minor_tick_length']
 plt.rcParams['ytick.minor.width'] = pp['minor_tick_width']
+
+plt.rcParams['figure.max_open_warning'] = 100
 
 # plt.rcParams[''] = pp['']
 
@@ -425,7 +428,6 @@ def plot_burst_size_vs_num_active_synapses(neuron_instance,plot_save_string = ''
     tt = time.time()        
     save_str = 'burst_vs_num_active__'+plot_save_string+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
     
-    plt.rcParams['figure.figsize'] = pp['fig_size']
     fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
     fig.suptitle('Number of spikes in output burst')
     plt.title(plot_save_string)
@@ -440,4 +442,102 @@ def plot_burst_size_vs_num_active_synapses(neuron_instance,plot_save_string = ''
     plt.show()
     fig.savefig('figures/'+save_str+'.png')  
 
+    return
+
+def plot_dendritic_drive(time_vec, input_signal__dd):
+        
+    fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
+    fig.suptitle('Dendritic drive signal')
+    # plt.title(plot_save_string)
+    
+    ax.plot(time_vec*1e6,input_signal__dd*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'])        
+    ax.set_xlabel(r'Time [$\mu$s]')
+    ax.set_ylabel(r'Dendritic drive [$\mu$A]')    
+    
+    plt.show() 
+
+    return
+
+def plot_dendritic_integration_loop_current(dendrite_instance):
+        
+    fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
+    fig.suptitle('Current in dendritic integration loop')
+    # plt.title(plot_save_string)
+    
+    ax.plot(dendrite_instance.time_vec*1e6,dendrite_instance.I_di*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'])        
+    ax.set_xlabel(r'Time [$\mu$s]')
+    ax.set_ylabel(r'$I_{di}$ [$\mu$A]')    
+    
+    plt.show() 
+
+    return
+
+def plot_wr_data(data_dict,data_to_plot,plot_save_string):
+    
+    tt = time.time()    
+    save_str = 'wr__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    
+    fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
+    fig.suptitle('WRSpice data')
+    plt.title(plot_save_string)
+
+    color_list = ['blue_3','red_3','green_3','yellow_3']
+    for ii in range(len(data_to_plot)):
+        ax.plot(data_dict['time']*1e9,data_dict[data_to_plot[ii]]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = data_to_plot[ii])        
+    ax.set_xlabel(r'Time [ns]')
+    ax.set_ylabel(r'Current [$\mu$A]')
+    ax.legend()    
+    
+    plt.show()
+    fig.savefig('figures/'+save_str+'.png') 
+        
+    return
+
+def plot_wr_comparison(target_data,actual_data,plot_string):
+    
+    tt = time.time()    
+    save_str = 'wr_cmpr__'+plot_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    
+    fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
+    fig.suptitle('Current in dendritic integration loop')
+    plt.title(plot_string)
+    
+    ax.plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim')   
+    ax.plot(target_data[0,:]*1e6,target_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
+    ax.set_xlabel(r'Time [$\mu$s]')
+    ax.set_ylabel(r'$I_{di}$ [$\mu$A]')
+    ax.legend()    
+    
+    plt.show()
+    fig.savefig('figures/'+save_str+'.png') 
+    
+    return
+
+def plot_error_mat(error_mat,vec1,vec2,x_label,y_label,extra_title_str,title_string,plot_string):
+    
+    tt = time.time()    
+    save_str = 'wr_err__'+plot_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    
+    # fig, ax = plt.subplots(1,1)
+    # error = ax.imshow(np.transpose(error_mat[:,:]), cmap = plt.cm.viridis, interpolation='none', extent=[vec1[0],vec1[-1],vec2[0],vec2[-1]], aspect = 'auto', origin = 'lower')
+    # cbar = fig.colorbar(error, extend='both')
+    # cbar.minorticks_on()
+    # fig.suptitle('Error versus {} and {}, {}'.format(x_label,y_label,extra_title_str))
+    # plt.title(title_string)
+    # ax.set_xlabel(r'{}'.format(x_label))
+    # ax.set_ylabel(r'{}'.format(y_label)) 
+    # plt.show()       
+    # fig.savefig('figures/'+save_str+'__lin.png')  
+     
+    fig, ax = plt.subplots(1,1)
+    error = ax.imshow(np.log10(np.transpose(error_mat[:,:])), cmap = plt.cm.viridis, interpolation='none', extent=[vec1[0],vec1[-1],vec2[0],vec2[-1]], aspect = 'auto', origin = 'lower')
+    cbar = fig.colorbar(error, extend='both')
+    cbar.minorticks_on()     
+    fig.suptitle('log10(Error) versus {} and {}, {}'.format(x_label,y_label,extra_title_str))
+    plt.title(title_string)
+    ax.set_xlabel(r'{}'.format(x_label))
+    ax.set_ylabel(r'{}'.format(y_label))   
+    plt.show()      
+    fig.savefig('figures/'+save_str+'__log.png') 
+        
     return
