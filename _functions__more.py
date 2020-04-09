@@ -187,7 +187,7 @@ def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt_vec,tf
                     # plot_dendritic_drive(dendrite_1.time_vec, dendrite_1.dendritic_drive)
                     
                     actual_data = np.vstack((input_1.time_vec[:],dendrite_1.I_di[:,0]))    
-                    error_mat_2[aa,bb] = chi_squared_error(target_data,actual_data)
+                    error_mat_2[aa,bb,cc] = chi_squared_error(target_data,actual_data)
                     
                     # plot_wr_comparison(target_data,actual_data,'{}; amp = {}, mu1 = {}, mu2 = {}'.format(data_file_list[ii],amp_vec[aa],mu1_vec[bb],mu2_vec[cc]))
             
