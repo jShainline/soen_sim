@@ -11,9 +11,9 @@ plt.close('all')
 
 #%% set up parameters that apply to all
     
-num_loop = 20
+num_loop = 30
 
-amp_vec = np.linspace(16.5,16.5,1) # np.logspace(np.log10(7),np.log10(200),num_loop)#np.linspace(25,25,1)#np.linspace(25,25,1)#
+amp_vec = np.linspace(13.5,19.5,3) # np.logspace(np.log10(7),np.log10(200),num_loop)#np.linspace(25,25,1)#np.linspace(25,25,1)#
 mu1_vec = np.linspace(1.5,2.5,num_loop)
 mu2_vec = np.linspace(0.25,0.75,num_loop)
 mu3_vec = np.linspace(0.25,2.25,num_loop)
