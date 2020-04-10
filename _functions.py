@@ -139,6 +139,41 @@ def dendritic_drive__piecewise_linear(time_vec,pwl):
     
     return input_signal__dd
 
+def dendritic_drive__exp_pls_train__LR(time_vec,exp_pls_trn_params):
+        
+    t_r1_start = exp_pls_trn_params['t_r1_start']
+    t_r1_rise = exp_pls_trn_params['t_r1_rise']
+    t_r1_pulse = exp_pls_trn_params['t_r1_pulse']
+    t_r1_fall = exp_pls_trn_params['t_r1_fall']
+    t_r1_period = exp_pls_trn_params['t_r1_period']
+    value_r1_off = exp_pls_trn_params['value_r1_off']
+    value_r1_on = exp_pls_trn_params['value_r1_on']
+    r2 = exp_pls_trn_params['r2']
+    L1 = exp_pls_trn_params['L1']
+    L2 = exp_pls_trn_params['L2']
+    Ib = exp_pls_trn_params['Ib']
+    
+    # make vector of r1(t)
+    sq_pls_trn_params = dict()
+    sq_pls_trn_params['t_start'] = t_r1_start
+    sq_pls_trn_params['t_rise'] = t_r1_rise
+    sq_pls_trn_params['t_pulse'] = t_r1_pulse
+    sq_pls_trn_params['t_fall'] = t_r1_fall
+    sq_pls_trn_params['t_period'] = t_r1_period
+    sq_pls_trn_params['value_off'] = value_r1_off
+    sq_pls_trn_params['value_on'] = value_r1_on
+    # print('making resistance vec ...')
+    r1_vec = dendritic_drive__square_pulse_train(time_vec,sq_pls_trn_params)
+    
+    input_signal__dd = np.zeros([len(time_vec),1])
+    # print('time stepping ...')
+    for ii in range(len(time_vec)-1):
+        # print('ii = {} of {}'.format(ii+1,len(time_vec)-1))
+        dt = time_vec[ii+1]-time_vec[ii]
+        input_signal__dd[ii+1] = input_signal__dd[ii]*( 1 - dt*(r1_vec[ii]+r2)/(L1+L2) ) + dt*Ib*r1_vec[ii]/(L1+L2)
+    
+    return input_signal__dd
+
 def dendritic_drive__exponential(time_vec,exp_params):
         
     t_rise = exp_params['t_rise']
@@ -181,13 +216,12 @@ def dendritic_drive__square_pulse_train(time_vec,sq_pls_trn_params):
     ind_start = (np.abs(np.asarray(time_vec)-t_start)).argmin()
     ind_pulse_end = (np.abs(np.asarray(time_vec)-t_start-t_rise-t_pulse-t_fall)).argmin()
     ind_per_end = (np.abs(np.asarray(time_vec)-t_start-t_period)).argmin()
-    num_ind_pulse = ind_pulse_end-ind_start
+    num_ind_pulse = len(pulse) # ind_pulse_end-ind_start
     num_ind_per = ind_per_end-ind_start
     for ii in range(num_pulses):
-        input_signal__dd[ind_start+ii*num_ind_per:ind_start+ii*num_ind_per+num_ind_pulse+1] = pulse[:]
+        input_signal__dd[ind_start+ii*num_ind_per:ind_start+ii*num_ind_per+num_ind_pulse] = pulse[:]
         
     if t_start+num_pulses*t_period <= time_vec[-1] and t_start+(num_pulses+1)*t_period >= time_vec[-1]:
-        'here1'
         ind_final = (np.abs(np.asarray(time_vec)-t_start-num_pulses*t_period)).argmin()
         ind_end = (np.abs(np.asarray(time_vec)-t_start-num_pulses*t_period-t_rise-t_pulse-t_fall)).argmin()
         num_ind = ind_end-ind_final
@@ -411,9 +445,11 @@ def mu_fitter_3_4(data_dict,time_vec,I_di,mu3,mu4):
 
 def chi_squared_error(target_data,actual_data):
     
+    print('calculating chi^2 ...')
     error = 0
     norm = 0
     for ii in range(len(actual_data[0,:])):
+        # print('ii = {} of {}'.format(ii+1,len(actual_data[0,:])))
         ind = (np.abs(target_data[0,:]-actual_data[0,ii])).argmin()        
         error += abs( target_data[1,ind]-actual_data[1,ii] )**2
         norm += abs( target_data[1,ind] )**2

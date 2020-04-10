@@ -86,7 +86,9 @@ class input_signal():
             if 'square_pulse_train' in kwargs:
                 self.sq_pls_trn_params = kwargs['square_pulse_train'] 
             if 'exponential' in kwargs:
-                self.exp_params = kwargs['exponential'] 
+                self.exp_params = kwargs['exponential']
+            if 'exponential_pls_trn' in kwargs:
+                self.exp_pls_trn_params = kwargs['exponential_pls_trn']    
             
         input_signal.input_signals[self.name] = self
             

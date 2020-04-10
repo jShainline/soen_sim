@@ -3,7 +3,7 @@ import numpy as np
 import time
 
 from soen_sim import input_signal, synapse, dendrite, neuron
-from _functions import dendritic_drive__piecewise_linear, dendritic_drive__square_pulse_train, dendritic_drive__exponential, read_wr_data, chi_squared_error
+from _functions import dendritic_drive__piecewise_linear, dendritic_drive__square_pulse_train, dendritic_drive__exponential, read_wr_data, chi_squared_error, dendritic_drive__exp_pls_train__LR
 from _plotting import plot_dendritic_drive, plot_wr_comparison
 
 #%%
@@ -33,7 +33,7 @@ data_dict = read_wr_data('wrspice_data/constant_drive/'+file_name)
 target_data = np.vstack((data_dict['time'],data_dict['@I0[c]']))
 actual_data = np.vstack((input_1.time_vec[:],dendritic_drive[:,0])) 
 error = chi_squared_error(target_data,actual_data)
-plot_wr_comparison(target_data,actual_data,'WR comparison, drive signals','{} _ error = {:f}'.format(file_name,error),'$I_{flux}$ [$\mu$A]')
+plot_wr_comparison(target_data,actual_data,'WR comparison, drive signals','{}_error={:1.4f}'.format(file_name,error),'$I_{flux}$ [$\mu$A]')
         
 #%% square pulse train
 sq_pls_trn_params = dict()
@@ -57,7 +57,7 @@ data_dict = read_wr_data('wrspice_data/square_pulse_sequence/'+file_name)
 target_data = np.vstack((data_dict['time'],data_dict['@I0[c]']))
 actual_data = np.vstack((input_1.time_vec[:],dendritic_drive[:,0])) 
 error = chi_squared_error(target_data,actual_data)
-plot_wr_comparison(target_data,actual_data,'WR comparison, drive signals','{} _ error = {:f}'.format(file_name,error),'$I_{flux}$ [$\mu$A]')
+plot_wr_comparison(target_data,actual_data,'WR comparison, drive signals','{}_error={:1.4f}'.format(file_name,error),'$I_{flux}$ [$\mu$A]')
 
 #%% exponential
 tf = 1e-6
@@ -77,9 +77,39 @@ dendritic_drive = dendritic_drive__exponential(input_1.time_vec,exp_params)
 
 # plot_dendritic_drive(input_1.time_vec, dendritic_drive) 
 
-# file_name = 'dend__exp_pls_seq__amp20uA_tauin50ns_per1000ns_Ldi7.75nH_taudi100ns.dat'
-# data_dict = read_wr_data('wrspice_data/exponential_pulse_sequence/'+file_name)
-# target_data = np.vstack((data_dict['time'],data_dict['L5#branch']))
+file_name = 'dend__exp_pls_seq__amp20uA_tauin50ns_per1000ns_Ldi7.75nH_taudi100ns.dat'
+data_dict = read_wr_data('wrspice_data/exponential_pulse_sequence/'+file_name)
+target_data = np.vstack((data_dict['time'],data_dict['L5#branch']))
 actual_data = np.vstack((input_1.time_vec[:],dendritic_drive[:,0])) 
 error = chi_squared_error(target_data,actual_data)
-plot_wr_comparison(target_data,actual_data,'WR comparison, drive signals','{} _ error = {:f}'.format(file_name,error),'$I_{flux}$ [$\mu$A]')   
+plot_wr_comparison(target_data,actual_data,'WR comparison, drive signals','{}_error={:1.4f}'.format(file_name,error),'$I_{flux}$ [$\mu$A]')   
+
+#%% exponential pulse train
+tf = 1e-6
+
+exp_pls_trn_params = dict()
+exp_pls_trn_params['t_r1_start'] = 5e-9
+exp_pls_trn_params['t_r1_rise'] = 100e-12
+exp_pls_trn_params['t_r1_pulse'] = 200e-12
+exp_pls_trn_params['t_r1_fall'] = 100e-12
+exp_pls_trn_params['t_r1_period'] = 100e-9
+exp_pls_trn_params['value_r1_off'] = 0
+exp_pls_trn_params['value_r1_on'] = 5e3
+exp_pls_trn_params['r2'] = 5.004
+exp_pls_trn_params['L1'] = 250e-9
+exp_pls_trn_params['L2'] = 200e-12
+exp_pls_trn_params['Ib'] = 20e-6
+  
+input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
+                       time_vec = np.arange(0,tf+dt,dt), exponential_pls_train = exp_pls_trn_params)  
+
+dendritic_drive = dendritic_drive__exp_pls_train__LR(input_1.time_vec,exp_pls_trn_params)
+
+# plot_dendritic_drive(input_1.time_vec, dendritic_drive) 
+
+file_name = 'dend__exp_pls_seq__amp20uA_tauin50ns_per100ns_Ldi7.75nH_taudi100ns.dat'
+data_dict = read_wr_data('wrspice_data/exponential_pulse_sequence/'+file_name)
+target_data = np.vstack((data_dict['time'],data_dict['L5#branch']))
+actual_data = np.vstack((input_1.time_vec[:],dendritic_drive[:,0])) 
+error = chi_squared_error(target_data,actual_data)
+plot_wr_comparison(target_data,actual_data,'WR comparison, drive signals','{}_error={:1.4f}'.format(file_name,error),'$I_{flux}$ [$\mu$A]')   
