@@ -496,7 +496,7 @@ def plot_wr_data(data_dict,data_to_plot,plot_save_string):
 def plot_wr_comparison(target_data,actual_data,main_title,sub_title,y_axis_label):
     
     tt = time.time()    
-    save_str = main_title+sub_title+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    save_str = sub_title+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
     
     fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
     fig.suptitle(main_title)

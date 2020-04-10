@@ -143,7 +143,7 @@ def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt_vec,tf
         # plot_dendritic_integration_loop_current(dendrite_1)
         actual_data = np.vstack((input_1.time_vec[:],dendrite_1.I_di[:,0]))
         plot_string = '{}__amp_best_{:2.2f}_mu1_best_{:1.4f}_mu2_best_{:1.4f}'.format(data_file_list[ii],amp_best_mu12,mu1_best,mu2_best)
-        plot_wr_comparison(target_data,actual_data,plot_string)
+        plot_wr_comparison(target_data,actual_data,'Current in the dendritic integration loop',plot_string,'$I_{dr}$ [$\mu$A]')
         
         #-----------------------------
         # find best amp_mu34, mu3, mu4
@@ -236,7 +236,7 @@ def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt_vec,tf
         # plot_dendritic_integration_loop_current(dendrite_1)
         plot_string = '{}__amp_best_mu12_{:2.2f}_amp_best_mu34_{:2.2f}_mu1_best_{:1.2f}_mu2_best_{:1.2f}_mu3_best_{:1.2f}_mu4_best_{:1.2f}'.format(data_file_list[ii],amp_best_mu12,amp_best_mu34,mu1_best,mu2_best,mu3_best,mu4_best) 
         actual_data = np.vstack((input_1.time_vec[:],dendrite_1.I_di[:,0]))
-        plot_wr_comparison(target_data,actual_data,plot_string)            
+        plot_wr_comparison(target_data,actual_data,'Current in the dendritic integration loop',plot_string,'$I_{dr}$ [$\mu$A]')
     
     # save data
     save_string = 'wr_fits__no_leak__vary_L_di__finding_amp_mu1_mu2+mu3_mu4'
