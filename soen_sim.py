@@ -4,7 +4,7 @@ from pylab import *
 import time
 import pickle
 
-from _functions import synaptic_response_function, synaptic_time_stepper, dendritic_drive__step_function, dendritic_drive__linear_ramp, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj
+from _functions import synaptic_response_function, synaptic_time_stepper, dendritic_drive__step_function, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR
 from _plotting import plot_dendritic_drive, plot_dendritic_integration_loop_current
 
 class input_signal():
@@ -75,20 +75,14 @@ class input_signal():
                 dt = 5e-9
                 tf = 20e-9
                 self.time_vec = np.arange(0,tf+dt,dt)
-            if 'amplitude' in kwargs:
-                self.amplitude = kwargs['amplitude']
-            if 'slope' in kwargs:
-                self.slope = kwargs['slope']
-            if 'time_on' in kwargs:
-                self.time_on = kwargs['time_on']
             if 'piecewise_linear' in kwargs:
                 self.piecewise_linear = kwargs['piecewise_linear']
             if 'square_pulse_train' in kwargs:
-                self.sq_pls_trn_params = kwargs['square_pulse_train'] 
+                self.square_pulse_train = kwargs['square_pulse_train'] 
             if 'exponential' in kwargs:
                 self.exp_params = kwargs['exponential']
-            if 'exponential_pls_trn' in kwargs:
-                self.exp_pls_trn_params = kwargs['exponential_pls_trn']    
+            if 'exponential_pulse_train' in kwargs:
+                self.exponential_pulse_train = kwargs['exponential_pulse_train']    
             
         input_signal.input_signals[self.name] = self
             
@@ -454,8 +448,12 @@ class dendrite():
         
         if hasattr(self.direct_connections[0],'piecewise_linear'):
             dendritic_drive = dendritic_drive__piecewise_linear(time_vec,self.direct_connections[0].piecewise_linear)
-        if hasattr(self.direct_connections[0],'slope'):
-            dendritic_drive = dendritic_drive__linear_ramp(time_vec, time_on = self.direct_connections[0].time_on, slope = self.direct_connections[0].slope)
+        if hasattr(self.direct_connections[0],'square_pulse_train'):
+            dendritic_drive = dendritic_drive__square_pulse_train(time_vec,self.direct_connections[0].square_pulse_train)
+        if hasattr(self.direct_connections[0],'exponential_pulse_train'):
+            dendritic_drive = dendritic_drive__exp_pls_train__LR(time_vec,self.direct_connections[0].exponential_pulse_train)
+        # if hasattr(self.direct_connections[0],'slope'):
+        #     dendritic_drive = dendritic_drive__linear_ramp(time_vec, time_on = self.direct_connections[0].time_on, slope = self.direct_connections[0].slope)
         # dendritic_drive = dendritic_drive__step_function(time_vec, amplitude = self.direct_connections[0].amplitude, time_on = self.direct_connections[0].time_on)
         # 
         # plot_dendritic_drive(time_vec, dendritic_drive)

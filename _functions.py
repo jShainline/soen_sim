@@ -133,6 +133,7 @@ def dendritic_drive__piecewise_linear(time_vec,pwl):
         # print('t2_ind = {}'.format(t2_ind))
         # print('slope = {}'.format(slope))
         partial_time_vec = time_vec[t1_ind:t2_ind+1]
+        input_signal__dd[t1_ind] = pwl[ii][1]
         for jj in range(len(partial_time_vec)-1):
             input_signal__dd[t1_ind+jj+1] = input_signal__dd[t1_ind+jj]+(partial_time_vec[jj+1]-partial_time_vec[jj])*slope
     input_signal__dd[t2_ind:] = input_signal__dd[t2_ind]*np.ones([len(time_vec)-t2_ind,1])
@@ -229,16 +230,16 @@ def dendritic_drive__square_pulse_train(time_vec,sq_pls_trn_params):
         
     return input_signal__dd
 
-def dendritic_drive__linear_ramp(time_vec, time_on = 5e-9, slope = 1e-6/1e-9):
+# def dendritic_drive__linear_ramp(time_vec, time_on = 5e-9, slope = 1e-6/1e-9):
     
-    t_on_ind = (np.abs(np.asarray(time_vec)-time_on)).argmin()
-    input_signal__dd = np.zeros([len(time_vec),1])
-    partial_time_vec = time_vec[t_on_ind:]
-    for ii in range(len(partial_time_vec)):
-        time = partial_time_vec[ii]
-        input_signal__dd[t_on_ind+ii] = (time-time_on)*slope
+#     t_on_ind = (np.abs(np.asarray(time_vec)-time_on)).argmin()
+#     input_signal__dd = np.zeros([len(time_vec),1])
+#     partial_time_vec = time_vec[t_on_ind:]
+#     for ii in range(len(partial_time_vec)):
+#         time = partial_time_vec[ii]
+#         input_signal__dd[t_on_ind+ii] = (time-time_on)*slope
     
-    return input_signal__dd
+#     return input_signal__dd
 
 def dendrite_current_splitting(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev):
     # print('Ic = {}'.format(Ic))
@@ -445,7 +446,7 @@ def mu_fitter_3_4(data_dict,time_vec,I_di,mu3,mu4):
 
 def chi_squared_error(target_data,actual_data):
     
-    print('calculating chi^2 ...')
+    # print('calculating chi^2 ...')
     error = 0
     norm = 0
     for ii in range(len(actual_data[0,:])):

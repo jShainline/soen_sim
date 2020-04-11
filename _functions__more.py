@@ -3,11 +3,13 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from soen_sim import input_signal, synapse, dendrite, neuron
-from _functions import save_session_data, read_wr_data, chi_squared_error
-from _plotting import plot_dendritic_drive, plot_wr_comparison, plot_error_mat
+from _functions import save_session_data, read_wr_data, chi_squared_error, dendritic_drive__piecewise_linear, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR
+from _plotting import plot_wr_comparison, plot_error_mat, plot_wr_comparison__drive_and_response
 
 #%%
 def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt_vec,tf_vec,drive_info,amp_vec,mu1_vec,mu2_vec,mu3_vec,mu4_vec,master_error_plot_name):
+    
+    master_error_plot_name = 'mstr_err__'+master_error_plot_name
     
     best_params = dict()
     best_params['amp_mu12'] = []
@@ -31,42 +33,85 @@ def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt_vec,tf
     num_mu3 = len(mu3_vec)
     num_mu4 = len(mu4_vec)
     
+    mu3_initial = 1
+    mu4_initial = 0.5
+    
+    print('\n\nrunning dendrite_model__parameter_sweep\n\nnum_files = {:d}\nnum_amps = {:d}\nnum_mu1 = {:d}\nnum_mu2 = {:d}\nnum_mu3 = {:d}\nnum_mu4 = {:d}'.format(num_sims,num_amps,num_mu1,num_mu2,num_mu3,num_mu4))
+    
     error_mat_master__mu1_mu2 = np.zeros([num_amps,num_mu1,num_mu2])
     error_mat_master__mu3_mu4 = np.zeros([num_amps,num_mu3,num_mu4])
     
     if drive_info['drive_type'] == 'piecewise_linear':
-        pwl_drive = drive_info['pwl_drive']      
+        pwl_drive = drive_info['pwl_drive']
+        directory_string = 'constant_drive'
+        wr_drive_string = '@I0[c]'
+        wr_target_string = 'L9#branch'
+    if drive_info['drive_type'] == 'linear_ramp':
+        pwl_drive = drive_info['pwl_drive']
+        directory_string = 'linear_ramp'
+        wr_drive_string = '@I0[c]'
+        wr_target_string = 'L9#branch'
+    if drive_info['drive_type'] == 'sq_pls_trn':
+        sq_pls_trn_params = drive_info['sq_pls_trn_params']
+        directory_string = 'square_pulse_sequence'
+        wr_drive_string = '@I0[c]'
+        wr_target_string = 'L9#branch'
+    if drive_info['drive_type'] == 'exp_pls_trn':
+        exp_pls_trn_params = drive_info['exp_pls_trn_params']
+        directory_string = 'exponential_pulse_sequence'
+        wr_drive_string = 'L5#branch'
+        wr_target_string = 'L10#branch'
     
     for ii in range(num_sims):
-        print('\n\ndata_file {} of {}\n'.format(ii+1,num_sims))
+        print('\ndata_file {} of {}\n'.format(ii+1,num_sims))
         plt.close('all')
         
         dt = dt_vec[ii]
         tf = tf_vec[ii]
         
         # WR data
+        print('reading wr data ...\n')
         file_name = data_file_list[ii]+'.dat'
-        data_dict = read_wr_data('wrspice_data/constant_drive/'+file_name)
-        target_data = np.vstack((data_dict['time'],data_dict['L9#branch']))
+        data_dict = read_wr_data('wrspice_data/'+directory_string+'/'+file_name)
+        target_data = np.vstack((data_dict['time'],data_dict[wr_target_string]))
+        
+        #----------------------
+        # compare drive signals
+        #----------------------
+        target_data__drive = np.vstack((data_dict['time'],data_dict[wr_drive_string]))
+        
+        # initialize input signal
+        if drive_info['drive_type'] == 'piecewise_linear' or drive_info['drive_type'] == 'linear_ramp':
+            input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
+                                    time_vec = np.arange(0,tf+dt,dt), piecewise_linear = pwl_drive)
+            dendritic_drive = dendritic_drive__piecewise_linear(input_1.time_vec,pwl_drive)
+        if drive_info['drive_type'] == 'sq_pls_trn':
+            input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
+                                    time_vec = np.arange(0,tf+dt,dt), square_pulse_train = sq_pls_trn_params)
+            dendritic_drive = dendritic_drive__square_pulse_train(input_1.time_vec,sq_pls_trn_params)
+        if drive_info['drive_type'] == 'exp_pls_trn':
+            input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
+                                    time_vec = np.arange(0,tf+dt,dt), exponential_pulse_train = exp_pls_trn_params)
+            dendritic_drive = dendritic_drive__exp_pls_train__LR(input_1.time_vec,exp_pls_trn_params)
+        
+        actual_data__drive = np.vstack((input_1.time_vec[:],dendritic_drive[:,0])) 
+        print('comparing drive signals ...\n')
+        error__drive = chi_squared_error(target_data__drive,actual_data__drive)
              
         #------------------------
         # find best amp, mu1, mu2
         #------------------------
-        mu3 = [1] #np.linspace([0.5,2.5,10])
-        mu4 = [0.5] #np.linspace([0.25,1.5,10])
+        mu3 = [mu3_initial] #np.linspace([0.5,2.5,10])
+        mu4 = [mu4_initial] #np.linspace([0.25,1.5,10])
         
-        error_mat_1 = np.zeros([len(amp_vec),len(mu1_vec),len(mu2_vec)])
+        error_mat_1 = np.zeros([num_amps,num_mu1,num_mu2])        
         print('seeking amp, mu1, mu2 ...')
-        for aa in range(len(amp_vec)):
-            for bb in range(len(mu1_vec)):
-                for cc in range(len(mu2_vec)):
+        for aa in range(num_amps):
+            for bb in range(num_mu1):
+                for cc in range(num_mu2):
                          
                     print('aa = {} of {}, bb = {} of {}, cc = {} of {}'.format(aa+1,num_amps,bb+1,num_mu1,cc+1,num_mu2))
-                    
-                    # initialize input signal
-                    input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
-                                            time_vec = np.arange(0,tf+dt,dt), piecewise_linear = pwl_drive)  
-                    
+                                        
                     # create sim_params dictionary
                     sim_params = dict()
                     sim_params['amp'] = amp_vec[aa]
@@ -86,17 +131,11 @@ def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt_vec,tf
                                           integration_loop_self_inductance = L_di_vec[ii], integration_loop_output_inductance = 0e-12,
                                           integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_di_vec[ii],
                                           integration_loop_saturation_current = 11.75e-6, dendrite_model_params = sim_params)
-                                                                    
-                    # Idr = dendrite_current_splitting(40e-6,0,72e-6,29e-6,35e-6,np.sqrt(200e-12*10e-12),10e-12,10e-12,26e-12,200e-12,77.5e-12,7.75e-9)
-                        
+                                                                                            
                     dendrite_1.run_sim()
-                
-                    # plot_dendritic_drive(dendrite_1.time_vec, dendrite_1.dendritic_drive)
-                    
+                                    
                     actual_data = np.vstack((input_1.time_vec[:],dendrite_1.I_di[:,0]))    
                     error_mat_1[aa,bb,cc] = chi_squared_error(target_data,actual_data)
-                    
-                    # plot_wr_comparison(target_data,actual_data,'{}; amp = {}, mu1 = {}, mu2 = {}'.format(data_file_list[ii],amp_vec[aa],mu1_vec[bb],mu2_vec[cc]))
         
         error_mat_master__mu1_mu2 += error_mat_1
         ind_best = np.where(error_mat_1 == np.amin(error_mat_1))#error_mat.argmin()
@@ -112,14 +151,24 @@ def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt_vec,tf
         data_array['error_mat__amp_mu1_mu2'] = error_mat_1
         
         #plot errors
-        title_string = '{}; amp_best_mu12 = {:2.2f}, mu1_best = {:1.2f}, mu2_best = {:1.2f}'.format(data_file_list[ii],amp_best_mu12,mu1_best,mu2_best)
+        title_string = '{}\namp_best_mu12 = {:2.2f}, mu1_best = {:1.2f}, mu2_best = {:1.2f}'.format(data_file_list[ii],amp_best_mu12,mu1_best,mu2_best)
         save_str = '{}__error__mu1_mu2'.format(data_file_list[ii])
-        for aa in range(len(amp_vec)):    
+        for aa in range(num_amps):    
             plot_error_mat(error_mat_1[aa,:,:],mu1_vec,mu2_vec,'mu1','mu2','amp = {}'.format(amp_vec[aa]),title_string,save_str)
             
         #repeat best one and plot   
-        input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
-                           time_vec = np.arange(0,tf+dt,dt), piecewise_linear = pwl_drive)  
+        if drive_info['drive_type'] == 'piecewise_linear' or drive_info['drive_type'] == 'linear_ramp':
+            input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
+                                    time_vec = np.arange(0,tf+dt,dt), piecewise_linear = pwl_drive)
+            dendritic_drive = dendritic_drive__piecewise_linear(input_1.time_vec,pwl_drive)
+        if drive_info['drive_type'] == 'sq_pls_trn':
+            input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
+                                    time_vec = np.arange(0,tf+dt,dt), square_pulse_train = sq_pls_trn_params)
+            dendritic_drive = dendritic_drive__square_pulse_train(input_1.time_vec,sq_pls_trn_params)
+        if drive_info['drive_type'] == 'exp_pls_trn':
+            input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
+                                    time_vec = np.arange(0,tf+dt,dt), exponential_pulse_train = exp_pls_trn_params)
+            dendritic_drive = dendritic_drive__exp_pls_train__LR(input_1.time_vec,exp_pls_trn_params) 
                     
         sim_params = dict()
         sim_params['amp'] = amp_best_mu12
@@ -142,23 +191,34 @@ def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt_vec,tf
         dendrite_1.run_sim()
         # plot_dendritic_integration_loop_current(dendrite_1)
         actual_data = np.vstack((input_1.time_vec[:],dendrite_1.I_di[:,0]))
-        plot_string = '{}__amp_best_{:2.2f}_mu1_best_{:1.4f}_mu2_best_{:1.4f}'.format(data_file_list[ii],amp_best_mu12,mu1_best,mu2_best)
-        plot_wr_comparison(target_data,actual_data,'Current in the dendritic integration loop',plot_string,'$I_{dr}$ [$\mu$A]')
+        main_title = '{}\namp_best_{:2.2f}_mu1_best_{:1.4f}_mu2_best_{:1.4f}'.format(data_file_list[ii],amp_best_mu12,mu1_best,mu2_best)
+        error__signal =  np.amin(error_mat_1)
+        plot_wr_comparison__drive_and_response(main_title,target_data__drive,actual_data__drive,target_data,actual_data,data_file_list[ii],error__drive,error__signal)
         
         #-----------------------------
         # find best amp_mu34, mu3, mu4
         #-----------------------------   
         error_mat_2 = np.zeros([num_amps,num_mu3,num_mu4])
         print('seeking amp, mu3, mu4 ...')
-        for aa in range(len(amp_vec)):
-            for bb in range(len(mu3_vec)):
-                for cc in range(len(mu4_vec)):
+        for aa in range(num_amps):
+            for bb in range(num_mu1):
+                for cc in range(num_mu2):
                              
                     print('aa = {} of {}, bb = {} of {}, cc = {} of {}'.format(aa+1,num_amps,bb+1,num_mu3,cc+1,num_mu4))
                     
                     # initialize input signal
-                    input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
-                                            time_vec = np.arange(0,tf+dt,dt), piecewise_linear = pwl_drive)  
+                    if drive_info['drive_type'] == 'piecewise_linear' or drive_info['drive_type'] == 'linear_ramp':
+                        input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
+                                                time_vec = np.arange(0,tf+dt,dt), piecewise_linear = pwl_drive)
+                        dendritic_drive = dendritic_drive__piecewise_linear(input_1.time_vec,pwl_drive)
+                    if drive_info['drive_type'] == 'sq_pls_trn':
+                        input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
+                                                time_vec = np.arange(0,tf+dt,dt), square_pulse_train = sq_pls_trn_params)
+                        dendritic_drive = dendritic_drive__square_pulse_train(input_1.time_vec,sq_pls_trn_params)
+                    if drive_info['drive_type'] == 'exp_pls_trn':
+                        input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
+                                                time_vec = np.arange(0,tf+dt,dt), exponential_pulse_train = exp_pls_trn_params)
+                        dendritic_drive = dendritic_drive__exp_pls_train__LR(input_1.time_vec,exp_pls_trn_params) 
                     
                     # create sim_params dictionary
                     sim_params = dict()
@@ -179,17 +239,11 @@ def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt_vec,tf
                                           integration_loop_self_inductance = L_di_vec[ii], integration_loop_output_inductance = 0e-12,
                                           integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_di_vec[ii],
                                           integration_loop_saturation_current = 11.75e-6, dendrite_model_params = sim_params)
-                                                                    
-                    # Idr = dendrite_current_splitting(40e-6,0,72e-6,29e-6,35e-6,np.sqrt(200e-12*10e-12),10e-12,10e-12,26e-12,200e-12,77.5e-12,7.75e-9)
                         
                     dendrite_1.run_sim()
-                
-                    # plot_dendritic_drive(dendrite_1.time_vec, dendrite_1.dendritic_drive)
                     
                     actual_data = np.vstack((input_1.time_vec[:],dendrite_1.I_di[:,0]))    
                     error_mat_2[aa,bb,cc] = chi_squared_error(target_data,actual_data)
-                    
-                    # plot_wr_comparison(target_data,actual_data,'{}; amp = {}, mu1 = {}, mu2 = {}'.format(data_file_list[ii],amp_vec[aa],mu1_vec[bb],mu2_vec[cc]))
             
         error_mat_master__mu3_mu4 += error_mat_2
         ind_best = np.where(error_mat_2 == np.amin(error_mat_2))#error_mat.argmin()
@@ -205,14 +259,24 @@ def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt_vec,tf
         data_array['error_mat__mu3_mu4'] = error_mat_2
         
         #plot errors
-        title_string = '{}; amp_best_mu12 = {:2.2f}, amp_best_mu34 = {:2.2f}, mu1_best = {:1.2f}, mu2_best = {:1.2f}, mu3_best = {:1.2f}, mu4_best = {:1.2f}'.format(data_file_list[ii],amp_best_mu12,amp_best_mu34,mu1_best,mu2_best,mu3_best,mu4_best)
+        title_string = '{}\namp_best_mu12 = {:2.2f}, amp_best_mu34 = {:2.2f}, mu1_best = {:1.2f}, mu2_best = {:1.2f}, mu3_best = {:1.2f}, mu4_best = {:1.2f}'.format(data_file_list[ii],amp_best_mu12,amp_best_mu34,mu1_best,mu2_best,mu3_best,mu4_best)
         save_str = '{}__error__mu3_mu4'.format(data_file_list[ii])            
-        for aa in range(len(amp_vec)):    
+        for aa in range(num_amps):    
             plot_error_mat(error_mat_2[aa,:,:],mu3_vec,mu4_vec,'mu3','mu4','amp = {}'.format(amp_vec[aa]),title_string,save_str)
     
         #repeat best one and plot   
-        input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
-                           time_vec = np.arange(0,tf+dt,dt), piecewise_linear = pwl_drive)  
+        if drive_info['drive_type'] == 'piecewise_linear' or drive_info['drive_type'] == 'linear_ramp':
+            input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
+                                    time_vec = np.arange(0,tf+dt,dt), piecewise_linear = pwl_drive)
+            dendritic_drive = dendritic_drive__piecewise_linear(input_1.time_vec,pwl_drive)
+        if drive_info['drive_type'] == 'sq_pls_trn':
+            input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
+                                    time_vec = np.arange(0,tf+dt,dt), square_pulse_train = sq_pls_trn_params)
+            dendritic_drive = dendritic_drive__square_pulse_train(input_1.time_vec,sq_pls_trn_params)
+        if drive_info['drive_type'] == 'exp_pls_trn':
+            input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
+                                    time_vec = np.arange(0,tf+dt,dt), exponential_pulse_train = exp_pls_trn_params)
+            dendritic_drive = dendritic_drive__exp_pls_train__LR(input_1.time_vec,exp_pls_trn_params) 
                     
         sim_params = dict()
         sim_params['amp'] = amp_best_mu34
@@ -233,13 +297,13 @@ def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt_vec,tf
                             integration_loop_saturation_current = 11.75e-6, dendrite_model_params = sim_params)
                                                                     
         dendrite_1.run_sim()
-        # plot_dendritic_integration_loop_current(dendrite_1)
-        plot_string = '{}__amp_best_mu12_{:2.2f}_amp_best_mu34_{:2.2f}_mu1_best_{:1.2f}_mu2_best_{:1.2f}_mu3_best_{:1.2f}_mu4_best_{:1.2f}'.format(data_file_list[ii],amp_best_mu12,amp_best_mu34,mu1_best,mu2_best,mu3_best,mu4_best) 
+        main_title = '{}\namp_best_mu12_{:2.2f}_amp_best_mu34_{:2.2f}_mu1_best_{:1.2f}_mu2_best_{:1.2f}_mu3_best_{:1.2f}_mu4_best_{:1.2f}'.format(data_file_list[ii],amp_best_mu12,amp_best_mu34,mu1_best,mu2_best,mu3_best,mu4_best) 
         actual_data = np.vstack((input_1.time_vec[:],dendrite_1.I_di[:,0]))
-        plot_wr_comparison(target_data,actual_data,'Current in the dendritic integration loop',plot_string,'$I_{dr}$ [$\mu$A]')
+        error__signal = np.amin(error_mat_2)
+        plot_wr_comparison__drive_and_response(main_title,target_data__drive,actual_data__drive,target_data,actual_data,data_file_list[ii],error__drive,error__signal)
     
     # save data
-    save_string = 'wr_fits__no_leak__vary_L_di__finding_amp_mu1_mu2+mu3_mu4'
+    save_string = 'wr_fits__finding_amp_mu1_mu2+mu3_mu4'
     data_array['wr_spice_data_file_list'] = data_file_list
     data_array['best_params'] = best_params
     data_array['error_mat_master__mu1_mu2'] = error_mat_master__mu1_mu2
@@ -248,8 +312,8 @@ def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt_vec,tf
     save_session_data(data_array,save_string)
     
     #plot errors
-    title_string = '{}; amp_best_mu12 = {:2.2f}, amp_best_mu34 = {:2.2f}, mu1_best = {:1.2f}, mu2_best = {:1.2f}, mu3_best = {:1.2f}, mu4_best = {:1.2f}'.format(master_error_plot_name,amp_best_mu12,amp_best_mu34,mu1_best,mu2_best,mu3_best,mu4_best)    
-    for aa in range(len(amp_vec)):
+    title_string = '{}\namp_best_mu12 = {:2.2f}, amp_best_mu34 = {:2.2f}, mu1_best = {:1.2f}, mu2_best = {:1.2f}, mu3_best = {:1.2f}, mu4_best = {:1.2f}'.format(master_error_plot_name,amp_best_mu12,amp_best_mu34,mu1_best,mu2_best,mu3_best,mu4_best)    
+    for aa in range(num_amps):
         save_str_1 = '{}__master_error__mu1_mu2__amp_{:2.2f}'.format(master_error_plot_name,amp_vec[aa])
         save_str_2 = '{}__master_error__mu3_mu4__amp_{:2.2f}'.format(master_error_plot_name,amp_vec[aa])
         plot_error_mat(error_mat_master__mu1_mu2[aa,:,:],mu1_vec,mu2_vec,'mu1','mu2','amp = {}'.format(amp_vec[aa]),title_string,save_str_1)

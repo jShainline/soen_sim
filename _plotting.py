@@ -11,11 +11,11 @@ colors = color_dictionary()
 def plot_params():
     
     pp = dict()
-    pp['title_font_size'] = 20
+    pp['title_font_size'] = 14
     pp['subtitle_font_size'] = 10
-    pp['axes_labels_font_size'] = 16
-    pp['tick_labels_font_size'] = 14
-    pp['legend_font_size'] = 14
+    pp['axes_labels_font_size'] = 14
+    pp['tick_labels_font_size'] = 12
+    pp['legend_font_size'] = 10
     pp['nominal_linewidth'] = 2
     pp['fine_linewidth'] = 0.75
     pp['bold_linewidth'] = 3
@@ -511,6 +511,33 @@ def plot_wr_comparison(target_data,actual_data,main_title,sub_title,y_axis_label
     plt.show()
     fig.savefig('figures/'+save_str+'.png') 
     
+    return
+
+def plot_wr_comparison__drive_and_response(main_title,target_data__drive,actual_data__drive,target_data,actual_data,wr_data_file_name,error__drive,error__signal):
+    
+    tt = time.time()    
+    save_str = 'soen_sim_wr_cmpr__'+wr_data_file_name+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    
+    fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)   
+    fig.suptitle(main_title)
+    
+    axs[0].plot(actual_data__drive[0,:]*1e6,actual_data__drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim')   
+    axs[0].plot(target_data__drive[0,:]*1e6,target_data__drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
+    axs[0].set_xlabel(r'Time [$\mu$s]')
+    axs[0].set_ylabel(r'$I_{flux}$ [$\mu$A]')
+    axs[0].legend()
+    axs[0].set_title('Drive signal input to DR loop (error = {:1.5f})'.format(error__drive))
+     
+    axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim')   
+    axs[1].plot(target_data[0,:]*1e6,target_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
+    axs[1].set_xlabel(r'Time [$\mu$s]')
+    axs[1].set_ylabel(r'$I_{dr}$ [$\mu$A]')
+    axs[1].legend()
+    axs[1].set_title('Output signal in the DI loop (error = {:1.5f})'.format(error__signal))
+    
+    plt.show()
+    fig.savefig('figures/'+save_str+'.png') 
+
     return
 
 def plot_error_mat(error_mat,vec1,vec2,x_label,y_label,extra_title_str,title_string,plot_string):
