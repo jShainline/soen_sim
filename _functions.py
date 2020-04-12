@@ -75,12 +75,15 @@ def dendritic_time_stepper(time_vec,A_prefactor,I_drive,I_b,I_th,M_direct,Lm2,Ld
     Iflux = 0
     Idr2_prev = ((Lm2+Ldr1+Lj0)*I_b[0]+M_direct*Iflux)/( Lm2+Ldr1+Ldr2+2*Lj0 + (Lm2+Ldr1+Lj0)*(Ldr2+Lj0)/L1 )
     Idr1_prev = I_b[0]-( 1 + (Ldr2+Lj0)/L1 )*Idr2_prev
+    Ij2_prev = I_b[1]
+    Ij3_prev = I_b[2]
     
     I_di_vec = np.zeros([len(time_vec),1])
     for ii in range(len(time_vec)-1):
         dt = time_vec[ii+1]-time_vec[ii]
-                               # dendrite_current_splitting(Ic,  Iflux,        Ib1,   Ib2,   Ib3,   M,       Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev)
-        Idr1_next, Idr2_next = dendrite_current_splitting(I_th,I_drive[ii+1],I_b[0],I_b[1],I_b[2],M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev)
+                               
+                                                              #dendrite_current_splitting(Ic,  Iflux,        Ib1,   Ib2,   Ib3,   M,       Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
+        Idr1_next, Idr2_next, Ij2_next, Ij3_next, I1, I2, I3 = dendrite_current_splitting(I_th,I_drive[ii+1],I_b[0],I_b[1],I_b[2],M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
         I_di_sat = I_di_sat_of_I_dr_2(Idr2_next)
         # I_dr = dendrite_current_splitting__old(I_th,I_drive[ii+1],I_b[0],I_b[1],I_b[2],M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3) 
         # if ii == 0:
@@ -101,8 +104,8 @@ def dendritic_time_stepper(time_vec,A_prefactor,I_drive,I_b,I_th,M_direct,Lm2,Ld
         else:
             factor_2 = 0
         I_di_vec[ii+1] = dt * A_prefactor * factor_1 * factor_2 + (1-dt/tau_di)*I_di_vec[ii]
-        if I_di_vec[ii+1] > I_di_sat:
-            I_di_vec[ii+1] = I_di_sat
+        # if I_di_vec[ii+1] > I_di_sat:
+        #     I_di_vec[ii+1] = I_di_sat
         # if nan in I_di_vec[ii+1]:            
         #     print('I_dr = {}'.format(I_dr))
         #     print('I_di_vec[ii] = {}'.format(I_di_vec[ii]))
@@ -112,6 +115,8 @@ def dendritic_time_stepper(time_vec,A_prefactor,I_drive,I_b,I_th,M_direct,Lm2,Ld
         #     break
         Idr1_prev = Idr1_next
         Idr2_prev = Idr2_next
+        Ij2_prev = Ij2_next
+        Ij3_prev = Ij3_next
     
     return I_di_vec
 
@@ -242,7 +247,7 @@ def dendritic_drive__square_pulse_train(time_vec,sq_pls_trn_params):
     
 #     return input_signal__dd
 
-def dendrite_current_splitting(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev):
+def dendrite_current_splitting(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev):
     # print('Ic = {}'.format(Ic))
     # print('Iflux = {}'.format(Iflux))
     # print('Ib1 = {}'.format(Ib1))
@@ -258,9 +263,9 @@ def dendrite_current_splitting(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr
     # pause(10)
     #see pgs 74, 75 in green lab notebook from 2020_04_01
     
-    Lj0 = Ljj(Ic,0)
-    Lj2 = Ljj(Ic,Ib2)#approximation; current passing through jj2 is not exactly Ib2
-    Lj3 = Ljj(Ic,Ib3)#approximation; current passing through jj3 is not exactly Ib3
+    # Lj0 = Ljj(Ic,0)
+    Lj2 = Ljj(Ic,Ij2_prev)
+    Lj3 = Ljj(Ic,Ij3_prev)
         
     Ljdr1 = Ljj(Ic,Idr1_prev)
     Ljdr2 = Ljj(Ic,Idr2_prev)
@@ -292,8 +297,88 @@ def dendrite_current_splitting(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr
                     -L1*(L3*Lj3+L2*(L3+Lj3)+Lj2*(L3+Lj3))
                     -(L3*Lj3+L2*(L3+Lj3)+Lj2*(L3+Lj3))*(Ldr2+Ljdr2))
                     *(Ldr1+Ljdr1+Lm2))) )
+                                        
+    Ij2_next = ( (1/Lj2)*(-Ib1*L1+(Iflux*(L1+Ldr2+Ljdr2)*M)
+                     /(Ldr2+Ljdr2)-(((Ldr2+Ljdr2)*(Ldr1+Ljdr1+Lm2)
+                    +L1*(Ldr1+Ldr2+Ljdr1+Ljdr2+Lm2))
+                    *(-(Lj2*(Ib2*L2*L3+Ib3*L3*Lj3+Ib2*(L2+L3)*Lj3)
+                    +Ib1*(L1*L3*(L2+Lj2)+L3*Lj2*Lj3
+                    +L1*(L2+L3+Lj2)*Lj3+L2*Lj2*(L3+Lj3)))
+                    *(Ldr2+Ljdr2)-Iflux*(-L1*(L3*(L2+Lj2)
+                    +(L2+L3+Lj2)*Lj3)-Lj2*(L3*Lj3+L2*(L3+Lj3))
+                    -(L3*(L2+Lj2)+(L2+L3+Lj2)*Lj3)*(Ldr2+Ljdr2))*M))
+                    /((Ldr2+Ljdr2)*((L1*L3*(L2+Lj2)+L3*Lj2*Lj3
+                    +L1*(L2+L3+Lj2)*Lj3+L2*Lj2*(L3+Lj3))
+                    *(Ldr2+Ljdr2)-(-L1*(L3*(L2+Lj2)
+                    +(L2+L3+Lj2)*Lj3)-Lj2*(L3*Lj3+L2*(L3+Lj3))
+                    -(L3*(L2+Lj2)+(L2+L3+Lj2)*Lj3)
+                    *(Ldr2+Ljdr2))*(Ldr1+Ljdr1+Lm2)))) )                                       
+                                                                                                 
+    Ij3_next = ( (L3*(Ib3*(Lj2*(Ldr2+Ljdr2)*(Ldr1+Ljdr1+Lm2)
+                    +L1*(L2+Lj2)*(Ldr1+Ldr2+Ljdr1+Ljdr2+Lm2)
+                    +L2*(Lj2*Ljdr1+Lj2*Ljdr2+Ljdr1*Ljdr2
+                    +Ldr1*(Ldr2+Lj2+Ljdr2)+(Lj2+Ljdr2)*Lm2
+                    +Ldr2*(Lj2+Ljdr1+Lm2)))+Lj2*(Ib2*((Ldr2+Ljdr2)
+                    *(Ldr1+Ljdr1+Lm2)+L1*(Ldr1+Ldr2+Ljdr1+Ljdr2+Lm2))
+                    +(Ldr2+Ljdr2)*(Ib1*(Ldr1+Ljdr1+Lm2)+Iflux*M))))
+                    /(L3*Ldr1*Ldr2*Lj2+L3*Ldr1*Ldr2*Lj3
+                    +L3*Ldr1*Lj2*Lj3+L3*Ldr2*Lj2*Lj3+Ldr1*Ldr2*Lj2*Lj3
+                    +L3*Ldr2*Lj2*Ljdr1+L3*Ldr2*Lj3*Ljdr1+L3*Lj2*Lj3*Ljdr1
+                    +Ldr2*Lj2*Lj3*Ljdr1+L3*Ldr1*Lj2*Ljdr2+L3*Ldr1*Lj3*Ljdr2
+                    +L3*Lj2*Lj3*Ljdr2+Ldr1*Lj2*Lj3*Ljdr2+L3*Lj2*Ljdr1*Ljdr2
+                    +L3*Lj3*Ljdr1*Ljdr2+Lj2*Lj3*Ljdr1*Ljdr2+(Lj2*Lj3*(Ldr2+Ljdr2)
+                    +L3*(Lj2*Lj3+Ldr2*(Lj2+Lj3)+(Lj2+Lj3)*Ljdr2))*Lm2
+                    +L1*(L3*(L2+Lj2)+(L2+L3+Lj2)*Lj3)*(Ldr1+Ldr2+Ljdr1+Ljdr2+Lm2)
+                    +L2*(L3+Lj3)*(Lj2*Ljdr1+Lj2*Ljdr2+Ljdr1*Ljdr2
+                    +Ldr1*(Ldr2+Lj2+Ljdr2)+(Lj2+Ljdr2)*Lm2+Ldr2*(Lj2+Ljdr1+Lm2))) )
     
-    return Idr1_next, Idr2_next
+    I1_next = ( Ib1-(Iflux*M)/(Ldr2+Ljdr2)+((Ldr1+Ldr2+Ljdr1+Ljdr2+Lm2)
+                    *(-(Lj2*(Ib2*L2*L3+Ib3*L3*Lj3+Ib2*(L2+L3)*Lj3)
+                    +Ib1*(L1*L3*(L2+Lj2)+L3*Lj2*Lj3+L1*(L2+L3+Lj2)
+                    *Lj3+L2*Lj2*(L3+Lj3)))*(Ldr2+Ljdr2)
+                    -Iflux*(-L1*(L3*(L2+Lj2)+(L2+L3+Lj2)*Lj3)
+                    -Lj2*(L3*Lj3+L2*(L3+Lj3))-(L3(L2+Lj2)+(L2+L3+Lj2)*Lj3)
+                    *(Ldr2+Ljdr2))*M))/((Ldr2+Ljdr2)*((L1*L3*(L2+Lj2)
+                    +L3*Lj2*Lj3+L1*(L2+L3+Lj2)*Lj3+L2*Lj2*(L3+Lj3))
+                    *(Ldr2+Ljdr2)-(-L1*(L3*(L2+Lj2)+(L2+L3+Lj2)*Lj3)
+                    -Lj2*(L3*Lj3+L2*(L3+Lj3))-(L3*(L2+Lj2)+(L2+L3+Lj2)*Lj3)
+                    *(Ldr2+Ljdr2))*(Ldr1+Ljdr1+Lm2))) )
+                                                       
+    I2_next = ( Ib1+Ib2+(Ib1*L1)/Lj2-(Iflux*(L1+Ldr2+Lj2+Ljdr2)*M)
+                    /(Lj2*(Ldr2+Ljdr2))+((L1+Lj2+((L1+Ldr2+Lj2+Ljdr2)*
+                    (Ldr1 + Ljdr1 + Lm2))/(Ldr2+Ljdr2))
+                    *(-(Lj2*(Ib2*L2*L3+Ib3*L3*Lj3+Ib2*(L2+L3)*Lj3)
+                    +Ib1*(L1*L3*(L2+Lj2)+L3*Lj2*Lj3
+                    +L1*(L2+L3+Lj2)*Lj3+L2*Lj2*(L3+Lj3)))
+                    *(Ldr2+Ljdr2)-Iflux*(-L1*(L3*(L2+Lj2)
+                    +(L2+L3+Lj2)*Lj3)-Lj2*(L3*Lj3+L2*(L3+Lj3))
+                    -(L3*(L2+Lj2)+(L2+L3+Lj2)*Lj3)*(Ldr2+Ljdr2))*M))
+                    /(Lj2*((L1*L3*(L2+Lj2)+L3*Lj2*Lj3+L1*(L2+L3+Lj2)*Lj3
+                    +L2*Lj2*(L3+Lj3))*(Ldr2+Ljdr2)-(-L1*(L3*(L2+Lj2)
+                    +(L2+L3+Lj2)*Lj3)-Lj2*(L3*Lj3+L2*(L3+Lj3))
+                    -(L3*(L2+Lj2)+(L2+L3+Lj2)*Lj3)*(Ldr2+Ljdr2))*(Ldr1+Ljdr1+Lm2))) )
+                                                         
+    I3_next = ( (Lj3*(Ib3*(Lj2*(Ldr2+Ljdr2)*(Ldr1+Ljdr1+Lm2)
+                    +L1*(L2+Lj2)*(Ldr1+Ldr2+Ljdr1+Ljdr2+Lm2)
+                    +L2*(Lj2*Ljdr1+Lj2*Ljdr2+Ljdr1*Ljdr2
+                    +Ldr1*(Ldr2+Lj2+Ljdr2)+(Lj2+Ljdr2)*Lm2
+                    +Ldr2*(Lj2+Ljdr1+Lm2)))+Lj2*(Ib2*((Ldr2+Ljdr2)*(Ldr1+Ljdr1+Lm2)
+                    +L1*(Ldr1+Ldr2+Ljdr1+Ljdr2+Lm2))+(Ldr2+Ljdr2)*(Ib1(Ldr1+Ljdr1+Lm2)
+                    +Iflux*M))))/(L3*Ldr1*Ldr2*Lj2+L3*Ldr1*Ldr2*Lj3+L3*Ldr1*Lj2*Lj3
+                    +L3*Ldr2*Lj2*Lj3+Ldr1*Ldr2*Lj2*Lj3
+                    +L3*Ldr2*Lj2*Ljdr1+L3*Ldr2*Lj3*Ljdr1
+                    +L3*Lj2*Lj3*Ljdr1+Ldr2*Lj2*Lj3*Ljdr1
+                    +L3*Ldr1*Lj2*Ljdr2+L3*Ldr1*Lj3*Ljdr2
+                    +L3*Lj2*Lj3*Ljdr2+Ldr1*Lj2*Lj3*Ljdr2
+                    +L3*Lj2*Ljdr1*Ljdr2+L3*Lj3*Ljdr1*Ljdr2
+                    +Lj2*Lj3*Ljdr1*Ljdr2+(Lj2*Lj3*(Ldr2+Ljdr2)
+                    +L3*(Lj2*Lj3+Ldr2*(Lj2+Lj3)+(Lj2+Lj3)*Ljdr2))*Lm2
+                    +L1*(L3*(L2+Lj2)+(L2+L3+Lj2)*Lj3)*(Ldr1+Ldr2+Ljdr1+Ljdr2+Lm2)
+                    +L2*(L3+Lj3)*(Lj2*Ljdr1+Lj2*Ljdr2+Ljdr1*Ljdr2
+                    +Ldr1*(Ldr2+Lj2+Ljdr2)+(Lj2+Ljdr2)*Lm2
+                    +Ldr2*(Lj2+Ljdr1+Lm2))) )
+                                                
+    return Idr1_next, Idr2_next, Ij2_next, Ij3_next, I1_next, I2_next, I3_next
 
 def dendrite_current_splitting__old(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3):
     # print('Ic = {}'.format(Ic))
