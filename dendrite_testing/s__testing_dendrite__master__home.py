@@ -11,38 +11,50 @@ plt.close('all')
 
 #%% set up parameters that apply to all
     
-num_loop = 7
+data_set = 'minimal' #'intermediate' #'all'
+
+num_loop = 10
 
 amp_vec = np.linspace(15,15,1) # np.logspace(np.log10(7),np.log10(200),num_loop)#np.linspace(25,25,1)#np.linspace(25,25,1)#
-mu1_vec = np.linspace(1,2.5,num_loop)
+mu1_vec = np.linspace(1.25,2.25,num_loop)
 mu2_vec = np.linspace(0.25,1,num_loop)
-mu3_vec = np.linspace(0.1,2.5,num_loop)
-mu4_vec = np.linspace(0.1,2.5,num_loop)
+mu3_vec = np.linspace(0.0,2.25,num_loop)
+mu4_vec = np.linspace(0.0,1.5,num_loop)
 
 #%% constant drive, no leak, vary L_di
 
-# data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi7.75nH_taudi7.75ms_tsim200ns']  
-                  
-# data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi7.75nH_taudi7.75ms_tsim200ns',                                    
-#                   'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi77.5ms_tsim200ns',
-#                   'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi775ms_tsim200ns',
-#                   'dend__cnst_drv__Idrv20uA_Ldi7.75uH_taudi7.75s_tsim200ns',
-#                   'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi775ms_tsim1000ns',
-#                   'dend__cnst_drv__Idrv20uA_Ldi7.75uH_taudi7.75s_tsim1000ns']
-
-data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi7.75nH_taudi7.75ms_tsim200ns',                                    
-                  'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi77.5ms_tsim200ns',
-                  'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi775ms_tsim200ns',
-                  'dend__cnst_drv__Idrv20uA_Ldi7.75uH_taudi7.75s_tsim200ns']
+if data_set == 'minimal':
+    data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi7.75nH_taudi7.75ms_tsim200ns']
+    L_di_vec = [7.75e-9]
+    tau_di_vec = [7.75e-3]
+    dt_vec = [0.1e-9]
+    tf_vec = [200e-9]
+    
+if data_set == 'intermediate':
+    data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi7.75nH_taudi7.75ms_tsim200ns',                                    
+                      'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi77.5ms_tsim200ns',
+                      'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi775ms_tsim200ns',
+                      'dend__cnst_drv__Idrv20uA_Ldi7.75uH_taudi7.75s_tsim200ns']
+    L_di_vec = [7.75e-9,77.5e-9,775e-9,7.75e-6]
+    tau_di_vec = [7.75e-3,77.5e-3,775e-3,7.75]
+    dt_vec = [0.1e-9,0.1e-9,0.1e-9,0.1e-9]
+    tf_vec = [200e-9,200e-9,200e-9,200e-9]
+    
+if data_set == 'all':                  
+    data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi7.75nH_taudi7.75ms_tsim200ns',                                    
+                      'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi77.5ms_tsim200ns',
+                      'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi775ms_tsim200ns',
+                      'dend__cnst_drv__Idrv20uA_Ldi7.75uH_taudi7.75s_tsim200ns',
+                      'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi775ms_tsim1000ns',
+                      'dend__cnst_drv__Idrv20uA_Ldi7.75uH_taudi7.75s_tsim1000ns']
+    L_di_vec = [7.75e-9,77.5e-9,775e-9,7.75e-6,775e-9,7.75e-6]
+    tau_di_vec = [7.75e-3,77.5e-3,775e-3,7.75,0.775,7.75]
+    dt_vec = [0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9]
+    tf_vec = [200e-9,200e-9,200e-9,200e-9,1000e-9,1000e-9]
 
 drive_info = dict()
 drive_info['drive_type'] = 'piecewise_linear'
 drive_info['pwl_drive'] = [[0e-9,0e-6],[1.9e-9,0e-6],[2e-9,20e-6]]
-
-L_di_vec = [7.75e-9,77.5e-9,775e-9,7.75e-6,775e-9,7.75e-6]
-tau_di_vec = [7.75e-3,77.5e-3,775e-3,7.75,0.775,7.75]
-dt_vec = [0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9]
-tf_vec = [200e-9,200e-9,200e-9,200e-9,1000e-9,1000e-9]
 
 master_error_plot_name = 'no_leak__vary_L_di'
  
@@ -53,30 +65,41 @@ elapsed = time.time() - t_tot
 print('soen_sim duration = '+str(elapsed)+' s for no leak, vary L_di')
 
 #%% constant drive, vary tau_di
-# data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi50ns_tsim200ns',                                    
-#                   'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi100ns_tsim200ns',
-#                   'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi200ns_tsim200ns',
-#                   'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi1000ns_tsim200ns',
-#                   'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi50ns_tsim1000ns',                                    
-#                   'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi100ns_tsim1000ns',
-#                   'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi200ns_tsim1000ns',
-#                   'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi1000ns_tsim1000ns']
 
-# data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi50ns_tsim200ns']
-
-data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi50ns_tsim200ns',                                    
-                  'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi100ns_tsim200ns',
-                  'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi200ns_tsim200ns',
-                  'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi1000ns_tsim200ns']
+if data_set == 'minimal':
+    data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi50ns_tsim200ns']
+    L_di_vec = [77.5e-9]
+    tau_di_vec = [50e-9]
+    dt_vec = [0.1e-9]
+    tf_vec = [200e-9]
+    
+if data_set == 'intermediate':
+    data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi50ns_tsim200ns',                                    
+                      'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi100ns_tsim200ns',
+                      'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi200ns_tsim200ns',
+                      'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi1000ns_tsim200ns']
+    L_di_vec = [77.5e-9,77.5e-9,77.5e-9,77.5e-9]
+    tau_di_vec = [50e-9,100e-9,200e-9,1000e-9]
+    dt_vec = [0.1e-9,0.1e-9,0.1e-9,0.1e-9]
+    tf_vec = [200e-9,200e-9,200e-9,200e-9]
+    
+if data_set == 'all':    
+    data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi50ns_tsim200ns',                                    
+                      'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi100ns_tsim200ns',
+                      'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi200ns_tsim200ns',
+                      'dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi1000ns_tsim200ns',
+                      'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi50ns_tsim1000ns',                                    
+                      'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi100ns_tsim1000ns',
+                      'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi200ns_tsim1000ns',
+                      'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi1000ns_tsim1000ns']
+    L_di_vec = [77.5e-9,77.5e-9,77.5e-9,77.5e-9,775e-9,775e-9,775e-9,775e-9]
+    tau_di_vec = [50e-9,100e-9,200e-9,1000e-9,50e-9,100e-9,200e-9,1000e-9]
+    dt_vec = [0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9]
+    tf_vec = [200e-9,200e-9,200e-9,200e-9,1000e-9,1000e-9,1000e-9,1000e-9]
 
 drive_info = dict()
 drive_info['drive_type'] = 'piecewise_linear'
 drive_info['pwl_drive'] = [[0e-9,0e-6],[1.9e-9,0e-6],[2e-9,20e-6]]
-
-L_di_vec = [77.5e-9,77.5e-9,77.5e-9,77.5e-9,775e-9,775e-9,775e-9,775e-9]
-tau_di_vec = [50e-9,100e-9,200e-9,1000e-9,50e-9,100e-9,200e-9,1000e-9]
-dt_vec = [0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9]
-tf_vec = [200e-9,200e-9,200e-9,200e-9,1000e-9,1000e-9,1000e-9,1000e-9]
  
 master_error_plot_name = 'vary_tau_di'
  
@@ -88,19 +111,24 @@ print('soen_sim duration = '+str(elapsed)+' s for vary tau_di')
 
 #%% constant drive, vary I_drive
 
-# data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi77.5ms_tsim200ns']
+if data_set == 'minimal':
+    data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi77.5ms_tsim200ns']
+    L_di_vec = [77.5e-9]
+    tau_di_vec = [77.5e-3]
+    dt_vec = [0.1e-9]
+    tf_vec = [200e-9]
 
-data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi77.5ms_tsim200ns',                                    
-                  'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi775ms_tsim200ns']
+if data_set == 'intermediate' or data_set == 'all':
+    data_file_list = ['dend__cnst_drv__Idrv20uA_Ldi77.5nH_taudi77.5ms_tsim200ns',                                    
+                      'dend__cnst_drv__Idrv20uA_Ldi775nH_taudi775ms_tsim200ns']
+    L_di_vec = [77.5e-9,775e-9]
+    tau_di_vec = [77.5e-3,775e-3]
+    dt_vec = [0.1e-9,0.1e-9]
+    tf_vec = [200e-9,200e-9]
 
 drive_info = dict()
 drive_info['drive_type'] = 'piecewise_linear'
 drive_info['pwl_drive'] = [[0e-9,0e-6],[1.9e-9,0e-6],[2e-9,20e-6]]
-
-L_di_vec = [77.5e-9,775e-9]
-tau_di_vec = [77.5e-3,775e-3]
-dt_vec = [0.1e-9,0.1e-9]
-tf_vec = [200e-9,200e-9]
  
 master_error_plot_name = 'vary_I_drive'
  
@@ -110,10 +138,12 @@ best_params__vary_Idrive_20uA, error_mat_master__mu1_mu2__vary_Idrive_20uA, erro
 elapsed = time.time() - t_tot
 print('soen_sim duration = '+str(elapsed)+' s for vary I_drive_20uA')
 
-# data_file_list = ['dend__cnst_drv__Idrv25uA_Ldi77.5nH_taudi77.5ms_tsim200ns']
+if data_set == 'minimal':
+    data_file_list = ['dend__cnst_drv__Idrv25uA_Ldi77.5nH_taudi77.5ms_tsim200ns']
 
-data_file_list = ['dend__cnst_drv__Idrv25uA_Ldi77.5nH_taudi77.5ms_tsim200ns',
-                  'dend__cnst_drv__Idrv25uA_Ldi775nH_taudi775ms_tsim200ns']
+if data_set == 'intermediate' or data_set == 'all':
+    data_file_list = ['dend__cnst_drv__Idrv25uA_Ldi77.5nH_taudi77.5ms_tsim200ns',
+                      'dend__cnst_drv__Idrv25uA_Ldi775nH_taudi775ms_tsim200ns']
 
 drive_info['pwl_drive'] = [[0e-9,0e-6],[1.9e-9,0e-6],[2e-9,25e-6]]
  
@@ -123,8 +153,12 @@ best_params__vary_Idrive_25uA, error_mat_master__mu1_mu2__vary_Idrive_25uA, erro
 elapsed = time.time() - t_tot
 print('soen_sim duration = '+str(elapsed)+' s for vary I_drive_25uA')
 
-data_file_list = ['dend__cnst_drv__Idrv30uA_Ldi77.5nH_taudi77.5ms_tsim200ns',
-                  'dend__cnst_drv__Idrv30uA_Ldi775nH_taudi775ms_tsim200ns']
+if data_set == 'minimal':
+    data_file_list = ['dend__cnst_drv__Idrv30uA_Ldi77.5nH_taudi77.5ms_tsim200ns']
+    
+if data_set == 'intermediate' or data_set == 'all':
+    data_file_list = ['dend__cnst_drv__Idrv30uA_Ldi77.5nH_taudi77.5ms_tsim200ns',
+                      'dend__cnst_drv__Idrv30uA_Ldi775nH_taudi775ms_tsim200ns']
 
 drive_info['pwl_drive'] = [[0e-9,0e-6],[1.9e-9,0e-6],[2e-9,30e-6]]
  
@@ -136,24 +170,29 @@ print('soen_sim duration = '+str(elapsed)+' s for vary I_drive_30uA')
 
 #%% linear ramp
 
-# data_file_list = ['dend__lin_ramp__Lsi7.75nH']
+if data_set == 'minimal':
+    data_file_list = ['dend__lin_ramp__Lsi7.75nH']
+    L_di_vec = [7.75e-9]
+    tau_di_vec = [7.75e-9/1e-6]
+    dt_vec = [0.1e-9]
+    tf_vec = [200e-9]
 
-data_file_list = ['dend__lin_ramp__Lsi7.75nH',                                    
-                  'dend__lin_ramp__Lsi77.5nH',
-                  'dend__lin_ramp__Lsi775nH',
-                  'dend__lin_ramp__Lsi7.75uH']
+if data_set == 'intermediate' or data_set == 'all':
+    data_file_list = ['dend__lin_ramp__Lsi7.75nH',                                    
+                      'dend__lin_ramp__Lsi77.5nH',
+                      'dend__lin_ramp__Lsi775nH',
+                      'dend__lin_ramp__Lsi7.75uH']
+    L_di_vec = [7.75e-9,77.5e-9,775e-9,7.75e-6]
+    tau_di_vec = []
+    for L in L_di_vec:
+        tau_di_vec.append(L/1e-6)
+    dt_vec = [0.1e-9,0.1e-9,0.1e-9,0.1e-9]
+    tf_vec = [200e-9,200e-9,200e-9,200e-9]
 
 drive_info = dict()
 drive_info['drive_type'] = 'linear_ramp'
 drive_info['pwl_drive'] = [[0e-9,15e-6],[100e-9,30e-6]]
 
-L_di_vec = [7.75e-9,77.5e-9,775e-9,7.75e-6]
-tau_di_vec = []
-for L in L_di_vec:
-    tau_di_vec.append(L/1e-6)
-dt_vec = [0.1e-9,0.1e-9,0.1e-9,0.1e-9]
-tf_vec = [200e-9,200e-9,200e-9,200e-9]
- 
 master_error_plot_name = 'lin_ramp'
  
 #call main sweep function 
@@ -164,33 +203,50 @@ print('soen_sim duration = '+str(elapsed)+' s for lin_ramp')
 
 #%% square pulse sequence
 
-# data_file_list = ['dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi50ns_tsim_200ns']
+if data_set == 'minimal':
+    data_file_list = ['dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi50ns_tsim_200ns']
+    L_di_vec = [7.75e-9]
+    tau_di_vec = [50e-9]
+    dt_vec = [0.01e-9]
+    tf_vec = [200e-9]
 
-data_file_list = ['dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi50ns_tsim_200ns',
-                  'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi100ns_tsim_200ns',
-                  'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi200ns_tsim_200ns',
-                  'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi1000ns_tsim_200ns',
-                  'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi50ns_tsim_200ns',
-                  'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi100ns_tsim_200ns',
-                  'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi200ns_tsim_200ns',
-                  'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi1000ns_tsim_200ns']
+if data_set == 'intermediate':
+    data_file_list = ['dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi50ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi100ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi200ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi1000ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi50ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi100ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi200ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi1000ns_tsim_200ns']
+    L_di_vec = [7.75e-9,7.75e-9,7.75e-9,7.75e-9,77.5e-9,77.5e-9,77.5e-9,77.5e-9]
+    tau_di_vec = [50e-9,100e-9,200e-9,1000e-9,50e-9,100e-9,200e-9,1000e-9]
+    dt_vec = [0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9]
+    # dt_vec = [0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9]
+    tf_vec = [200e-9,200e-9,200e-9,200e-9,200e-9,200e-9,200e-9,200e-9]
 
-# data_file_list = ['dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi50ns_tsim_200ns',
-#                   'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi100ns_tsim_200ns',
-#                   'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi200ns_tsim_200ns',
-#                   'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi1000ns_tsim_200ns',
-#                   'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi50ns_tsim_200ns',
-#                   'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi100ns_tsim_200ns',
-#                   'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi200ns_tsim_200ns',
-#                   'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi1000ns_tsim_200ns',
-#                   'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi775nH_taudi50ns_tsim_200ns',
-#                   'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi775nH_taudi100ns_tsim_200ns',
-#                   'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi775nH_taudi200ns_tsim_200ns',
-#                   'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi775nH_taudi1000ns_tsim_200ns',
-#                   'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75uH_taudi50ns_tsim_200ns',
-#                   'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75uH_taudi100ns_tsim_200ns',
-#                   'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75uH_taudi200ns_tsim_200ns',
-#                   'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75uH_taudi1000ns_tsim_200ns']
+if data_set == 'all':
+    data_file_list = ['dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi50ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi100ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi200ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75nH_taudi1000ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi50ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi100ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi200ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi77.5nH_taudi1000ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi775nH_taudi50ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi775nH_taudi100ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi775nH_taudi200ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi775nH_taudi1000ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75uH_taudi50ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75uH_taudi100ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75uH_taudi200ns_tsim_200ns',
+                      'dend__sq_pls_seq__amp20uA_dur10ns_per20ns_Ldi7.75uH_taudi1000ns_tsim_200ns']
+    L_di_vec = [7.75e-9,7.75e-9,7.75e-9,7.75e-9,77.5e-9,77.5e-9,77.5e-9,77.5e-9,775e-9,775e-9,775e-9,775e-9,7.75e-6,7.75e-6,7.75e-6,7.75e-6]
+    tau_di_vec = [50e-9,100e-9,200e-9,1000e-9,50e-9,100e-9,200e-9,1000e-9,50e-9,100e-9,200e-9,1000e-9,50e-9,100e-9,200e-9,1000e-9]
+    dt_vec = [0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9]
+    # dt_vec = [0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9]
+    tf_vec = [200e-9,200e-9,200e-9,200e-9,200e-9,200e-9,200e-9,200e-9,200e-9,200e-9,200e-9,200e-9,200e-9,200e-9,200e-9,200e-9]
 
 drive_info = dict()
 drive_info['drive_type'] = 'sq_pls_trn'
@@ -203,12 +259,6 @@ sq_pls_trn_params['t_period'] = 20e-9
 sq_pls_trn_params['value_off'] = 0
 sq_pls_trn_params['value_on'] = 20e-6
 drive_info['sq_pls_trn_params'] = sq_pls_trn_params
-
-L_di_vec = [7.75e-9,7.75e-9,7.75e-9,7.75e-9,77.5e-9,77.5e-9,77.5e-9,77.5e-9,775e-9,775e-9,775e-9,775e-9,7.75e-6,7.75e-6,7.75e-6,7.75e-6]
-tau_di_vec = [50e-9,100e-9,200e-9,1000e-9,50e-9,100e-9,200e-9,1000e-9,50e-9,100e-9,200e-9,1000e-9,50e-9,100e-9,200e-9,1000e-9]
-dt_vec = [0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9,0.1e-9]
-# dt_vec = [0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9,0.01e-9]
-tf_vec = [200e-9,200e-9,200e-9,200e-9,200e-9,200e-9,200e-9,200e-9]
  
 master_error_plot_name = 'sq_pls_trn_per20ns'
  
@@ -264,15 +314,30 @@ print('soen_sim duration = '+str(elapsed)+' s for sq_pls_trn_per20ns')
 
 #%% exponential pulse sequence
 
-# data_file_list = ['dend__exp_pls_seq__amp20uA_tauin50ns_per100ns_Ldi7.75nH_taudi100ns']
+if data_set == 'minimal':
+    data_file_list = ['dend__exp_pls_seq__amp20uA_tauin50ns_per100ns_Ldi7.75nH_taudi100ns']
+    L_di_vec = [7.75e-9]
+    tau_di_vec = [100e-9]
+    dt_vec = [0.01e-9]
+    tf_vec = [200e-9]
 
-# data_file_list = ['dend__exp_pls_seq__amp20uA_tauin50ns_per100ns_Ldi7.75nH_taudi100ns',
-#                   'dend__exp_pls_seq__amp20uA_tauin50ns_per100ns_Ldi7.75nH_taudi1000ns',
-#                   'dend__exp_pls_seq__amp20uA_tauin50ns_per100ns_Ldi77.5nH_taudi100ns',
-#                   'dend__exp_pls_seq__amp20uA_tauin50ns_per100ns_Ldi77.5nH_taudi1000ns']
+if data_set == 'intermediate':
+    data_file_list = ['dend__exp_pls_seq__amp20uA_tauin50ns_per100ns_Ldi7.75nH_taudi100ns',
+                      'dend__exp_pls_seq__amp20uA_tauin50ns_per100ns_Ldi77.5nH_taudi100ns.75nH_taudi1000ns']
+    L_di_vec = [7.75e-9,77.5e-9]
+    tau_di_vec = [100e-9,100e-9]
+    dt_vec = [0.01e-9,0.01e-9]
+    tf_vec = [200e-9,200e-9]
 
-data_file_list = ['dend__exp_pls_seq__amp20uA_tauin50ns_per100ns_Ldi7.75nH_taudi100ns',
-                  'dend__exp_pls_seq__amp20uA_tauin50ns_per100ns_Ldi7.75nH_taudi1000ns']
+if data_set == 'all':    
+    data_file_list = ['dend__exp_pls_seq__amp20uA_tauin50ns_per100ns_Ldi7.75nH_taudi100ns',
+                      'dend__exp_pls_seq__amp20uA_tauin50ns_per100ns_Ldi7.75nH_taudi1000ns',
+                      'dend__exp_pls_seq__amp20uA_tauin50ns_per100ns_Ldi77.5nH_taudi100ns',
+                      'dend__exp_pls_seq__amp20uA_tauin50ns_per100ns_Ldi77.5nH_taudi1000ns']
+    L_di_vec = [7.75e-9,7.75e-9,77.5e-9,77.5e-9]
+    tau_di_vec = [100e-9,1000e-9,100e-9,1000e-9]
+    dt_vec = [0.01e-9,0.01e-9,0.01e-9,0.01e-9]
+    tf_vec = [1000e-9,1000e-9,1000e-9,1000e-9]
 
 drive_info = dict()
 drive_info['drive_type'] = 'exp_pls_trn'
@@ -289,12 +354,6 @@ exp_pls_trn_params['L1'] = 250e-9
 exp_pls_trn_params['L2'] = 200e-12
 exp_pls_trn_params['Ib'] = 20e-6
 drive_info['exp_pls_trn_params'] = exp_pls_trn_params
-
-L_di_vec = [7.75e-9,7.75e-9,77.5e-9,77.5e-9]
-tau_di_vec = [100e-9,1000e-9,100e-9,1000e-9]
-# dt_vec = [0.1e-9,0.1e-9,0.1e-9,0.1e-9]
-dt_vec = [0.01e-9,0.01e-9,0.01e-9,0.01e-9]
-tf_vec = [1000e-9,1000e-9,1000e-9,1000e-9]
  
 master_error_plot_name = 'exp_pls_trn_per100ns'
  

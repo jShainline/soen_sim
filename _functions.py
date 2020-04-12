@@ -66,9 +66,9 @@ def synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si,tau_rise,tau_fal
 
     return I_prefactor
 
-def dendritic_time_stepper(time_vec,A_prefactor,I_drive,I_b,I_th,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,I_di_sat,tau_di,mu_1,mu_2,mu_3,mu_4):
+def dendritic_time_stepper(time_vec,A_prefactor,I_drive,I_b,I_th,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,tau_di,mu_1,mu_2,mu_3,mu_4):
     
-    # print('A_prefactor = {}'.format(A_prefactor))
+    # print('A_prefactor = {}'.format(A_prefactor))    
     
     #initial approximations
     Lj0 = Ljj(I_th,0)
@@ -80,7 +80,8 @@ def dendritic_time_stepper(time_vec,A_prefactor,I_drive,I_b,I_th,M_direct,Lm2,Ld
     for ii in range(len(time_vec)-1):
         dt = time_vec[ii+1]-time_vec[ii]
                                # dendrite_current_splitting(Ic,  Iflux,        Ib1,   Ib2,   Ib3,   M,       Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev)
-        Idr1_next, Idr2_next = dendrite_current_splitting(I_th,I_drive[ii+1],I_b[0],I_b[1],I_b[2],M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev) 
+        Idr1_next, Idr2_next = dendrite_current_splitting(I_th,I_drive[ii+1],I_b[0],I_b[1],I_b[2],M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev)
+        I_di_sat = I_di_sat_of_I_dr_2(Idr2_next)
         # I_dr = dendrite_current_splitting__old(I_th,I_drive[ii+1],I_b[0],I_b[1],I_b[2],M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3) 
         # if ii == 0:
             # print('I_dr = {}'.format(I_dr))
@@ -114,13 +115,13 @@ def dendritic_time_stepper(time_vec,A_prefactor,I_drive,I_b,I_th,M_direct,Lm2,Ld
     
     return I_di_vec
 
-def dendritic_drive__step_function(time_vec, amplitude = 5e-6, time_on = 5e-9):
+# def dendritic_drive__step_function(time_vec, amplitude = 5e-6, time_on = 5e-9):
     
-    t_on_ind = (np.abs(np.asarray(time_vec)-time_on)).argmin()
-    input_signal__dd = np.zeros([len(time_vec),1])
-    input_signal__dd[t_on_ind:] = amplitude
+#     t_on_ind = (np.abs(np.asarray(time_vec)-time_on)).argmin()
+#     input_signal__dd = np.zeros([len(time_vec),1])
+#     input_signal__dd[t_on_ind:] = amplitude
     
-    return input_signal__dd
+#     return input_signal__dd
 
 def dendritic_drive__piecewise_linear(time_vec,pwl):
     
@@ -375,6 +376,17 @@ def Ljj(critical_current,current):
     L = (3.2910596281416393e-16/critical_current)*np.arcsin(norm_current)/(norm_current)
     
     return L
+
+def I_di_sat_of_I_dr_2(Idr2):
+    
+    if Idr2 < 40e-6:
+        I_di_sat = 10e-6
+    if Idr2 >= 40e-6 and Idr2 <= 44.7416e-6:
+        I_di_sat = 1.77837*Idr2-61.34579e-6
+    if Idr2 > 44.7416e-6:
+        I_di_sat = 18.0660e-6
+    
+    return I_di_sat
 
 def amp_fitter(time_vec,I_di):
     

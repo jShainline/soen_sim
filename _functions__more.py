@@ -33,8 +33,8 @@ def dendrite_model__parameter_sweep(data_file_list,L_di_vec,tau_di_vec,dt_vec,tf
     num_mu3 = len(mu3_vec)
     num_mu4 = len(mu4_vec)
     
-    mu3_initial = 1
-    mu4_initial = 0.5
+    mu3_initial = 0#1
+    mu4_initial = 0#0.5
     
     print('\n\nrunning dendrite_model__parameter_sweep\n\nnum_files = {:d}\nnum_amps = {:d}\nnum_mu1 = {:d}\nnum_mu2 = {:d}\nnum_mu3 = {:d}\nnum_mu4 = {:d}'.format(num_sims,num_amps,num_mu1,num_mu2,num_mu3,num_mu4))
     

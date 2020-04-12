@@ -521,15 +521,17 @@ def plot_wr_comparison__drive_and_response(main_title,target_data__drive,actual_
     fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)   
     fig.suptitle(main_title)
     
+    tf_ind = (np.abs(np.asarray(target_data__drive[0,:])-actual_data__drive[0,-1])).argmin()
+    
     axs[0].plot(actual_data__drive[0,:]*1e6,actual_data__drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim')   
-    axs[0].plot(target_data__drive[0,:]*1e6,target_data__drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
+    axs[0].plot(target_data__drive[0,0:tf_ind]*1e6,target_data__drive[1,0:tf_ind]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
     axs[0].set_xlabel(r'Time [$\mu$s]')
     axs[0].set_ylabel(r'$I_{flux}$ [$\mu$A]')
     axs[0].legend()
     axs[0].set_title('Drive signal input to DR loop (error = {:1.5f})'.format(error__drive))
      
     axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim')   
-    axs[1].plot(target_data[0,:]*1e6,target_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
+    axs[1].plot(target_data[0,0:tf_ind]*1e6,target_data[1,0:tf_ind]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
     axs[1].set_xlabel(r'Time [$\mu$s]')
     axs[1].set_ylabel(r'$I_{dr}$ [$\mu$A]')
     axs[1].legend()

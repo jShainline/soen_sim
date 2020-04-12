@@ -4,7 +4,7 @@ from pylab import *
 import time
 import pickle
 
-from _functions import synaptic_response_function, synaptic_time_stepper, dendritic_drive__step_function, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR
+from _functions import synaptic_response_function, synaptic_time_stepper, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR
 from _plotting import plot_dendritic_drive, plot_dendritic_integration_loop_current
 
 class input_signal():
@@ -482,7 +482,7 @@ class dendrite():
         A_prefactor = self.dendrite_model_params['amp']*L_reference/L3 #9.27586207*L_reference/L3#self.sim_params['A']*L_reference/L3 #
         # print(A_prefactor)
         tau_di = self.integration_loop_time_constant
-        I_di_vec = dendritic_time_stepper(time_vec,A_prefactor,dendritic_drive,I_b,I_th,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,I_di_sat,tau_di,mu_1,mu_2,mu_3,mu_4)
+        I_di_vec = dendritic_time_stepper(time_vec,A_prefactor,dendritic_drive,I_b,I_th,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,tau_di,mu_1,mu_2,mu_3,mu_4)
         
         self.I_di = I_di_vec        
         
