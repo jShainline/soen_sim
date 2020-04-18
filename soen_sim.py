@@ -4,7 +4,7 @@ from pylab import *
 import time
 import pickle
 
-from _functions import synaptic_response_function, synaptic_time_stepper, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR
+from _functions import synaptic_response_function, synaptic_time_stepper, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR, dendrite_time_stepper
 from _plotting import plot_dendritic_drive, plot_dendritic_integration_loop_current
 
 class input_signal():
@@ -459,30 +459,34 @@ class dendrite():
         # plot_dendritic_drive(time_vec, dendritic_drive)
         self.dendritic_drive = dendritic_drive
         
-        I_b = self.bias_currents
-        I_th = self.thresholding_junction_critical_current
-        I_di_sat = self.integration_loop_saturation_current
+        # I_b = self.bias_currents
+        # Ic = self.thresholding_junction_critical_current
+        # I_di_sat = self.integration_loop_saturation_current
         tau_di = self.integration_loop_time_constant
-        mu_1 = self.dendrite_model_params['mu1']
-        mu_2 = self.dendrite_model_params['mu2']
-        mu_3 = self.dendrite_model_params['mu3']
-        mu_4 = self.dendrite_model_params['mu4']
+        # mu_1 = self.dendrite_model_params['mu1']
+        # mu_2 = self.dendrite_model_params['mu2']
+        # mu_3 = self.dendrite_model_params['mu3']
+        # mu_4 = self.dendrite_model_params['mu4']
         # print('mu1 = {}'.format(mu_1))
         # print('mu2 = {}'.format(mu_2))
         # print('mu3 = {}'.format(mu_3))
         # print('mu4 = {}'.format(mu_4))
-        M_direct = self.input_direct_inductances[0][1]*np.sqrt(self.input_direct_inductances[0][0]*self.direct_connections[0].output_inductance)
-        Lm2 = self.input_direct_inductances[0][0]
-        Ldr1 = self.circuit_inductances[0]
-        Ldr2 = self.circuit_inductances[1]
-        L1 = self.circuit_inductances[2]
-        L2 = self.circuit_inductances[3]
+        # M_direct = self.input_direct_inductances[0][1]*np.sqrt(self.input_direct_inductances[0][0]*self.direct_connections[0].output_inductance)
+        # Lm2 = self.input_direct_inductances[0][0]
+        # Ldr1 = self.circuit_inductances[0]
+        # Ldr2 = self.circuit_inductances[1]
+        # L1 = self.circuit_inductances[2]
+        # L2 = self.circuit_inductances[3]
         L3 = self.integration_loop_self_inductance+self.integration_loop_output_inductance
-        L_reference = 10e-6
-        A_prefactor = self.dendrite_model_params['amp']*L_reference/L3 #9.27586207*L_reference/L3#self.sim_params['A']*L_reference/L3 #
+        # L_reference = 10e-6
+        # A_prefactor = self.dendrite_model_params['amp']*L_reference/L3 #9.27586207*L_reference/L3#self.sim_params['A']*L_reference/L3 #
         # print(A_prefactor)
-        tau_di = self.integration_loop_time_constant
-        I_di_vec = dendritic_time_stepper(time_vec,A_prefactor,dendritic_drive,I_b,I_th,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,tau_di,mu_1,mu_2,mu_3,mu_4)
+        # tau_di = self.integration_loop_time_constant
+        #I_di_vec = dendritic_time_stepper_old2(time_vec,A_prefactor,dendritic_drive,I_b,I_th,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,tau_di,mu_1,mu_2,mu_3,mu_4)
+        # R = 4.125
+        # I_di_vec = dendritic_time_stepper(time_vec,R,dendritic_drive,I_b,Ic,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,tau_di,mu_1,mu_2)
+        # dendrite_time_stepper(time_vec,I_drive,L3,tau_di)
+        I_di_vec = dendrite_time_stepper(time_vec,dendritic_drive,L3,tau_di)
         
         self.I_di = I_di_vec        
         

@@ -4,6 +4,7 @@ import time
 from matplotlib import pyplot as plt
 from pylab import *
 
+from util import physical_constants
 from _plotting import plot_dendritic_drive, plot_wr_comparison, plot_error_mat
 
 def synaptic_time_stepper(time_vec,present_time_index,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
@@ -66,10 +67,120 @@ def synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si,tau_rise,tau_fal
 
     return I_prefactor
 
-def dendritic_time_stepper(time_vec,A_prefactor,I_drive,I_b,I_th,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,tau_di,mu_1,mu_2,mu_3,mu_4):
+def dendrite_time_stepper(time_vec,I_drive,L3,tau_di):
     
-    # print('A_prefactor = {}'.format(A_prefactor))    
+    with open('../master_rate_matrix.soen', 'rb') as data_file:         
+        data_array_imported = pickle.load(data_file)
     
+    I_di_list__imported = data_array_imported['I_di_list']
+    I_drive_vec__imported = data_array_imported['I_drive_vec']
+    master_rate_matrix__imported = data_array_imported['master_rate_matrix']
+        
+    p = physical_constants()
+    Phi0 = p['Phi0']
+    I_fq = Phi0/L3
+    
+    I_di_vec = np.zeros([len(time_vec),1])
+    for ii in range(len(time_vec)-1):
+        dt = time_vec[ii+1]-time_vec[ii]
+                               
+        if I_drive[ii] > 19e-6:
+            ind1 = (np.abs(np.asarray(I_drive_vec__imported)-I_drive[ii])).argmin()
+            ind2 = (np.abs(np.asarray(I_di_list__imported[ind1])-I_di_vec[ii])).argmin()
+            rate = master_rate_matrix__imported[ind1][ind2]
+        else:
+            rate = 0
+
+        I_di_vec[ii+1] = rate*I_fq*dt + (1-dt/tau_di)*I_di_vec[ii]        
+    
+    return I_di_vec
+
+def dendritic_time_stepper(time_vec,R,I_drive,I_b,Ic,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,tau_di,mu_1,mu_2):
+    
+    p = physical_constants()
+    Phi0 = p['Phi0']
+    prefactor = Ic*R/Phi0
+    I_fq = Phi0/L3
+        
+    #initial approximations
+    Lj0 = Ljj(Ic,0)
+    Iflux = 0
+    Idr2_prev = ((Lm2+Ldr1+Lj0)*I_b[0]+M_direct*Iflux)/( Lm2+Ldr1+Ldr2+2*Lj0 + (Lm2+Ldr1+Lj0)*(Ldr2+Lj0)/L1 )
+    Idr1_prev = I_b[0]-( 1 + (Ldr2+Lj0)/L1 )*Idr2_prev
+    Ij2_prev = I_b[1]
+    Ij3_prev = I_b[2]
+    
+    I_di_vec = np.zeros([len(time_vec),1])
+    # Idr1_next, Idr2_next, Ij2_next, Ij3_next, I1, I2, I3 = dendrite_current_splitting(Ic,0,I_b[0],I_b[1],I_b[2],M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
+    # print('Idr1 = {}uA, Idr2 = {}uA, Ij2 = {}uA, Ij3 = {}uA'.format(Idr1_next*1e6,Idr2_next*1e6,Ij2_next*1e6,Ij3_next*1e6))
+    for ii in range(len(time_vec)-1):
+        dt = time_vec[ii+1]-time_vec[ii]
+                               
+                                                              #dendrite_current_splitting(Ic,  Iflux,        Ib1,   Ib2,   Ib3,   M,       Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
+        Idr1_next, Idr2_next, Ij2_next, Ij3_next, I1, I2, I3 = dendrite_current_splitting(Ic,I_drive[ii+1],I_b,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
+        # I_di_sat = I_di_sat_of_I_dr_2(Idr2_next)
+        
+        Ljdr2 = Ljj(Ic,Idr2_next)
+        Lj2 = Ljj(Ic,Ij2_next)
+        Lj3 = Ljj(Ic,Ij3_next)        
+        # Ljdr2 = Ljj(Ic,0)
+        # Lj2 = Ljj(Ic,0)
+        # Lj3 = Ljj(Ic,0)
+        
+        Idr1_prev = Idr1_next
+        Idr2_prev = Idr2_next
+        Ij2_prev = Ij2_next#(Lj3/(L2+Lj2))*I_di_vec[ii]
+        Ij3_prev = Ij3_next
+        
+        # I_j_df_fluxon_soen = Phi0/(L1+Ldr2+Ljdr2+Lj2)
+        # I_j_2_fluxon_soen = Phi0/(Lj2+L_pp)
+        # I_j_3_fluxon_soen = Phi0/(L3+Lj3)
+        
+        I_loop2_from_di = (Lj3/(L2+Lj2))*I_di_vec[ii]
+        I_loop1_from_loop2 = (Lj2/(L1+Ljdr2+Ldr2))*I_loop2_from_di
+        # print('I_loop2_from_di = {}uA, I_loop1_from_loop2 = {}uA'.format(I_loop2_from_di*1e6,I_loop1_from_loop2*1e6))
+        
+        Idr2_next -= I_loop1_from_loop2
+        Ij2_next -= I_loop2_from_di
+        Ij3_next -= I_di_vec[ii] - I_loop2_from_di        
+                
+        L_ppp = Lj3*L3/(Lj3+L3)
+        L_pp = L2+L_ppp
+        L_p = Lj2*L_pp/(Lj2+L_pp)
+        # print('L_p = {}pH, L_pp = {}pH, L_ppp = {}pH'.format(L_p*1e12,L_pp*1e12,L_ppp*1e12))
+        
+        large_number = 1e9
+        
+        I_flux_1 = 6e-6
+        I_flux_2 = 20e-6
+        
+        Ij2_next += I_flux_1 # (Phi0/(L1+L_p))*(L_pp)/(Lj2+L_pp)#(Lj3/(L2+Lj2))*I_di_vec[ii]
+        # print('Ij2_next += {}uA'.format(1e6*(Phi0/(L1+L_p))*(L_pp)/(Lj2+L_pp)))
+        # Ij3_next += (Phi0/L_pp)*(L3/(L3+Lj3)) + (Phi0/(L1+L_p))*L3/(Lj3+L3) - I_di_vec[ii]
+        Ij3_next += I_flux_2 # (Phi0/L_pp)*(L3/(L3+Lj3))
+        # print('Ij3_next += {}uA'.format(1e6*(Phi0/L_pp)*(L3/(L3+Lj3))))
+        # print('term_1 = {}; term_2 = {}'.format( (Phi0/L_pp)*(L3/(L3+Lj3)) , (Phi0/(L1+L_p))*L3/(Lj3+L3) ) )
+        if Idr2_next > Ic:
+            factor_1 = inter_fluxon_interval(Idr2_next) # ( (Idr2_next/Ic)**mu_1 - 1 )**(-mu_2)            
+        else:
+            factor_1 = large_number
+        if Ij2_next > Ic:
+            factor_2 = inter_fluxon_interval(Ij2_next) # ( (Ij2_next/Ic)**mu_1 - 1 )**(-mu_2)  
+        else:
+            factor_2 = large_number
+        if Ij3_next > Ic:
+            factor_3 = inter_fluxon_interval(Ij3_next) # ( (Ij3_next/Ic)**mu_1 - 1 )**(-mu_2)  
+        else:
+            factor_3 = large_number
+
+        # print('factor_1 = {}, factor_2 = {}, factor_3 = {}'.format(factor_1,factor_2,factor_3))
+        r_tot = (factor_1+factor_2+factor_3)**(-1)
+        I_di_vec[ii+1] = r_tot*I_fq*dt + (1-dt/tau_di)*I_di_vec[ii]        
+    
+    return I_di_vec
+
+def dendritic_time_stepper_old2(time_vec,A_prefactor,I_drive,I_b,I_th,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,tau_di,mu_1,mu_2,mu_3,mu_4):
+        
     #initial approximations
     Lj0 = Ljj(I_th,0)
     Iflux = 0
@@ -81,52 +192,24 @@ def dendritic_time_stepper(time_vec,A_prefactor,I_drive,I_b,I_th,M_direct,Lm2,Ld
     I_di_vec = np.zeros([len(time_vec),1])
     for ii in range(len(time_vec)-1):
         dt = time_vec[ii+1]-time_vec[ii]
-                               
-                                                              #dendrite_current_splitting(Ic,  Iflux,        Ib1,   Ib2,   Ib3,   M,       Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
+                                                                                            
         Idr1_next, Idr2_next, Ij2_next, Ij3_next, I1, I2, I3 = dendrite_current_splitting(I_th,I_drive[ii+1],I_b[0],I_b[1],I_b[2],M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
         I_di_sat = I_di_sat_of_I_dr_2(Idr2_next)
-        # I_dr = dendrite_current_splitting__old(I_th,I_drive[ii+1],I_b[0],I_b[1],I_b[2],M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3) 
-        # if ii == 0:
-            # print('I_dr = {}'.format(I_dr))
-        # if time_vec[ii+1] > 3e-9:
-        #     print('I_dr = {}'.format(I_dr))
-        #     print('I_th = {}'.format(I_th))
         if Idr2_next > I_th:
             factor_1 = ( (Idr2_next/I_th)**mu_1 - 1 )**mu_2            
         else:
             factor_1 = 0
-        # print('I_di_vec[ii] = {}'.format(I_di_vec[ii]))
-        # print('I_di_sat = {}'.format(I_di_sat))
-        # print('mu_3 = {}'.format(mu_3))
-        # print('mu_4 = {}'.format(mu_4))
         if I_di_vec[ii] <= I_di_sat:
             factor_2 = ( 1-(I_di_vec[ii]/I_di_sat)**mu_3 )**mu_4
         else:
             factor_2 = 0
         I_di_vec[ii+1] = dt * A_prefactor * factor_1 * factor_2 + (1-dt/tau_di)*I_di_vec[ii]
-        # if I_di_vec[ii+1] > I_di_sat:
-        #     I_di_vec[ii+1] = I_di_sat
-        # if nan in I_di_vec[ii+1]:            
-        #     print('I_dr = {}'.format(I_dr))
-        #     print('I_di_vec[ii] = {}'.format(I_di_vec[ii]))
-        #     print('I_di_sat = {}'.format(I_di_sat))
-        #     print('mu_3 = {}'.format(mu_3))
-        #     print('mu_4 = {}'.format(mu_4))
-        #     break
         Idr1_prev = Idr1_next
         Idr2_prev = Idr2_next
         Ij2_prev = Ij2_next
         Ij3_prev = Ij3_next
     
     return I_di_vec
-
-# def dendritic_drive__step_function(time_vec, amplitude = 5e-6, time_on = 5e-9):
-    
-#     t_on_ind = (np.abs(np.asarray(time_vec)-time_on)).argmin()
-#     input_signal__dd = np.zeros([len(time_vec),1])
-#     input_signal__dd[t_on_ind:] = amplitude
-    
-#     return input_signal__dd
 
 def dendritic_drive__piecewise_linear(time_vec,pwl):
     
@@ -247,7 +330,7 @@ def dendritic_drive__square_pulse_train(time_vec,sq_pls_trn_params):
     
 #     return input_signal__dd
 
-def dendrite_current_splitting(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev):
+def dendrite_current_splitting(Ic,Iflux,Ib,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev):
     # print('Ic = {}'.format(Ic))
     # print('Iflux = {}'.format(Iflux))
     # print('Ib1 = {}'.format(Ib1))
@@ -263,10 +346,13 @@ def dendrite_current_splitting(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr
     # pause(10)
     #see pgs 74, 75 in green lab notebook from 2020_04_01
     
+    Ib1 = Ib[0]
+    Ib2 = Ib[1]
+    Ib3 = Ib[2]
+    
     # Lj0 = Ljj(Ic,0)
     Lj2 = Ljj(Ic,Ij2_prev)
     Lj3 = Ljj(Ic,Ij3_prev)
-        
     Ljdr1 = Ljj(Ic,Idr1_prev)
     Ljdr2 = Ljj(Ic,Idr2_prev)
     
@@ -337,7 +423,7 @@ def dendrite_current_splitting(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr
                     +Ib1*(L1*L3*(L2+Lj2)+L3*Lj2*Lj3+L1*(L2+L3+Lj2)
                     *Lj3+L2*Lj2*(L3+Lj3)))*(Ldr2+Ljdr2)
                     -Iflux*(-L1*(L3*(L2+Lj2)+(L2+L3+Lj2)*Lj3)
-                    -Lj2*(L3*Lj3+L2*(L3+Lj3))-(L3(L2+Lj2)+(L2+L3+Lj2)*Lj3)
+                    -Lj2*(L3*Lj3+L2*(L3+Lj3))-(L3*(L2+Lj2)+(L2+L3+Lj2)*Lj3)
                     *(Ldr2+Ljdr2))*M))/((Ldr2+Ljdr2)*((L1*L3*(L2+Lj2)
                     +L3*Lj2*Lj3+L1*(L2+L3+Lj2)*Lj3+L2*Lj2*(L3+Lj3))
                     *(Ldr2+Ljdr2)-(-L1*(L3*(L2+Lj2)+(L2+L3+Lj2)*Lj3)
@@ -363,7 +449,7 @@ def dendrite_current_splitting(Ic,Iflux,Ib1,Ib2,Ib3,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr
                     +L2*(Lj2*Ljdr1+Lj2*Ljdr2+Ljdr1*Ljdr2
                     +Ldr1*(Ldr2+Lj2+Ljdr2)+(Lj2+Ljdr2)*Lm2
                     +Ldr2*(Lj2+Ljdr1+Lm2)))+Lj2*(Ib2*((Ldr2+Ljdr2)*(Ldr1+Ljdr1+Lm2)
-                    +L1*(Ldr1+Ldr2+Ljdr1+Ljdr2+Lm2))+(Ldr2+Ljdr2)*(Ib1(Ldr1+Ljdr1+Lm2)
+                    +L1*(Ldr1+Ldr2+Ljdr1+Ljdr2+Lm2))+(Ldr2+Ljdr2)*(Ib1*(Ldr1+Ljdr1+Lm2)
                     +Iflux*M))))/(L3*Ldr1*Ldr2*Lj2+L3*Ldr1*Ldr2*Lj3+L3*Ldr1*Lj2*Lj3
                     +L3*Ldr2*Lj2*Lj3+Ldr1*Ldr2*Lj2*Lj3
                     +L3*Ldr2*Lj2*Ljdr1+L3*Ldr2*Lj3*Ljdr1
@@ -558,6 +644,7 @@ def chi_squared_error(target_data,actual_data):
 
 def read_wr_data(file_path):
     
+    print('reading wr data file ...')
     f = open(file_path, 'rt')
     
     file_lines = f.readlines()
@@ -576,7 +663,10 @@ def read_wr_data(file_path):
 
     var_list = []
     for jj in range(num_vars):
-        var_list.append(file_lines[counter+jj][3:-3]) 
+        if jj <= 9:
+            var_list.append(file_lines[counter+jj][3:-3]) 
+        if jj > 9:
+            var_list.append(file_lines[counter+jj][4:-3]) 
 
     data_mat = np.zeros([num_pts,num_vars])
     tn = counter+num_vars+1
@@ -594,6 +684,8 @@ def read_wr_data(file_path):
     data_dict = dict()
     for ii in range(num_vars):
         data_dict[var_list[ii]] = data_mat[:,ii]
+        
+    print('done reading wr data file.')
     
     return data_dict
 
@@ -602,25 +694,7 @@ def omega_LRC(L,R,C):
     omega_r = np.sqrt( (L*C)**(-1) - 0.25*(R/L)**(2) )
     omega_i = R/(2*L)
     
-    return omega_r, omega_i
-
-def physical_constants():
-
-    p = dict(h = 6.62606957e-34,#Planck's constant in kg m^2/s
-         hBar = 6.62606957e-34/2/np.pi,
-         c = 299792458,#speed of light in meters per second
-         epsilon0 = 8.854187817e-12,#permittivity of free space in farads per meter
-         mu0 = 4*np.pi*1e-7,#permeability of free space in volt seconds per amp meter
-         kB = 1.3806e-23,#Boltzmann's constant
-         eE = 1.60217657e-19,#electron charge in coulombs
-         mE = 9.10938291e-31,#mass of electron in kg
-         eV = 1.60217657e-19,#joules per eV
-         Ry = 9.10938291e-31*1.60217657e-19**4/(8*8.854187817e-12**2*(6.62606957e-34/2/np.pi)**3*299792458),#13.3*eV;#Rydberg in joules
-         a0 = 4*np.pi*8.854187817e-12*(6.62606957e-34/2/np.pi)**2/(9.10938291e-31*1.60217657e-19**2),#estimate of Bohr radius
-         Phi0 = 6.62606957e-34/(2*1.60217657e-19)#flux quantum
-         )
-
-    return p   
+    return omega_r, omega_i  
 
 def load_neuron_data(load_string):
         
@@ -644,3 +718,83 @@ def load_session_data(load_string):
         data_array_imported = pickle.load(data_file)
 
     return data_array_imported
+
+def t_fq(I,Ic,R,mu1,mu2):
+    
+    p = physical_constants()
+    t_fq_vec = (p['Phi0']/(Ic*R))*((I/Ic)**mu1-1)**(-mu2)
+    
+    return t_fq_vec
+
+def V_fq(I,Ic,R,mu1,mu2):
+    
+    V_fq_vec = (Ic*R)*((I/Ic)**mu1-1)**(mu2)
+    
+    return V_fq_vec
+
+def V_fq__fit(I,mu1,mu2,V0):
+    
+    Ic = 40e-6
+    R = 4.125
+    
+    V_fq_vec = (Ic*R)*((I/Ic)**mu1-1)**(mu2)+V0
+    
+    return V_fq_vec
+
+def inter_fluxon_interval__fit(I,mu1,mu2,V0):
+    
+    Ic = 40e-6
+    R = 4.125
+    
+    V_fq_vec = (Ic*R)*((I/Ic)**mu1-1)**(mu2)+V0
+    p = physical_constants()
+    ifi_vec = p['Phi0']/V_fq_vec
+    
+    return ifi_vec
+
+def inter_fluxon_interval__fit_2(I_di,t0,I_fluxon,mu1,mu2,V0):
+    
+    Ic = 40e-6
+    R = 4.125
+    Lj2 = Ljj(Ic,Ic)
+    Lj3 = Lj2
+    L2 = 77.5e-12
+    I0 = 35.2699e-6
+    Phi0 = 2.06783375e-15
+
+    t_fq = np.zeros([len(I_di)])
+    for ii in range(len(I_di)):
+        I_loop2_from_di = (Lj3/(L2+Lj2))*I_di[ii]
+        if I0+I_fluxon+I_loop2_from_di-I_di[ii] > Ic:
+            t_fq[ii] = t0 + Phi0 * ( (Ic*R)*(((I0+I_fluxon+I_loop2_from_di-I_di[ii])/Ic)**mu1-1)**(mu2)+V0 )**(-1)
+        else:
+            t_fq[ii] = 1e-6
+    
+    return t_fq
+
+def inter_fluxon_interval__fit_3(I_di,I_bar_1,I_bar_2):
+    
+    Ic = 40e-6
+    R = 4.125
+    Phi0 = 2.06783375e-15
+    V0 = 105e-6
+    mu1 = 2.8
+    mu2 = 0.5
+
+    t_1 = Phi0/((Ic*R)*((I_bar_1/Ic)**mu1-1)**mu2+V0)
+    t_2 = np.zeros([len(I_di)])
+    for ii in range(len(I_di)):
+        if I_bar_2-I_di[ii] > Ic:
+            t_2[ii] = Phi0/((Ic*R)*(((I_bar_2-I_di[ii])/Ic)**mu1-1)**mu2+V0)
+        else:
+            t_2[ii] = 1
+    t_fq = t_1+t_2
+    
+    return t_fq
+
+def inter_fluxon_interval(I):
+    
+    V_fq_vec = (40e-6*4.125)*((I/40e-6)**2.839-1)**(0.501)+103.047e-6    
+    ifi_vec = 2.06783375e-15/V_fq_vec
+    
+    return ifi_vec
