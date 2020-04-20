@@ -568,7 +568,7 @@ def plot_wr_comparison__drive_and_response(main_title,target_data__drive,actual_
     axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim')   
     axs[1].plot(target_data[0,0:tf_ind]*1e6,target_data[1,0:tf_ind]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
     axs[1].set_xlabel(r'Time [$\mu$s]')
-    axs[1].set_ylabel(r'$I_{dr}$ [$\mu$A]')
+    axs[1].set_ylabel(r'$I_{di}$ [$\mu$A]')
     axs[1].legend()
     axs[1].set_title('Output signal in the DI loop (error = {:1.5f}%)'.format(error__signal*100))
     

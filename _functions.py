@@ -84,10 +84,12 @@ def dendrite_time_stepper(time_vec,I_drive,L3,tau_di):
     for ii in range(len(time_vec)-1):
         dt = time_vec[ii+1]-time_vec[ii]
                                
-        if I_drive[ii] > 19e-6:
+        if I_drive[ii] > 18.6e-6:
             ind1 = (np.abs(np.asarray(I_drive_vec__imported)-I_drive[ii])).argmin()
             ind2 = (np.abs(np.asarray(I_di_list__imported[ind1])-I_di_vec[ii])).argmin()
-            rate = master_rate_matrix__imported[ind1][ind2]
+            rate = master_rate_matrix__imported[ind1,ind2]
+            # linear interpolation
+            # rate = np.interp(I_drive[ii],I_drive_vec__imported,master_rate_matrix__imported[:,ind2])            
         else:
             rate = 0
 
@@ -632,11 +634,12 @@ def chi_squared_error(target_data,actual_data):
     # print('calculating chi^2 ...')
     error = 0
     norm = 0
-    for ii in range(len(actual_data[0,:])):
+    for ii in range(len(actual_data[0,0:-1])):
+        dt = actual_data[0,ii+1]-actual_data[0,ii]
         # print('ii = {} of {}'.format(ii+1,len(actual_data[0,:])))
         ind = (np.abs(target_data[0,:]-actual_data[0,ii])).argmin()        
-        error += abs( target_data[1,ind]-actual_data[1,ii] )**2
-        norm += abs( target_data[1,ind] )**2
+        error += dt*abs( target_data[1,ind]-actual_data[1,ii] )**2
+        norm += dt*abs( target_data[1,ind] )**2
     
     error = error/norm    
     
