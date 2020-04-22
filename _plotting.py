@@ -20,6 +20,7 @@ def plot_params():
     pp['fine_linewidth'] = 0.75
     pp['bold_linewidth'] = 3
     pp['nominal_markersize'] = 3
+    pp['big_markersize'] = 6
     tn = 4*8.6/2.54
     pp['fig_size'] = (tn,tn/1.618)
     pp['axes_linewidth'] = 1.5
@@ -474,14 +475,15 @@ def plot_dendritic_integration_loop_current(dendrite_instance):
 
 def plot_wr_data(data_dict,data_to_plot,plot_save_string):
     
-    tt = time.time()    
-    save_str = 'wr__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    tt = time.time()  
+    if plot_save_string != False:
+        save_str = 'wr__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
     
     fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
     fig.suptitle('WRSpice data')
-    plt.title(plot_save_string)
+    if 'file_name' in data_dict.keys():
+        plt.title(data_dict['file_name'])
 
-    color_list = ['blue_3','red_3','green_3','yellow_3']
     for ii in range(len(data_to_plot)):
         ax.plot(data_dict['time']*1e9,data_dict[data_to_plot[ii]]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = data_to_plot[ii])        
     ax.set_xlabel(r'Time [ns]')
@@ -489,7 +491,40 @@ def plot_wr_data(data_dict,data_to_plot,plot_save_string):
     ax.legend()    
     
     plt.show()
-    fig.savefig('figures/'+save_str+'.png') 
+    if plot_save_string != False:
+        fig.savefig('figures/'+save_str+'.png') 
+        
+    return
+
+def plot_wr_data__currents_and_voltages(data_dict,data_to_plot,plot_save_string):
+    
+    tt = time.time()  
+    if plot_save_string != False:
+        save_str = 'wr__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    
+    fig, ax = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)   
+    fig.suptitle('WRSpice data')
+    if 'file_name' in data_dict.keys():
+        plt.title(data_dict['file_name'])
+
+    for ii in range(len(data_to_plot)):
+        if data_to_plot[ii][0] == 'v':
+            ax[0].plot(data_dict['time']*1e9,data_dict[data_to_plot[ii]]*1e3, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = data_to_plot[ii]) 
+        if data_to_plot[ii][0] == 'L' or data_to_plot[ii][0] == '@':
+            ax[1].plot(data_dict['time']*1e9,data_dict[data_to_plot[ii]]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = data_to_plot[ii]) 
+        
+    ax[0].set_ylabel(r'Voltage [mV]')
+    ax[0].legend()
+    ax[0].set_title('Voltages in the circuit')
+        
+    ax[1].set_xlabel(r'Time [ns]')
+    ax[1].set_ylabel(r'Current [$\mu$A]')
+    ax[1].legend()
+    ax[1].set_title('Currents in the circuit')
+    
+    plt.show()
+    if plot_save_string != False:
+        fig.savefig('figures/'+save_str+'.png') 
         
     return
 
@@ -521,26 +556,28 @@ def plot_wr_comparison__drive_and_response(main_title,target_data__drive,actual_
     fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)   
     fig.suptitle(main_title)
     
+    tf_ind = (np.abs(np.asarray(target_data__drive[0,:])-actual_data__drive[0,-1])).argmin()
+    
     axs[0].plot(actual_data__drive[0,:]*1e6,actual_data__drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim')   
-    axs[0].plot(target_data__drive[0,:]*1e6,target_data__drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
+    axs[0].plot(target_data__drive[0,0:tf_ind]*1e6,target_data__drive[1,0:tf_ind]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
     axs[0].set_xlabel(r'Time [$\mu$s]')
     axs[0].set_ylabel(r'$I_{flux}$ [$\mu$A]')
     axs[0].legend()
-    axs[0].set_title('Drive signal input to DR loop (error = {:1.5f})'.format(error__drive))
+    axs[0].set_title('Drive signal input to DR loop (error = {:1.5f}%)'.format(error__drive*100))
      
     axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim')   
-    axs[1].plot(target_data[0,:]*1e6,target_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
+    axs[1].plot(target_data[0,0:tf_ind]*1e6,target_data[1,0:tf_ind]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
     axs[1].set_xlabel(r'Time [$\mu$s]')
     axs[1].set_ylabel(r'$I_{dr}$ [$\mu$A]')
     axs[1].legend()
-    axs[1].set_title('Output signal in the DI loop (error = {:1.5f})'.format(error__signal))
+    axs[1].set_title('Output signal in the DI loop (error = {:1.5f}%)'.format(error__signal*100))
     
     plt.show()
     fig.savefig('figures/'+save_str+'.png') 
 
     return
 
-def plot_error_mat(error_mat,vec1,vec2,x_label,y_label,extra_title_str,title_string,plot_string):
+def plot_error_mat(error_mat,vec1,vec2,x_label,y_label,title_string,plot_string):
     
     tt = time.time()    
     save_str = 'wr_err__'+plot_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
@@ -560,11 +597,33 @@ def plot_error_mat(error_mat,vec1,vec2,x_label,y_label,extra_title_str,title_str
     error = ax.imshow(np.log10(np.transpose(error_mat[:,:])), cmap = plt.cm.viridis, interpolation='none', extent=[vec1[0],vec1[-1],vec2[0],vec2[-1]], aspect = 'auto', origin = 'lower')
     cbar = fig.colorbar(error, extend='both')
     cbar.minorticks_on()     
-    fig.suptitle('log10(Error) versus {} and {}, {}'.format(x_label,y_label,extra_title_str))
+    fig.suptitle('log10(Error) versus {} and {}'.format(x_label,y_label))
     plt.title(title_string)
     ax.set_xlabel(r'{}'.format(x_label))
     ax.set_ylabel(r'{}'.format(y_label))   
     plt.show()      
     fig.savefig('figures/'+save_str+'__log.png') 
         
+    return
+
+def plot_fq_peaks(data_x,data_y,peak_indices):
+    
+    fig, ax = plt.subplots(1,1)
+    ax.plot(data_x[:]*1e9,data_y[:], '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'data')   
+    ax.plot(data_x[peak_indices]*1e9,data_y[peak_indices], 'x', markersize = pp['big_markersize'], label = 'peaks') 
+    ax.set_xlabel(r'Time [ns]')
+    ax.set_ylabel(r'Amplitude')
+    plt.show()
+    
+    return
+
+def plot_fq_peaks__dt_vs_bias(bias_current,dt_fq_peaks,Ic):
+    
+    fig, ax = plt.subplots(1,1)
+    ax.plot(bias_current[:]*1e6,dt_fq_peaks[:]*1e9, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize']) #, label = 'data'  
+    ax.plot([Ic*1e6,Ic*1e6],[np.min(dt_fq_peaks)*1e9,np.max(dt_fq_peaks)*1e9], '-.', linewidth = pp['fine_linewidth'])  
+    ax.set_xlabel(r'Current bias [$\mu$A]')
+    ax.set_ylabel(r'Time between flux quanta [ns]')
+    plt.show()
+    
     return
