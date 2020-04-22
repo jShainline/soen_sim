@@ -7,8 +7,9 @@ from pylab import *
 from util import physical_constants
 from _plotting import plot_dendritic_drive, plot_wr_comparison, plot_error_mat
 
-def synaptic_time_stepper(time_vec,present_time_index,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
+def synapse_time_stepper(time_vec,present_time_index,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
     
+    # print('gamma1 = {}'.format(gamma1))
     _pti = present_time_index
     _pt = time_vec[_pti] #present time
     I_si = 0
@@ -27,7 +28,7 @@ def synaptic_time_stepper(time_vec,present_time_index,input_spike_times,I_0,I_si
                     I_si += synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si,tau_rise,tau_fall)*\
                         np.exp(tau_rise/tau_fall)*np.exp(-(_pt-input_spike_times[qq])/tau_fall)
                     
-    return I_si*1e-6
+    return I_si
 
 def synaptic_response_function(time_vec,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
 

@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 import pickle
 
 # from soen_sim import input_signal, synapse, dendrite, neuron
-from _plotting import plot_wr_comparison__drive_and_response
+from _plotting import plot_wr_comparison__dend_drive_and_response
 from _functions import read_wr_data, chi_squared_error, dendritic_drive__piecewise_linear, dendritic_drive__exp_pls_train__LR, dendritic_drive__square_pulse_train
 from soen_sim import input_signal, synapse, dendrite, neuron
 
@@ -47,7 +47,7 @@ dendrite_1.run_sim()
 actual_data = np.vstack((input_1.time_vec[:],dendrite_1.I_di[:,0]))    
 error__signal = chi_squared_error(target_data,actual_data)
 
-plot_wr_comparison__drive_and_response('test',target_data__drive,actual_data__drive,target_data,actual_data,file_name,error__drive,error__signal)
+plot_wr_comparison__dend_drive_and_response(file_name,target_data__drive,actual_data__drive,target_data,actual_data,file_name,error__drive,error__signal)
 
 #%% linear ramp
 # file_name = 'dend_lin_ramp_Idrv18.0-30.0uA_Ldi0077.50nH_taudi0010.0ns_tsim50ns_dt01.0ps.dat'
@@ -89,7 +89,7 @@ dendrite_1.run_sim()
 actual_data = np.vstack((input_1.time_vec[:],dendrite_1.I_di[:,0]))    
 error__signal = chi_squared_error(target_data,actual_data)
 
-plot_wr_comparison__drive_and_response('test',target_data__drive,actual_data__drive,target_data,actual_data,file_name,error__drive,error__signal)
+plot_wr_comparison__dend_drive_and_response(file_name,target_data__drive,actual_data__drive,target_data,actual_data,file_name,error__drive,error__signal)
 
 #%% sq pls seq
 
@@ -141,7 +141,7 @@ dendrite_1.run_sim()
 actual_data = np.vstack((input_1.time_vec[:],dendrite_1.I_di[:,0]))    
 error__signal = chi_squared_error(target_data,actual_data)
 
-plot_wr_comparison__drive_and_response('test',target_data__drive,actual_data__drive,target_data,actual_data,file_name,error__drive,error__signal)
+plot_wr_comparison__dend_drive_and_response(file_name,target_data__drive,actual_data__drive,target_data,actual_data,file_name,error__drive,error__signal)
 
 
 #%% exp pulse seq
@@ -202,7 +202,7 @@ dendrite_1.run_sim()
 actual_data = np.vstack((input_1.time_vec[:],dendrite_1.I_di[:,0]))    
 error__signal = chi_squared_error(target_data,actual_data)
 
-plot_wr_comparison__drive_and_response('test',target_data__drive,actual_data__drive,target_data,actual_data,file_name,error__drive,error__signal)
+plot_wr_comparison__dend_drive_and_response(file_name,target_data__drive,actual_data__drive,target_data,actual_data,file_name,error__drive,error__signal)
 
 #%%
 with open('../master_rate_matrix.soen', 'rb') as data_file:         

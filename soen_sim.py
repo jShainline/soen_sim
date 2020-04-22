@@ -4,8 +4,9 @@ from pylab import *
 import time
 import pickle
 
-from _functions import synaptic_response_function, synaptic_time_stepper, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR, dendrite_time_stepper
+from _functions import synaptic_response_function, synapse_time_stepper, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR, dendrite_time_stepper
 from _plotting import plot_dendritic_drive, plot_dendritic_integration_loop_current
+from util import physical_constants
 
 class input_signal():
     
@@ -166,12 +167,12 @@ class synapse():
 
         if 'synaptic_bias_current' in kwargs:
             # if type(kwargs['synaptic_bias_current']) == int or type(kwargs['synaptic_bias_current']) == float or type(kwargs['synaptic_bias_current']) == np.float64:
-            if kwargs['synaptic_bias_current'] < 34e-6 or kwargs['synaptic_bias_current'] > 100e-6:
-                raise ValueError('[soens_sim] synaptic_bias_current associated with synaptic integration loop must be a real number between 34e-6 and 39e-6 (units of amps)')
+            if kwargs['synaptic_bias_current'] < 22e-6 or kwargs['synaptic_bias_current'] > 40e-6:
+                raise ValueError('[soens_sim] synaptic_bias_current associated with synaptic integration loop must be a real number between 22e-6 and 40e-6 (units of amps)')
             else:
                  self.synaptic_bias_current = kwargs['synaptic_bias_current']
         else:
-            _synaptic_bias_current_default = 35e-6 #units of amps
+            _synaptic_bias_current_default = 28e-6 #units of amps
             self.synaptic_bias_current = _synaptic_bias_current_default
 
         if 'integration_loop_bias_current' in kwargs:
@@ -182,6 +183,15 @@ class synapse():
                  self.integration_loop_bias_current = kwargs['integration_loop_bias_current']
         else:
             self.integration_loop_bias_current = 30e-6 #units of amps
+            
+        if 'synapse_model_params' in kwargs:
+            self.synapse_model_params = kwargs['synapse_model_params']
+            sim_params = self.synapse_model_params            
+        else:
+            sim_params = dict()
+            sim_params['dt'] = 1e-9 # units of seconds
+            sim_params['tf'] = 1e-6 # units of seconds
+            self.synapse_model_params = sim_params
             
         if 'input_signal_name' in kwargs:
             if kwargs['input_signal_name'] != '':
@@ -202,38 +212,64 @@ class synapse():
         # print('synapse deleted')
         return
         
-    def run_sim(self,time_vec):
+    def run_sim(self):
 
-        input_spike_times = self.input_spike_times
+        sim_params = self.synapse_model_params
+        tf = sim_params['tf']
+        dt = sim_params['dt']
+        time_vec = np.arange(0,tf+dt,dt)
+        p = physical_constants()
+        # input_spike_times = self.input_spike_times
         
+        #setup input signal
+        if hasattr(self,'input_signal'):
+            self.input_spike_times = self.input_signal.spike_times
+        else:
+            self.input_spike_times = []
+                
         #here currents are in uA. they are converted to A before passing back
         I_sy = self.synaptic_bias_current*1e6
 
         #these values obtained by fitting to spice simulations
         #see matlab scripts in a4/calculations/nC/phenomenological_modeling...
-        gamma1 = 0.9
-        gamma2 = 0.158
-        gamma3 = 3/4
+        if 'gamma1' in sim_params:
+            gamma1 = sim_params['gamma1']
+        else:
+            gamma1 = 0.9
+        if 'gamma2' in sim_params:
+            gamma2 = sim_params['gamma2']
+        else:
+            gamma2 = 0.158
+        if 'gamma3' in sim_params:
+            gamma3 = sim_params['gamma3']
+        else:
+            gamma3 = 3/4
 
         #these fits were obtained by comparing to spice simulations
         #see matlab scripts in a4/calculations/nC/phenomenological_modeling...
-        tau_rise = (1.294*I_sy-43.01)*1e-9
+        
+        # tau_rise = (1.294*I_sy-43.01)*1e-9
+        tau_rise = (0.038359*I_sy**2-0.778850*I_sy-0.441682)*1e-9
         self.integration_loop_total_inductance = self.integration_loop_self_inductance+self.integration_loop_output_inductance
-        _reference_inductance = 50e-9 #inductance at which I_0 fit was performed
+        _reference_inductance = 775e-9 #inductance at which I_0 fit was performed
         _scale_factor = _reference_inductance/self.integration_loop_total_inductance
-        I_0 = (0.06989*I_sy**2-3.948*I_sy+53.73)*_scale_factor
+        #I_0 = (0.06989*I_sy**2-3.948*I_sy+53.73)*_scale_factor #from earlier model assuming 10uA spd
+        
+        # I_0 = (0.006024*I_sy**2-0.202821*I_sy+1.555543)*_scale_factor # in terms of currents
+        I_0 = 1e6*(2.257804*I_sy**2-76.01606*I_sy+583.005805)*p['Phi0']/self.integration_loop_total_inductance # in terms of n_fq
         
         #I_si_sat is actually a function of I_b (loop_current_bias). The fit I_si_sat(I_b) has not yet been performed (20200319)
-        I_si_sat = 13
+        I_si_sat = 19.7
 
-        tau_fall = self.time_constant
+        tau_fall = self.integration_loop_time_constant
 
         # I_si_vec = synaptic_response_function(time_vec,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
         I_si_vec = np.zeros([len(time_vec),1])
         for ii in range(len(time_vec)):
-            I_si_vec[ii] = synaptic_time_stepper(time_vec,ii,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
+            I_si_vec[ii] = synapse_time_stepper(time_vec,ii,self.input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
 
         self.I_si = I_si_vec*1e-6
+        self.time_vec = time_vec
 
         return self
     

@@ -104,7 +104,7 @@ for ii in range(num_files):
 
 I_sy_vec_dense = np.linspace(I_sy_vec[0],I_sy_vec[-1],1000)
 
-I_si_fit = np.polyfit(I_sy_vec,I_si_vec,2)
+I_si_fit = np.polyfit(I_sy_vec,I_si_vec*1e6,2)
 I_si_vec_dense = np.polyval(I_si_fit,I_sy_vec_dense)
 
 n_fq_fit = np.polyfit(I_sy_vec,n_fq_vec,2)
@@ -115,10 +115,10 @@ fig.suptitle('Effect of varying the synaptic weight')
 # plt.title(r) 
  
 ax[0].plot(I_sy_vec,I_si_vec*1e6, 'o-', label = 'WR data')      
-ax[0].plot(I_sy_vec_dense,I_si_vec_dense*1e6, '-', label = 'Polyfit')
+ax[0].plot(I_sy_vec_dense,I_si_vec_dense, '-', label = 'Polyfit')
 ax[0].set_xlabel(r'$I_{sy}$ [$\mu$A]')
 ax[0].set_ylabel(r'$I_{si}$ [$\mu$A]')
-ax[0].set_title('Current added to SI loop after one synapse event; Lsi = {:3.1f}nH'.format(L_si))
+ax[0].set_title('Current added to SI loop after one synapse event; Lsi = {:3.1f}nH; $I_0$ = {:f}Isy^2+{:f}Isy+{:f} (I_0, Isy in uA)'.format(L_si*1e9,I_si_fit[0],I_si_fit[1],I_si_fit[2]))
 ax[0].legend()
 
 ax[1].plot(I_sy_vec,n_fq_vec, 'o-', label = 'WR data')             
