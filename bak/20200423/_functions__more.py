@@ -40,11 +40,15 @@ def synapse_model__parameter_sweep(data_file_list,I_sy_vec,L_si_vec,tau_si_vec,d
         # plt.close('all')
                 
         # WR data
-        directory = 'wrspice_data/test_data'
+        directory = 'wrspice_data/fitting_data'
         file_name = data_file_list[ii]
         data_dict = read_wr_data(directory+'/'+file_name)
         target_data = np.vstack((data_dict['time'],data_dict['L3#branch']))
-        wr_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))        
+        wr_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))
+        
+        # initialize input signal
+        name__i = 'in'
+        input_1 = input_signal(name__i, input_temporal_form = 'arbitrary_spike_train', spike_times = spike_times)
         
         error_mat_1 = np.zeros([num_gamma1,num_gamma2])        
         print('\nseeking gamma1, gamma2 ...\n')
@@ -52,10 +56,6 @@ def synapse_model__parameter_sweep(data_file_list,I_sy_vec,L_si_vec,tau_si_vec,d
             for bb in range(num_gamma2):
                      
                 print('aa = {} of {}, bb = {} of {}'.format(aa+1,num_gamma1,bb+1,num_gamma2))
-                
-                # initialize input signal
-                name__i = 'in'
-                input_1 = input_signal(name__i, input_temporal_form = 'arbitrary_spike_train', spike_times = spike_times)
                                     
                 # create sim_params dictionary
                 sim_params = dict()
@@ -74,10 +74,10 @@ def synapse_model__parameter_sweep(data_file_list,I_sy_vec,L_si_vec,tau_si_vec,d
                 
                 synapse_1.run_sim()
                                                 
-                actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:]))    
+                actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:,0]))    
                 error_mat_1[aa,bb] = chi_squared_error(target_data,actual_data)
                 
-                # plot_wr_comparison__synapse(file_name+'; gamma1 = {:f}, gamma2 = {:f}'.format(gamma1_vec[aa],gamma2_vec[bb]),spike_times,wr_drive,target_data,actual_data,file_name,error_mat_1[aa,bb])  
+                plot_wr_comparison__synapse(file_name+'; gamma1 = {:f}, gamma2 = {:f}'.format(gamma1_vec[aa],gamma2_vec[bb]),spike_times,wr_drive,target_data,actual_data,file_name,error_mat_1[aa,bb])  
                         
         error_mat_master__gamma1_gamma2 += error_mat_1
         ind_best = np.where(error_mat_1 == np.amin(error_mat_1))#error_mat.argmin()
@@ -111,10 +111,10 @@ def synapse_model__parameter_sweep(data_file_list,I_sy_vec,L_si_vec,tau_si_vec,d
         
         synapse_1.run_sim()
         
-        actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:]))    
+        actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:,0]))    
         error__si = chi_squared_error(target_data,actual_data)
         
-        main_title = 'best _ {}\ngamma1_best_{:6.4f}_gamma2_best_{:6.4f}'.format(data_file_list[ii],gamma1_best,gamma2_best)
+        main_title = '{}\ngamma1_best_{:6.4f}_gamma2_best_{:6.4f}'.format(data_file_list[ii],gamma1_best,gamma2_best)
         plot_wr_comparison__synapse(main_title,spike_times,wr_drive,target_data,actual_data,file_name,error__si)
     
     # # save data
@@ -134,84 +134,84 @@ def synapse_model__parameter_sweep(data_file_list,I_sy_vec,L_si_vec,tau_si_vec,d
     #-----------------
     # find best gamma3
     #-----------------
-    error_mat_master__gamma3 = np.zeros([num_gamma3])
-    for ii in range(num_sims):
-        print('\ndata_file {} of {}\n'.format(ii+1,num_sims))
-        # plt.close('all')
+    # error_mat_master__gamma3 = np.zeros([num_gamma3])
+    # for ii in range(num_sims):
+    #     print('\ndata_file {} of {}\n'.format(ii+1,num_sims))
+    #     # plt.close('all')
         
-        # WR data
-        directory = 'wrspice_data/test_data'
-        file_name = data_file_list[ii]
-        data_dict = read_wr_data(directory+'/'+file_name)
-        target_data = np.vstack((data_dict['time'],data_dict['L3#branch']))
-        wr_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))                
+    #     # WR data
+    #     directory = 'wrspice_data/fitting_data'
+    #     file_name = data_file_list[ii]
+    #     data_dict = read_wr_data(directory+'/'+file_name)
+    #     target_data = np.vstack((data_dict['time'],data_dict['L3#branch']))
+    #     wr_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))
+         
+    #     # initialize input signal
+    #     name__i = 'in'
+    #     input_1 = input_signal(name__i, input_temporal_form = 'arbitrary_spike_train', spike_times = spike_times)
         
-        error_mat_2 = np.zeros([num_gamma3])   
-        print('\nseeking gamma3 ...\n')
-        for aa in range(num_gamma3):
+    #     error_mat_2 = np.zeros([num_gamma3])   
+    #     print('\nseeking gamma3 ...\n')
+    #     for aa in range(num_gamma3):
                 
-            print('aa = {} of {}'.format(aa+1,num_gamma3))
-            
-            # initialize input signal
-            name__i = 'in'
-            input_1 = input_signal(name__i, input_temporal_form = 'arbitrary_spike_train', spike_times = spike_times)
+    #         print('aa = {} of {}'.format(aa+1,num_gamma3))
                                 
-            # create sim_params dictionary
-            sim_params = dict()
-            sim_params['gamma1'] = gamma1_best
-            sim_params['gamma2'] = gamma2_best
-            sim_params['gamma3'] = gamma3_vec[aa]
-            sim_params['dt'] = dt
-            sim_params['tf'] = tf
+    #         # create sim_params dictionary
+    #         sim_params = dict()
+    #         sim_params['gamma1'] = gamma1_best
+    #         sim_params['gamma2'] = gamma2_best
+    #         sim_params['gamma3'] = gamma3_vec[aa]
+    #         sim_params['dt'] = dt
+    #         sim_params['tf'] = tf
             
-            # initialize synapse
-            name_s = 'sy'
-            synapse_1 = synapse(name_s, integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si_vec[ii], 
-                                integration_loop_self_inductance = L_si_vec[ii], integration_loop_output_inductance = 0e-12, 
-                                synaptic_bias_current = I_sy_vec[ii], integration_loop_bias_current = 35e-6,
-                                input_signal_name = 'in', synapse_model_params = sim_params)
+    #         # initialize synapse
+    #         name_s = 'sy'
+    #         synapse_1 = synapse(name_s, integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si_vec[ii], 
+    #                             integration_loop_self_inductance = L_si_vec[ii], integration_loop_output_inductance = 0e-12, 
+    #                             synaptic_bias_current = I_sy_vec[ii], integration_loop_bias_current = 35e-6,
+    #                             input_signal_name = 'in', synapse_model_params = sim_params)
             
-            synapse_1.run_sim()
+    #         synapse_1.run_sim()
                                             
-            actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:,0]))    
-            error_mat_2[aa] = chi_squared_error(target_data,actual_data)
+    #         actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:,0]))    
+    #         error_mat_2[aa] = chi_squared_error(target_data,actual_data)
             
-            # plot_wr_comparison__synapse(file_name+'gamma1 = {:f}, gamma2 = {:f}'.format(gamma1_vec[aa],gamma2_vec[bb]),spike_times,wr_drive,target_data,actual_data,file_name,error_mat_1[aa,bb])  
+    #         # plot_wr_comparison__synapse(file_name+'gamma1 = {:f}, gamma2 = {:f}'.format(gamma1_vec[aa],gamma2_vec[bb]),spike_times,wr_drive,target_data,actual_data,file_name,error_mat_1[aa,bb])  
                             
-        error_mat_master__gamma3 += error_mat_2
-        ind_best = np.where(error_mat_2 == np.amin(error_mat_2))#error_mat.argmin()
-        gamma3_best = gamma3_vec[ind_best[0]][0]
-        print('gamma3_best = {}'.format(gamma3_best))
-        best_params['gamma3'].append(gamma3_best)
-        data_array['error_mat__gamma3'] = error_mat_2
+    #     error_mat_master__gamma3 += error_mat_2
+    #     ind_best = np.where(error_mat_2 == np.amin(error_mat_2))#error_mat.argmin()
+    #     gamma3_best = gamma3_vec[ind_best[0]][0]
+    #     print('gamma3_best = {}'.format(gamma3_best))
+    #     best_params['gamma3'].append(gamma3_best)
+    #     data_array['error_mat__gamma3'] = error_mat_2
             
-        #plot errors
-        # title_string = '{}\ngamma1_best = {:1.2f}, gamma2_best = {:1.2f}'.format(data_file_list[ii],gamma1_best,gamma2_best)
-        # save_str = '{}__error__gamma1_gamma2'.format(data_file_list[ii])    
-        # plot_error_mat(error_mat_1[:,:],gamma1_vec,gamma2_vec,'gamma1','gamma2',title_string,save_str)
+    #     #plot errors
+    #     # title_string = '{}\ngamma1_best = {:1.2f}, gamma2_best = {:1.2f}'.format(data_file_list[ii],gamma1_best,gamma2_best)
+    #     # save_str = '{}__error__gamma1_gamma2'.format(data_file_list[ii])    
+    #     # plot_error_mat(error_mat_1[:,:],gamma1_vec,gamma2_vec,'gamma1','gamma2',title_string,save_str)
             
-        # repeat best one and plot   
-        sim_params = dict()
-        sim_params['gamma1'] = gamma1_best
-        sim_params['gamma2'] = gamma2_best
-        sim_params['gamma3'] = gamma3_best
-        sim_params['dt'] = dt
-        sim_params['tf'] = tf
+    #     # repeat best one and plot   
+    #     sim_params = dict()
+    #     sim_params['gamma1'] = gamma1_best
+    #     sim_params['gamma2'] = gamma2_best
+    #     sim_params['gamma3'] = gamma3_best
+    #     sim_params['dt'] = dt
+    #     sim_params['tf'] = tf
         
-        # initialize synapse
-        name_s = 'sy'
-        synapse_1 = synapse(name_s, integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si_vec[ii], 
-                            integration_loop_self_inductance = L_si_vec[ii], integration_loop_output_inductance = 0e-12, 
-                            synaptic_bias_current = I_sy_vec[ii], integration_loop_bias_current = 35e-6,
-                            input_signal_name = 'in', synapse_model_params = sim_params)
+    #     # initialize synapse
+    #     name_s = 'sy'
+    #     synapse_1 = synapse(name_s, integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si_vec[ii], 
+    #                         integration_loop_self_inductance = L_si_vec[ii], integration_loop_output_inductance = 0e-12, 
+    #                         synaptic_bias_current = I_sy_vec[ii], integration_loop_bias_current = 35e-6,
+    #                         input_signal_name = 'in', synapse_model_params = sim_params)
         
-        synapse_1.run_sim()
+    #     synapse_1.run_sim()
         
-        actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:,0]))    
-        error__si = chi_squared_error(target_data,actual_data)
+    #     actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:,0]))    
+    #     error__si = chi_squared_error(target_data,actual_data)
         
-        main_title = 'best _ {}\ngamma1_best = {:6.4f}, gamma2_best = {:6.4f}\ngamma3_best_{:6.4f}'.format(data_file_list[ii],gamma1_best,gamma2_best,gamma3_best)
-        plot_wr_comparison__synapse(main_title,spike_times,wr_drive,target_data,actual_data,file_name,error__si)
+    #     main_title = '{}\ngamma1_best = {:6.4f}, gamma2_best = {:6.4f}\ngamma3_best_{:6.4f}'.format(data_file_list[ii],gamma1_best,gamma2_best,gamma3_best)
+    #     plot_wr_comparison__synapse(main_title,spike_times,wr_drive,target_data,actual_data,file_name,error__si)
     
     # # save data
     # save_string = 'wr_fits__finding_gamma1_gamma2'

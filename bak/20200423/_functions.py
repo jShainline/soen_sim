@@ -1,4 +1,3 @@
-#%%
 import numpy as np
 import pickle
 import time
@@ -8,123 +7,28 @@ from pylab import *
 from util import physical_constants
 from _plotting import plot_dendritic_drive, plot_wr_comparison, plot_error_mat
 
-#%%
-
-def synapse_time_stepper(time_vec,I_drive,L3,tau_di):
+def synapse_time_stepper(time_vec,present_time_index,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
     
-    with open('../master_rate_matrix__soen.soen', 'rb') as data_file:         
-        data_array_imported = pickle.load(data_file)
-    
-    I_si_list__imported = data_array_imported['I_si_list']
-    I_drive_vec__imported = data_array_imported['I_drive_vec']
-    master_rate_matrix__imported = data_array_imported['master_rate_matrix']
-        
-    p = physical_constants()
-    Phi0 = p['Phi0']
-    I_fq = Phi0/L3
-    
-    I_si_vec = np.zeros([len(time_vec),1])
-    for ii in range(len(time_vec)-1):
-        dt = time_vec[ii+1]-time_vec[ii]
-                               
-        if I_drive[ii] > 8.9e-6:
-            ind1 = (np.abs(np.asarray(I_drive_vec__imported)-I_drive[ii])).argmin()
-            ind2 = (np.abs(np.asarray(I_di_list__imported[ind1])-I_di_vec[ii])).argmin()
-            rate = master_rate_matrix__imported[ind1,ind2]
-            # linear interpolation
-            # rate = np.interp(I_drive[ii],I_drive_vec__imported,master_rate_matrix__imported[:,ind2])            
-        else:
-            rate = 0
-
-        I_di_vec[ii+1] = rate*I_fq*dt + (1-dt/tau_di)*I_di_vec[ii]        
-    
-    return I_di_vec
-
-# def synapse_time_stepper(time_vec,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
-
-#     I_si_mat = np.zeros([len(time_vec),len(input_spike_times)])
-
-#     for ii in range(len(input_spike_times)):
-#         ind_vec = np.argwhere( time_vec > input_spike_times[ii] )
-#         I_si_vec_temp = np.sum(I_si_mat, axis = 1)
-#         # I_si_mat(ind_vec(1:end),ii) = f__synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si_vec_temp(ind_vec(ii)-1))*(1-exp(-(time_vec(ind_vec(1:end))-input_spike_times(ii))/tau_rise)).*exp(-(time_vec(ind_vec(1:end))-input_spike_times(ii))/tau_fall);
-#         for jj in range(len(ind_vec)):
-#             if time_vec[ind_vec[jj]]-input_spike_times[ii] <= tau_rise:
-#                 I_si_mat[ind_vec[jj],ii] = synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si_vec_temp[ind_vec[jj]-1],tau_rise,tau_fall)*\
-#                 ( (1/tau_rise**gamma3)*( time_vec[ind_vec[jj]] - input_spike_times[ii] )**gamma3 )*\
-#                 np.exp(tau_rise/tau_fall)*\
-#                 np.exp(-(time_vec[ind_vec[jj]]-input_spike_times[ii])/tau_fall)
-#             else:
-#                 I_si_mat[ind_vec[jj],ii] = synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si_vec_temp[ind_vec[jj]-1],tau_rise,tau_fall)*\
-#                 np.exp(tau_rise/tau_fall)*\
-#                 np.exp(-(time_vec[ind_vec[jj]]-input_spike_times[ii])/tau_fall)
-#     I_si_vec = np.sum(I_si_mat, axis = 1);
-
-#     return I_si_vec
-
-
-# def synapse_time_stepper(time_vec,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
-    
-#     # print('I_0 = {}, I_si_sat = {}, tau_rise = {}, tau_fall = {}'.format(I_0,I_si_sat,tau_rise,tau_fall))
-#     # print('gamma1 = {}, gamma2 = {}, gamma3 = {}'.format(gamma1,gamma2,gamma3))
-#     # num_tau_retain = 15    
-#     # idx_start = (np.abs(input_spike_times-(_pt-num_tau_retain*tau_fall))).argmin()
-#     num_spikes = len(input_spike_times)
-#     # print(input_spike_times)
-#     I_si_vec = np.zeros([len(time_vec),1])    
-#     for kk in range(len(time_vec)):
-#         _pt = time_vec[kk]#present time
-#         I_si = 0
-#         for ii in range(num_spikes):
-#             _st = input_spike_times[ii]#spike time under consideration
-            
-#             if _pt > _st:
-                
-#                 if _pt-_st <= tau_rise:
+    # print('gamma1 = {}'.format(gamma1))
+    _pti = present_time_index
+    _pt = time_vec[_pti] #present time
+    I_si = 0
+    if len(input_spike_times) > 0:
+        num_tau_retain = 15
+        idx_start = (np.abs(input_spike_times-(_pt-num_tau_retain*tau_fall))).argmin()
+        # idx_start = 0
+        for ii in range(len(input_spike_times[idx_start:])):
+            qq = ii+idx_start
+            if _pt > input_spike_times[qq]:
+                if _pt-input_spike_times[qq] <= tau_rise:
+                    I_si += synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si,tau_rise,tau_fall)*\
+                        ( (1/tau_rise**gamma3)*(_pt - input_spike_times[qq])**gamma3 )*\
+                            np.exp(tau_rise/tau_fall)*np.exp(-(_pt-input_spike_times[qq])/tau_fall)
+                else:
+                    I_si += synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si,tau_rise,tau_fall)*\
+                        np.exp(tau_rise/tau_fall)*np.exp(-(_pt-input_spike_times[qq])/tau_fall)
                     
-#                     I_si += ( synaptic_response_prefactor(I_0,I_si_vec[kk-1],I_si_sat,gamma1,gamma2,tau_rise,tau_fall)
-#                          *( (_pt-_st)/tau_rise )**gamma3
-#                          *np.exp(-(_pt-_st)/tau_fall) )
-#                          #                          *np.exp(tau_rise/tau_fall)
-                    
-#                 else:
-                    
-#                     I_si += ( synaptic_response_prefactor(I_0,I_si_vec[kk-1],I_si_sat,gamma1,gamma2,tau_rise,tau_fall)     
-#                          *np.exp(-(_pt-_st)/tau_fall) )                    
-#                         # *np.exp(tau_rise/tau_fall)
-#                     #
-                 
-#                 I_si_vec[kk] = I_si
-                
-#     return I_si_vec
-
-def synaptic_response_prefactor(I_0,I_si,I_si_sat,gamma1,gamma2,tau_rise,tau_fall):
-
-    if I_si >= 0 and I_si < I_si_sat:
-        # I_prefactor = min([I_0*(1-(I_si/I_si_sat)**gamma1)**gamma2, (I_si_sat-I_si)*np.exp(tau_rise/tau_fall)]);
-        I_prefactor = np.min([I_0*(1-(I_si/I_si_sat)**gamma1)**gamma2,(I_si_sat-I_si)])
-    else:
-        I_prefactor = 0
-
-    return I_prefactor
-
-
-# def synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si,tau_rise,tau_fall):
-
-#     if I_si >= 0 and I_si < I_si_sat:
-#         A = I_0
-#         I_prefactor = min([A*(1-(I_si/I_si_sat)**gamma1)**gamma2, (I_si_sat-I_si)*np.exp(tau_rise/tau_fall)]);
-#         # I_prefactor = A*(1-log(I_si/I_si_sat)/log(gamma1))^gamma2;
-#         # I_prefactor = I_0*(I_si_sat-I_si)/I_si_sat
-#         # I_prefactor = I_0*(1-exp((I_si_sat-I_si)/I_si_sat))
-#     else:
-#         I_prefactor = 0
-
-#     #print('\n\nI_si = %g',I_si)
-#     #print('\n\nI_prefactor = %g',I_prefactor)
-
-#     return I_prefactor
-
+    return I_si
 
 def synaptic_response_function(time_vec,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
 
@@ -148,10 +52,25 @@ def synaptic_response_function(time_vec,input_spike_times,I_0,I_si_sat,gamma1,ga
 
     return I_si_vec
 
+def synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si,tau_rise,tau_fall):
+
+    if I_si >= 0 and I_si < I_si_sat:
+        A = I_0
+        I_prefactor = min([A*(1-(I_si/I_si_sat)**gamma1)**gamma2, (I_si_sat-I_si)*np.exp(tau_rise/tau_fall)]);
+        # I_prefactor = A*(1-log(I_si/I_si_sat)/log(gamma1))^gamma2;
+        # I_prefactor = I_0*(I_si_sat-I_si)/I_si_sat
+        # I_prefactor = I_0*(1-exp((I_si_sat-I_si)/I_si_sat))
+    else:
+        I_prefactor = 0
+
+    #print('\n\nI_si = %g',I_si)
+    #print('\n\nI_prefactor = %g',I_prefactor)
+
+    return I_prefactor
 
 def dendrite_time_stepper(time_vec,I_drive,L3,tau_di):
     
-    with open('../master_rate_matrix__dend.soen', 'rb') as data_file:         
+    with open('../master_rate_matrix.soen', 'rb') as data_file:         
         data_array_imported = pickle.load(data_file)
     
     I_di_list__imported = data_array_imported['I_di_list']

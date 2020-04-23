@@ -3,7 +3,6 @@ from matplotlib import pyplot as plt
 from pylab import *
 import time
 import pickle
-import copy
 
 from _functions import synaptic_response_function, synapse_time_stepper, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR, dendrite_time_stepper
 from _plotting import plot_dendritic_drive, plot_dendritic_integration_loop_current
@@ -218,17 +217,15 @@ class synapse():
         sim_params = self.synapse_model_params
         tf = sim_params['tf']
         dt = sim_params['dt']
-        time_vec = 1e9*np.arange(0,tf+dt,dt)
+        time_vec = np.arange(0,tf+dt,dt)
         p = physical_constants()
         # input_spike_times = self.input_spike_times
         
         #setup input signal
         if hasattr(self,'input_signal'):
-            self.input_spike_times = copy.deepcopy(self.input_signal.spike_times)
+            self.input_spike_times = self.input_signal.spike_times
         else:
             self.input_spike_times = []
-        for ii in range(len(self.input_spike_times)):
-            self.input_spike_times[ii] = self.input_spike_times[ii]*1e9
                 
         #here currents are in uA. they are converted to A before passing back
         I_sy = self.synaptic_bias_current*1e6
@@ -252,7 +249,7 @@ class synapse():
         #see matlab scripts in a4/calculations/nC/phenomenological_modeling...
         
         # tau_rise = (1.294*I_sy-43.01)*1e-9
-        tau_rise = (0.038359*I_sy**2-0.778850*I_sy-0.441682)#*1e-9
+        tau_rise = (0.038359*I_sy**2-0.778850*I_sy-0.441682)*1e-9
         self.integration_loop_total_inductance = self.integration_loop_self_inductance+self.integration_loop_output_inductance
         _reference_inductance = 775e-9 #inductance at which I_0 fit was performed
         _scale_factor = _reference_inductance/self.integration_loop_total_inductance
@@ -264,14 +261,15 @@ class synapse():
         #I_si_sat is actually a function of I_b (loop_current_bias). The fit I_si_sat(I_b) has not yet been performed (20200319)
         I_si_sat = 19.7
 
-        tau_fall = copy.deepcopy(self.integration_loop_time_constant)*1e9
+        tau_fall = self.integration_loop_time_constant
 
         # I_si_vec = synaptic_response_function(time_vec,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
-                 # synapse_time_stepper(time_vec,input_spike_times,     I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
-        I_si_vec = synapse_time_stepper(time_vec,self.input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
+        I_si_vec = np.zeros([len(time_vec),1])
+        for ii in range(len(time_vec)):
+            I_si_vec[ii] = synapse_time_stepper(time_vec,ii,self.input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
 
         self.I_si = I_si_vec*1e-6
-        self.time_vec = time_vec*1e-9
+        self.time_vec = time_vec
 
         return self
     

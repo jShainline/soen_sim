@@ -13,13 +13,13 @@ from util import physical_constants
 from soen_sim import input_signal, synapse
 p = physical_constants()
 
-# plt.close('all')
+plt.close('all')
 
 #%%
     
-gamma1_vec = np.linspace(0.05,2.5,20)
-gamma2_vec = np.linspace(0.05,2.5,20)
-gamma3_vec = np.linspace(0.1,1,20)
+gamma1_vec = np.linspace(1,2.5,10)
+gamma2_vec = np.linspace(0.1,2.5,10)
+gamma3_vec = np.linspace(0.1,1,10)
 
 spike_times = [5e-9,55e-9,105e-9,155e-9,205e-9,255e-9,305e-9,355e-9,505e-9,555e-9,605e-9,655e-9,705e-9,755e-9,805e-9,855e-9]
 
@@ -66,13 +66,13 @@ print('soen_sim duration = '+str(elapsed)+' s for vary L_si')
 #%%vary tau_si
 I_sy = 33e-6
 L_si = 775e-9
-tau_si_vec = [10e-9,50e-9,250e-9,1.25e-6]
+tau_si_vec = [50e-9,250e-9,1.25e-6]#[10e-9,50e-9,250e-9,1.25e-6]
 
 master_error_plot_name = 'vary_tau_si'
 
 data_file_list = []
-num_files = len(L_si_vec)
-for ii in range(num_files):
+num_files = len(tau_si_vec)
+for ii in range(1):#range(num_files):
     data_file_list.append('syn_Ispd20.00uA_Isy{:05.2f}uA_Lsi{:07.2f}nH_tausi{:04.0f}ns_dt10.0ps_tsim1000ns.dat'.format(I_sy*1e6,L_si*1e9,tau_si_vec[ii]*1e9))
 
 #call main sweep function 
