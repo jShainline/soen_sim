@@ -218,7 +218,7 @@ class synapse():
         sim_params = self.synapse_model_params
         tf = sim_params['tf']
         dt = sim_params['dt']
-        time_vec = 1e9*np.arange(0,tf+dt,dt)
+        time_vec = 1e6*np.arange(0,tf+dt,dt)
         p = physical_constants()
         # input_spike_times = self.input_spike_times
         
@@ -228,7 +228,7 @@ class synapse():
         else:
             self.input_spike_times = []
         for ii in range(len(self.input_spike_times)):
-            self.input_spike_times[ii] = self.input_spike_times[ii]*1e9
+            self.input_spike_times[ii] = self.input_spike_times[ii]*1e6
                 
         #here currents are in uA. they are converted to A before passing back
         I_sy = self.synaptic_bias_current*1e6
@@ -264,14 +264,16 @@ class synapse():
         #I_si_sat is actually a function of I_b (loop_current_bias). The fit I_si_sat(I_b) has not yet been performed (20200319)
         I_si_sat = 19.7
 
-        tau_fall = copy.deepcopy(self.integration_loop_time_constant)*1e9
+        tau_fall = copy.deepcopy(self.integration_loop_time_constant)*1e6
 
         # I_si_vec = synaptic_response_function(time_vec,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
                  # synapse_time_stepper(time_vec,input_spike_times,     I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
-        I_si_vec = synapse_time_stepper(time_vec,self.input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
+        # I_si_vec = synapse_time_stepper(time_vec,self.input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
+        L3 = self.integration_loop_total_inductance
+        I_si_vec = synapse_time_stepper(time_vec,self.input_spike_times,L3,I_sy,tau_fall)
 
         self.I_si = I_si_vec*1e-6
-        self.time_vec = time_vec*1e-9
+        self.time_vec = time_vec*1e-6
 
         return self
     

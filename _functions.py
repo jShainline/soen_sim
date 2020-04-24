@@ -4,41 +4,129 @@ import pickle
 import time
 from matplotlib import pyplot as plt
 from pylab import *
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+from mpl_toolkits.mplot3d import Axes3D
 
 from util import physical_constants
 from _plotting import plot_dendritic_drive, plot_wr_comparison, plot_error_mat
 
 #%%
 
-def synapse_time_stepper(time_vec,I_drive,L3,tau_di):
+def synapse_time_stepper(time_vec,spike_times,L3,I_sy,tau_si):
     
-    with open('../master_rate_matrix__soen.soen', 'rb') as data_file:         
-        data_array_imported = pickle.load(data_file)
-    
-    I_si_list__imported = data_array_imported['I_si_list']
-    I_drive_vec__imported = data_array_imported['I_drive_vec']
-    master_rate_matrix__imported = data_array_imported['master_rate_matrix']
+    if spike_times:
         
-    p = physical_constants()
-    Phi0 = p['Phi0']
-    I_fq = Phi0/L3
+        # print('spike_times = {}'.format(spike_times))
+        
+        nt = len(time_vec)
+        dt = time_vec[1]-time_vec[0]
+        #make reduced spd response
+        with open('../master__syn__spd_response.soen', 'rb') as data_file:         
+            data_array__imported = pickle.load(data_file)
+        spd_response_matrix__imported = data_array__imported['master_spd_response_matrix']
+        I_sy_vec__imported = data_array__imported['I_sy_vec']
+        time_vec__imported = data_array__imported['time_vec']
+        
+        tf = time_vec__imported[-1]
+        nt_spd = np.floor(tf/dt).astype(int)
+        spd_t = np.zeros([nt_spd])
+        spd_i = np.zeros([nt_spd])
+        
+        I_sy_ind = (np.abs(I_sy_vec__imported[:] - I_sy)).argmin()
+        for ii in range(nt_spd):
+            ti = (np.abs(np.asarray(time_vec__imported[:]) - ii*dt)).argmin()
+            spd_t[ii] = time_vec__imported[ti] # spd time vector
+            spd_i[ii] = spd_response_matrix__imported[I_sy_ind,ti] # spd current vector
+            
+        spd_duration = spd_t[-1]
+        
+        if 1 == 2:
+            fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
+            fig.suptitle('master spd response')   
+            ax.plot(spd_t,spd_i)      
+            ax.set_xlabel(r'Time [$\mu$s]')
+            ax.set_ylabel(r'$I_{spd}$ [$\mu$A]')
+            plt.show()
+        
+        #load master rate matrix
+        with open('../master__syn__rate_matrix.soen', 'rb') as data_file:         
+            data_array_imported = pickle.load(data_file)
+        
+        I_si_vec__imported = data_array_imported['I_si_vec'] # entries have units of uA
+        I_drive_vec__imported = data_array_imported['I_drive_vec'] # entries have units of uA
+        master_rate_matrix__imported = data_array_imported['master_rate_matrix'] # entries have units of fluxons per microsecond
+            
+        if 1 == 2:
+            fig = plt.figure()
+            ax = fig.gca(projection='3d')
+            Y = I_drive_vec__imported
+            X = I_si_vec__imported
+            XXa, YYb = np.meshgrid(X, Y)
+            surf = ax.plot_surface(XXa, YYb, master_rate_matrix__imported*1e-3, cmap=cm.viridis,linewidth=0, antialiased=False)
+            ax.set_xlabel('$I_{si}$ [$\mu$A]')
+            ax.set_ylabel('$I_{spd}$ [$\mu$A]')
+            ax.set_zlabel('Rate of fluxon generation [kilofluxons per $\mu$s]')
+            
+            fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
+            fig.suptitle('master _ sy _ rate_matrix') 
+            for ii in range(len(I_drive_vec__imported)):
+                ax.plot(I_si_vec__imported,master_rate_matrix__imported[ii,:]*1e-3, '-', label = 'I_drive = {}'.format(I_drive_vec__imported[ii]))    
+            ax.set_xlabel(r'$I_{si}$ [$\mu$s]')
+            ax.set_ylabel(r'Rate [kilofluxons per $\mu$s]')
+            ax.legend()
+            plt.show()
+        
+        p = physical_constants()
+        Phi0 = p['Phi0']
+        I_fq = 1e6*Phi0/L3
+        
+        I_si_vec = np.zeros([nt])
+        # print('I_si_vec.size = {}'.format(I_si_vec.size))
+        # print('len(I_si_list__imported) = {}'.format(len(I_si_list__imported)))
+        for ii in range(nt-1):
+            # dt = time_vec[ii+1]-time_vec[ii]
+            
+            _pt = time_vec[ii] # present time
+            # print('ii = {}, present time = {}us'.format(ii,_pt))
+            
+            # find most recent spike time  
+            gf = 0
+            st_ind = (np.abs(spike_times[:] - _pt)).argmin()            
+            if st_ind == 0 and spike_times[st_ind] > _pt:
+                gf = 0 # growth factor
+                # print('code 1: st_ind == 0 and spike_times[st_ind] > _pt')
+            if st_ind > 0 and spike_times[st_ind] > _pt:
+                st_ind -= 1
+                # print('code 2: st_ind > 0 and spike_times[st_ind] > _pt')
+            if _pt - spike_times[st_ind] > spd_duration:
+                gf = 0 # growth factor
+                # print('code 3: _pt - spike_times[st_ind] > spd_duration')
+            if spike_times[st_ind] < _pt and _pt - spike_times[st_ind] < spd_duration:
+                # print('code 4')
+                dt_spk = _pt - spike_times[st_ind]
+                spd_t_ind  = (np.abs(spd_t[:] - dt_spk)).argmin()
+                spd_current = spd_i[spd_t_ind]
+                if spd_current < np.min(I_drive_vec__imported):
+                    gf = 0
+                else:
+                    I_drive_ind = (np.abs(I_drive_vec__imported[:] - spd_current)).argmin()
+                    
+                    I_si_ind = (np.abs(I_si_vec__imported[:] - I_si_vec[ii])).argmin()
+                    gf = dt*I_fq*master_rate_matrix__imported[I_drive_ind,I_si_ind] # growth factor
+                    
+                    # linear interpolation
+                    # rate = np.interp(spd_current,I_drive_vec__imported,master_rate_matrix__imported[:,I_si_ind])
+                    # gf = dt*I_fq*rate
+                    
     
-    I_si_vec = np.zeros([len(time_vec),1])
-    for ii in range(len(time_vec)-1):
-        dt = time_vec[ii+1]-time_vec[ii]
-                               
-        if I_drive[ii] > 8.9e-6:
-            ind1 = (np.abs(np.asarray(I_drive_vec__imported)-I_drive[ii])).argmin()
-            ind2 = (np.abs(np.asarray(I_di_list__imported[ind1])-I_di_vec[ii])).argmin()
-            rate = master_rate_matrix__imported[ind1,ind2]
-            # linear interpolation
-            # rate = np.interp(I_drive[ii],I_drive_vec__imported,master_rate_matrix__imported[:,ind2])            
-        else:
-            rate = 0
-
-        I_di_vec[ii+1] = rate*I_fq*dt + (1-dt/tau_di)*I_di_vec[ii]        
+            # if _pt > 0.4 and _pt < 0.5:
+            #     print('spd_current = {}uA, gf = {}uA/us'.format(spd_current,gf))
+                
+            
+            I_si_vec[ii+1] = gf + (1-dt/tau_si)*I_si_vec[ii]        
     
-    return I_di_vec
+    return I_si_vec
 
 # def synapse_time_stepper(time_vec,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
 
