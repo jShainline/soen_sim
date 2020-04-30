@@ -7,7 +7,6 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.collections import PolyCollection
-import numpy.matlib
 
 # from soen_sim import input_signal, synapse, dendrite, neuron
 from _plotting import plot_fq_peaks, plot_fq_peaks__dt_vs_bias, plot_wr_data__currents_and_voltages
@@ -21,29 +20,14 @@ plt.close('all')
 
 I_sy = 40#uA
 
-I_drive_list = ( [1.76,1.77,1.78,1.79,1.8,#1
-                  1.9,2,2.1,2.2,2.3,#2
-                  2.4,2.5,2.75,3,3.5,#3
-                  4,4.5,5,5.5,6,#4
-                  6.5,7,7.5,8,8.5,#5
-                  9,9.5,10,10.5,11,#6
-                  11.5,12,12.5,13,13.5,#7
-                  14,14.5,15,15.5,16,#8
-                  16.5,17,17.5,18,18.5,#9
-                  19,19.25,19.5,19.6,19.7,#10
-                  19.8,19.9,20] )#11; units of uA
+I_drive_list = ( [1.76,1.77,1.78,1.79,1.8,1.9,2,2.1,2.2,2.3,2.4,2.5,2.75,
+                  3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,
+                  12,12.5,13,13.5,14,14.5,15,15.5,16,16.5,17,17.5,18,18.5,
+                  19,19.25,19.5,19.6,19.7,19.8,19.9,20] )#units of uA
 
-t_sim_list = ( [10,10,13,16,20,#1
-                40,60,82,72,58,#2
-                51,47,41,37,33,#3
-                30,29,41,32,30,#4
-                29,27,26,25,24,#5
-                24,23,23,23,22,#6
-                22,22,22,21,21,#7
-                21,21,21,21,21,#8
-                21,20,20,20,20,#9
-                20,20,20,20,20,#10
-                20,20,20] )#11; units of ns
+t_sim_list = ( [10,10,13,16,20,40,60,82,72,58,51,47,41,37,33,30,29,41,37,33,
+                30,29,41,32,30,29,27,26,25,24,24,23,23,22,22,22,22,21,21,21,21,21,21,21,21,
+                20,20,20,20,20,20,20,20,20,20,20,20,] )#units of ns
 
 #%%
     
@@ -55,6 +39,8 @@ j_si_ifi_array = [] # array of inter-fluxon intervals at the synaptic integratio
 j_si_rate_array = [] # array of fluxon production rate at the synaptic integration loop junction
 
 I_si_array = [] # array of values of I_si
+
+I_si_array.append([])
 
 num_drives = len(I_drive_list) 
 for ii in range(num_drives):
@@ -116,24 +102,24 @@ for ii in range(num_drives):
     j_jtl_rate = 1/j_jtl_ifi
     j_si_rate = 1/j_si_ifi
     
-    j_sf_ifi_array.append(j_sf_ifi)
-    j_sf_rate_array.append(j_sf_rate)
-    j_jtl_ifi_array.append(j_jtl_ifi)
-    j_jtl_rate_array.append(j_jtl_rate)
-    j_si_ifi_array.append(j_si_ifi)
-    j_si_rate_array.append(j_si_rate)
+    j_sf_ifi_array[ii].append(j_sf_ifi)
+    j_sf_rate_array[ii].append(j_sf_rate)
+    j_jtl_ifi_array[ii].append(j_jtl_ifi)
+    j_jtl_rate_array[ii].append(j_jtl_rate)
+    j_si_ifi_array[ii].append(j_si_ifi)
+    j_si_rate_array[ii].append(j_si_rate)
     
-    I_si_array.append(I_si[j_si_peaks])
+    I_si_array[ii].append(I_si[j_si_peaks])
     
     
 #%% assemble data and change units
-I_si_pad = 10e-9 # amount above the observed max of Isi that the simulation will allow before giving a zero rate
+I_si_pad = 100e-9 # amount above the observed max of Isi that the simulation will allow before giving a zero rate
 
 master_rate_array = []
 I_si_array__scaled = []
     
 for ii in range(num_drives):
-                
+            
     temp_rate_vec = np.zeros([len(j_si_rate_array[ii])])
     temp_I_si_vec = np.zeros([len(j_si_rate_array[ii])])
     for jj in range(len(j_si_rate_array[ii])):
@@ -155,55 +141,9 @@ for ii in range(num_drives):
     ax.plot(I_si_array__scaled[ii][:],master_rate_array[ii][:]*1e-3, '-', label = 'I_drive = {}'.format(I_drive_list[ii]))    
 ax.set_xlabel(r'$I_{si}$ [$\mu$A]')
 ax.set_ylabel(r'$r_{j_{si}}$ [kilofluxons per $\mu$s]')
-# ax.legend()
+ax.legend()
 plt.show()
 
-#%% surface plot
-dI_si = 0.1 # units of uA
-
-I_si_max = 0
-for ii in range(num_drives):
-    I_si_max = np.max([I_si_max,np.max(I_si_array__scaled[ii][:])])
-
-I_si_plotting_vec = np.arange(0,I_si_max+dI_si,dI_si)
-num_I_si = len(I_si_plotting_vec)
-I_si_plotting_mat = np.zeros([num_drives,num_I_si])
-rate_plotting_mat = np.zeros([num_drives,num_I_si])
-for ii in range(num_drives):
-    num_I_si__this = len(I_si_array[ii])
-    for jj in range(num_I_si__this):
-        ind = (np.abs(I_si_plotting_vec[:]-I_si_array__scaled[ii][jj])).argmin()
-        I_si_plotting_mat[ii,ind] = I_si_plotting_vec[ind]        
-        rate_plotting_mat[ii,ind] = 1e3*master_rate_array[ii][jj]
-
-I_drive_plotting_mat = np.matlib.repmat(np.asarray(I_drive_list),num_I_si,1).transpose()
-
-
-fig = plt.figure()
-ax = fig.gca(projection='3d')
-surf = ax.plot_surface(I_si_plotting_mat, I_drive_plotting_mat, rate_plotting_mat, cmap=cm.viridis,linewidth=0, antialiased=False)
-ax.set_xlabel('$I_{si}$ [$\mu$A]')
-ax.set_ylabel('$I_{drive}$ [$\mu$A]')
-ax.set_zlabel('Rate of fluxon generation [kilofluxons per $\mu$s]')
-
-plt.show()
-
-#%% color plot
-I_si_max = 0
-for ii in range(num_drives):
-    I_si_max = np.max([I_si_max,np.max(I_si_array__scaled[ii][:])])
-    
-fig, ax = plt.subplots(1,1)
-rates = ax.imshow(rate_plotting_mat.transpose(), cmap = plt.cm.viridis, interpolation='none', extent=[I_drive_list[0],I_drive_list[-1],0,I_si_max], aspect = 'auto', origin = 'lower')
-cbar = fig.colorbar(rates, extend='both')
-cbar.minorticks_on()     
-fig.suptitle('Rate [kilofluxons per $\mu$s]')
-# plt.title(title_string)
-ax.set_xlabel(r'$I_{drive}$ [$\mu$A]')
-ax.set_ylabel(r'$I_{si}$ [$\mu$A]')  
-ax.set_ylim() 
-plt.show()      
-# fig.savefig('figures/'+save_str+'__log.png')
 
 
 #%% save the data    
@@ -235,4 +175,43 @@ if 1 == 2:
     rate_obtained = rate_array__imprt[I_drive_sought_ind][I_si_sought_ind]
     
     print('I_drive_sought = {:7.4f}uA, I_drive_sought_ind = {:d}\nI_si_sought = {:7.4f}uA, I_si_sought_ind = {:d}\nrate_obtained = {:10.4f} fluxons per us'.format(I_drive_sought,I_drive_sought_ind,I_si_sought,I_si_sought_ind,rate_obtained))
+
+    
+#%%
+
+# #%% plot the matrices a few different ways
+
+# for kk in range(len(I_sy_list)):
+    
+#     fig, ax = plt.subplots(1,1)
+#     rates = ax.imshow(np.transpose(master_rate_matrices[kk][:,:]), cmap = plt.cm.viridis, interpolation='none', extent=[I_drive_mat[kk][0],I_drive_mat[kk][-1],0,max_I_si_list[kk]], aspect = 'auto', origin = 'lower')
+#     cbar = fig.colorbar(rates, extend='both')
+#     cbar.minorticks_on()     
+#     fig.suptitle('$Rate [kilofluxons per $\mu$s]')
+#     # plt.title(title_string)
+#     ax.set_xlabel(r'$I_{drive}$ [$\mu$A]')
+#     ax.set_ylabel(r'$I_{si}$ [$\mu$A]')  
+#     ax.set_ylim() 
+#     plt.show()      
+#     # fig.savefig('figures/'+save_str+'__log.png')
+    
+#     # fig = plt.figure()
+#     # ax = fig.gca(projection='3d')
+#     # Y = I_drive_mat[kk]
+#     # X = I_si_mat__scaled[kk]
+#     # XXa, YYb = np.meshgrid(X, Y)
+#     # surf = ax.plot_surface(XXa, YYb, master_rate_matrices[kk][:,:]*1e-3, cmap=cm.viridis,linewidth=0, antialiased=False)
+#     # ax.set_xlabel('$I_{si}$ [$\mu$A]')
+#     # ax.set_ylabel('$I_{spd}$ [$\mu$A]')
+#     # ax.set_zlabel('Rate of fluxon generation [kilofluxons per $\mu$s]')
+    
+#     # num_files = len(I_drive_mat[kk])
+#     # fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
+#     # fig.suptitle('master _ sy _ rate_matrix') 
+#     # for ii in range(num_files):
+#     #     ax.plot(I_si_mat__scaled[kk][ii][:],master_rate_matrices[kk][ii,:]*1e-3, '-', label = 'I_drive = {}'.format(I_drive_mat[kk][ii]))    
+#     # ax.set_xlabel(r'$I_{si}$ [$\mu$A]')
+#     # ax.set_ylabel(r'Rate [kilofluxons per $\mu$s]')
+#     # ax.legend()
+#     # plt.show()
 

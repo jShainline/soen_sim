@@ -18,7 +18,7 @@ plt.close('all')
 #%%
 spike_times = [5e-9,55e-9,105e-9,155e-9,205e-9,255e-9,305e-9,355e-9,505e-9,555e-9,605e-9,655e-9,705e-9,755e-9,805e-9,855e-9]
 
-dt = 0.1e-9
+dt = 0.05e-9
 tf = 1e-6
                     
 # create sim_params dictionary

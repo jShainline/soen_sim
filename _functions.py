@@ -56,34 +56,12 @@ def synapse_time_stepper(time_vec,spike_times,L3,I_sy,tau_si):
         
         # print('loading rate array')
         
-        
-        #load master rate matrix
-        # with open('../master__syn__rate_matrices.soen', 'rb') as data_file:         
-        #     data_array_imported = pickle.load(data_file)
-        
-        # I_si_vec__imported = data_array_imported['I_si_vec'] # entries have units of uA
-        # I_drive_vec__imported = data_array_imported['I_drive_vec'] # entries have units of uA
-        # master_rate_matrix__imported = data_array_imported['master_rate_matrix'] # entries have units of fluxons per microsecond
-        
-        with open('../_circuit_data/master__syn__rate_array__Isipad0100nA.soen', 'rb') as data_file:         
+        with open('../_circuit_data/master__syn__rate_array__Isipad0010nA.soen', 'rb') as data_file:         
             data_array_imprt = pickle.load(data_file)
             
-        I_si_array__imprt = data_array_imprt['I_si_array'] # entries have units of uA
-        I_drive_array__imprt = data_array_imprt['I_drive_array'] # entries have units of uA
-        I_sy_list__imprt = data_array_imprt['I_sy_list'] # entries have units of uA
-        rate_array__imprt = data_array_imprt['rate_array'] # entries have units of fluxons per microsecond
-        
-        I_sy_ind = (np.abs(np.asarray(I_sy_list__imprt)-I_sy)).argmin()
-        # print('I_sy_ind = {}'.format(I_sy_ind))
-        I_drive_list = np.asarray(I_drive_array__imprt[I_sy_ind])
-        I_si_array = I_si_array__imprt[I_sy_ind]
-        rate_array = rate_array__imprt[I_sy_ind]
-        
-        # I_drive_sought = 14.45
-        # I_drive_sought_ind = (np.abs(np.asarray(I_drive_vecs__imprt[I_sy_sought_ind])-I_drive_sought)).argmin()
-        # I_si_sought = 11.552
-        # I_si_sought_ind = (np.abs(I_si_vecs__imprt[I_sy_sought_ind][I_drive_sought_ind]-I_si_sought)).argmin()
-        # rate_obtained = master_rate_matrices__imprt[I_sy_sought_ind][I_drive_sought_ind,I_si_sought_ind]
+        I_si_array = data_array_imprt['I_si_array'] # entries have units of uA
+        I_drive_list = data_array_imprt['I_drive_list'] # entries have units of uA
+        rate_array = data_array_imprt['rate_array'] # entries have units of fluxons per microsecond
             
         # print('done loading rate array\nstarting time stepping')        
         
@@ -118,10 +96,12 @@ def synapse_time_stepper(time_vec,spike_times,L3,I_sy,tau_si):
                 dt_spk = _pt - spike_times[st_ind]
                 spd_t_ind  = (np.abs(spd_t[:] - dt_spk)).argmin()
                 spd_current = spd_i[spd_t_ind]
-                if spd_current < np.min(I_drive_list):
+                I_tot = spd_current+I_sy
+                I_drive = I_tot-40 # all data so far is with 40uA JJs
+                if I_drive < np.min(I_drive_list):
                     gf = 0
-                else:
-                    I_drive_ind = (np.abs(I_drive_list[:] - spd_current)).argmin()
+                else:                    
+                    I_drive_ind = (np.abs(I_drive_list[:] - I_drive)).argmin()
                     I_si_ind = (np.abs(np.asarray(I_si_array[I_drive_ind][:]) - I_si_vec[ii])).argmin()
                         
                     #no interpolation
@@ -129,8 +109,7 @@ def synapse_time_stepper(time_vec,spike_times,L3,I_sy,tau_si):
                 
                     # linear interpolation
                     # gf = dt*I_fq*np.interp(spd_current,I_drive_list,rate_array[:][I_si_ind])
-                
-            
+                            
             I_si_vec[ii+1] = gf + (1-dt/tau_si)*I_si_vec[ii]        
     
     print('done time stepping')
@@ -807,21 +786,27 @@ def mu_fitter_3_4(data_dict,time_vec,I_di,mu3,mu4):
     
     return error
 
+
 def chi_squared_error(target_data,actual_data):
     
     print('calculating chi^2 ...')
     error = 0
     norm = 0
-    for ii in range(len(actual_data[0,0:-1])):
-        dt = actual_data[0,ii+1]-actual_data[0,ii]
-        # print('ii = {} of {}'.format(ii+1,len(actual_data[0,:])))
+    for ii in range(len(actual_data[0,:])):
         ind = (np.abs(target_data[0,:]-actual_data[0,ii])).argmin()        
-        error += dt*abs( target_data[1,ind]-actual_data[1,ii] )**2
-        norm += dt*abs( target_data[1,ind] )**2
-    
-    error = error/norm    
+        error += np.abs( target_data[1,ind]-actual_data[1,ii] )**2
+        norm += np.abs( target_data[1,ind] )**2    
+    error = error/norm     
+    # for ii in range(len(actual_data[0,0:-1])):
+    #     dt = actual_data[0,ii+1]-actual_data[0,ii]
+    #     ind = (np.abs(target_data[0,:]-actual_data[0,ii])).argmin()        
+    #     error += dt*np.abs( target_data[1,ind]-actual_data[1,ii] )**2
+    #     norm += dt*np.abs( target_data[1,ind] )**2    
+    # error = error/norm    
     print('done calculating chi^2.')
+    
     return error
+
 
 def read_wr_data(file_path):
     
