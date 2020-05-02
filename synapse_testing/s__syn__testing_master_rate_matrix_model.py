@@ -6,7 +6,7 @@ from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
 
 # from soen_sim import input_signal, synapse, dendrite, neuron
-from _plotting import plot_fq_peaks, plot_fq_peaks__dt_vs_bias, plot_wr_data__currents_and_voltages, plot_wr_comparison__synapse, plot_error_mat
+from _plotting import plot_fq_peaks, plot_fq_peaks__dt_vs_bias, plot_wr_data__currents_and_voltages, plot_wr_comparison__synapse, plot_error_mat, plot_wr_comparison__synapse__tiles
 from _functions import save_session_data, load_session_data, read_wr_data, V_fq__fit, inter_fluxon_interval__fit, inter_fluxon_interval, inter_fluxon_interval__fit_2, inter_fluxon_interval__fit_3, chi_squared_error
 from _functions__more import synapse_model__parameter_sweep
 from util import physical_constants
@@ -26,6 +26,10 @@ sim_params = dict()
 sim_params['dt'] = dt
 sim_params['tf'] = tf
 
+target_data_array = []
+actual_data_array = []
+error_array = []
+
 
 #%% vary Isy
 I_sy_vec = [23e-6,28e-6,33e-6,38e-6]
@@ -43,6 +47,7 @@ for ii in range(num_files):
     data_dict = read_wr_data('wrspice_data/test_data/'+file_name)
     wr_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))
     target_data = np.vstack((data_dict['time'],data_dict['L3#branch']))
+    target_data_array.append(target_data)
 
     # initialize input signal
     name__i = 'in'
@@ -56,8 +61,10 @@ for ii in range(num_files):
                         input_signal_name = 'in', synapse_model_params = sim_params)
     
     synapse_1.run_sim()    
-    actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:]))    
+    actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:])) 
+    actual_data_array.append(actual_data)
     error_signal = chi_squared_error(target_data,actual_data)
+    error_array.append(error_signal)
     plot_wr_comparison__synapse(file_name,spike_times,wr_drive,target_data,actual_data,file_name,error_signal)    
 
 elapsed = time.time() - t_tot
@@ -80,6 +87,7 @@ for ii in range(num_files):
     data_dict = read_wr_data('wrspice_data/test_data/'+file_name)
     wr_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))
     target_data = np.vstack((data_dict['time'],data_dict['L3#branch']))
+    target_data_array.append(target_data)
 
     # initialize input signal
     name__i = 'in'
@@ -93,8 +101,10 @@ for ii in range(num_files):
                         input_signal_name = 'in', synapse_model_params = sim_params)
     
     synapse_1.run_sim()    
-    actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:]))    
+    actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:]))   
+    actual_data_array.append(actual_data)
     error_signal = chi_squared_error(target_data,actual_data)
+    error_array.append(error_signal)
     plot_wr_comparison__synapse(file_name,spike_times,wr_drive,target_data,actual_data,file_name,error_signal) 
     
 elapsed = time.time() - t_tot
@@ -117,6 +127,7 @@ for ii in range(num_files):
     data_dict = read_wr_data('wrspice_data/test_data/'+file_name)
     wr_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))
     target_data = np.vstack((data_dict['time'],data_dict['L3#branch']))
+    target_data_array.append(target_data)
 
     # initialize input signal
     name__i = 'in'
@@ -130,10 +141,15 @@ for ii in range(num_files):
                         input_signal_name = 'in', synapse_model_params = sim_params)
     
     synapse_1.run_sim()    
-    actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:]))    
+    actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:])) 
+    actual_data_array.append(actual_data)
     error_signal = chi_squared_error(target_data,actual_data)
+    error_array.append(error_signal)
     plot_wr_comparison__synapse(file_name,spike_times,wr_drive,target_data,actual_data,file_name,error_signal)
 
 elapsed = time.time() - t_tot
 print('soen_sim duration = '+str(elapsed)+' s for vary tau_si')
 
+#%%
+
+plot_wr_comparison__synapse__tiles(target_data_array,actual_data_array,spike_times,error_array)

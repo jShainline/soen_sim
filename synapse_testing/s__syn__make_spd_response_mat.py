@@ -5,6 +5,7 @@ import pickle
 
 # from soen_sim import input_signal, synapse, dendrite, neuron
 from _functions import save_session_data, read_wr_data
+from _plotting import plot_spd_response
 
 plt.close('all')
 
@@ -39,7 +40,7 @@ for ii in range(len(I_sy_list)):
 #%% reduce temporal resolution
 
 print('\nreducing temporal resolution ...')
-dt = 0.05e-9 # desired temporal resolution
+dt = 0.1e-9 # desired temporal resolution
 
 time_vec_reduced = np.arange(time_vec[0],time_vec[-1]+dt*1e6,dt*1e6)
 nt_spd = len(time_vec_reduced)
@@ -63,16 +64,8 @@ print('done reducing temporal resolution.')
 
     
 #%% plot 
-fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
-fig.suptitle('spd response') 
-for ii in range(len(I_sy_list)):  
-    ax.plot(time_vec,I_spd_array[ii], color = 'red', label = 'I_sy = {}uA'.format(I_sy_list[ii]))    
-    ax.plot(time_vec_reduced,I_spd_array_reduced[ii], color = 'blue', label = 'I_sy = {}uA (reduced)'.format(I_sy_list[ii]))    
-ax.set_xlabel(r'Time [$\mu$s]')
-ax.set_ylabel(r'$I_{spd}$ [$\mu$A]')
-ax.legend()
-plt.show()
 
+plot_spd_response(time_vec,time_vec_reduced,I_sy_list,I_spd_array,I_spd_array_reduced)
 
 #%% save data
 I_spd_mat = np.zeros([len(I_sy_list),len(time_vec)])

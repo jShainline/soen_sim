@@ -10,7 +10,7 @@ from matplotlib.collections import PolyCollection
 import numpy.matlib
 
 # from soen_sim import input_signal, synapse, dendrite, neuron
-from _plotting import plot_fq_peaks, plot_fq_peaks__dt_vs_bias, plot_wr_data__currents_and_voltages
+from _plotting import plot_syn_rate_array
 from _functions import save_session_data, load_session_data, read_wr_data, V_fq__fit, inter_fluxon_interval__fit, inter_fluxon_interval, inter_fluxon_interval__fit_2, inter_fluxon_interval__fit_3
 from util import physical_constants
 p = physical_constants()
@@ -148,15 +148,8 @@ for ii in range(num_drives):
 
 #%% plot the rate vectors 
 
-fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
-fig.suptitle('master _ sy _ rates') 
-plt.title('$I_sy = $ {} $\mu$A'.format(I_sy))
-for ii in range(num_drives):
-    ax.plot(I_si_array__scaled[ii][:],master_rate_array[ii][:]*1e-3, '-', label = 'I_drive = {}'.format(I_drive_list[ii]))    
-ax.set_xlabel(r'$I_{si}$ [$\mu$A]')
-ax.set_ylabel(r'$r_{j_{si}}$ [kilofluxons per $\mu$s]')
-# ax.legend()
-plt.show()
+plot_syn_rate_array(I_si_array__scaled,master_rate_array,I_drive_list)
+
 
 #%% surface plot
 dI_si = 0.1 # units of uA

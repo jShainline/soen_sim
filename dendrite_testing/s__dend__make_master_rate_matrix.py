@@ -14,31 +14,29 @@ p = physical_constants()
 plt.close('all')
 
 #%% load wr data, find peaks, find rates
+I_de = 71.5#uA
 
-dI = 1
-I_drive_vec = [18.6,19,20,21,22,23,24,25,26,27,28,29,30]#np.arange(19,30+dI,dI)
-t_sim_vec = [60,70,50,40,35,32,32,32,32,32,32,32,32]
-data_file_list = []
-num_files = len(I_drive_vec)
-for ii in range(num_files):
-    data_file_list.append('dend_cnst_drv_Idrv{:5.2f}uA_Ldi0077.50nH_taudi0775ms_tsim{:04.0f}ns_dt00.1ps.dat'.format(I_drive_vec[ii],t_sim_vec[ii]))
+I_drive_list = [18.6,19,20,21,22,23,24,25,26,27,28,29,30]#np.arange(19,30+dI,dI)
+t_sim_list = [60,70,50,40,35,32,32,32,32,32,32,32,32]
 
-master_data__df1__t_fq = []
-master_data__df1__r_fq = []
-master_data__df2__t_fq = []
-master_data__df2__r_fq = []
-master_data__jtl__t_fq = []
-master_data__jtl__r_fq = []
-master_data__di__t_fq = []
-master_data__di__r_fq = []
-max_I_di = 0
-I_di_list = []
-for ii in range(num_files):
+j_df1_ifi_array = []
+j_df1_rate_array = []
+j_df2_ifi_array = []
+j_df2_rate_array = []
+j_jtl_ifi_array = []
+j_jtl_rate_array = []
+j_di_ifi_array = []
+j_di_rate_array = []
+
+I_di_array = []
+
+num_drives = len(I_drive_list)
+for ii in range(num_drives):
     
-    print('ii = {:d} of {:d}'.format(ii+1,num_files))
+    print('ii = {:d} of {:d}'.format(ii+1,num_drives))
     
     directory = 'wrspice_data/fitting_data'
-    file_name = data_file_list[ii]
+    file_name = 'dend_cnst_drv_Idrv{:5.2f}uA_Ldi0077.50nH_taudi0775ms_tsim{:04.0f}ns_dt00.1ps.dat'.format(I_drive_list[ii],t_sim_list[ii])
     data_dict = read_wr_data(directory+'/'+file_name)
     
     # find peaks for each jj
@@ -48,7 +46,7 @@ for ii in range(num_files):
     j_di = data_dict['v(5)']
     
     initial_ind = (np.abs(time_vec-2.0e-9)).argmin()
-    final_ind = (np.abs(time_vec-t_sim_vec[ii]*1e-9)).argmin()
+    final_ind = (np.abs(time_vec-t_sim_list[ii]*1e-9)).argmin()
 
     time_vec = time_vec[initial_ind:final_ind]
     j_df = j_df[initial_ind:final_ind]
@@ -84,8 +82,7 @@ for ii in range(num_files):
     I_di = data_dict['L3#branch']
     I_di = I_di[initial_ind:final_ind]
     I_drive = data_dict['L4#branch']
-    I_drive = I_drive[initial_ind:final_ind]    
-    max_I_di = np.max([np.max(I_di),max_I_di])
+    I_drive = I_drive[initial_ind:final_ind]   
     
     # I_dr1 = Idr1_next, Idr2_next, Ij2_next, Ij3_next, I1, I2, I3 = dendrite_current_splitting(Ic,Iflux_vec[jj],I_b,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
     
@@ -99,40 +96,74 @@ for ii in range(num_files):
     j_jtl_rate = 1/j_jtl_ifi
     j_di_rate = 1/j_di_ifi
     
-    master_data__df1__t_fq.append(j_df1_ifi)
-    master_data__df1__r_fq.append(j_df1_rate)
-    master_data__df2__t_fq.append(j_df2_ifi)
-    master_data__df2__r_fq.append(j_df2_rate)
-    master_data__jtl__t_fq.append(j_jtl_ifi)
-    master_data__jtl__r_fq.append(j_jtl_rate)
-    master_data__di__t_fq.append(j_di_ifi)
-    master_data__di__r_fq.append(j_di_rate)
+    j_df1_ifi_array.append(j_df1_ifi)
+    j_df1_rate_array.append(j_df1_rate)
+    j_df2_ifi_array.append(j_df2_ifi)
+    j_df2_rate_array.append(j_df2_rate)
+    j_jtl_ifi_array.append(j_jtl_ifi)
+    j_jtl_rate_array.append(j_jtl_rate)
+    j_di_ifi_array.append(j_di_ifi)
+    j_di_rate_array.append(j_di_rate)
     
-    I_di_list.append(I_di[j_di_peaks])
+    I_di_array.append(I_di[j_di_peaks])
     
 #%% assemble data
-longest_rate_vec = 0
-fastest_rate = 0
-for ii in range(num_files):
-    if len(master_data__di__r_fq[ii]) > longest_rate_vec:
-        longest_rate_vec = len(master_data__di__r_fq[ii])
-    fastest_rate = np.max([np.max(master_data__di__r_fq[ii]),fastest_rate])        
+# longest_rate_vec = 0
+# fastest_rate = 0
+# for ii in range(num_drives):
+#     if len(master_data__di__r_fq[ii]) > longest_rate_vec:
+#         longest_rate_vec = len(master_data__di__r_fq[ii])
+#     fastest_rate = np.max([np.max(master_data__di__r_fq[ii]),fastest_rate])        
 
-master_rate_matrix = np.zeros([num_files,longest_rate_vec])
-for ii in range(num_files):
-    tn = len(master_data__di__r_fq[ii])
-    for jj in range(tn):
-        master_rate_matrix[ii,jj] = master_data__di__r_fq[ii][jj]
+# master_rate_matrix = np.zeros([num_drives,longest_rate_vec])
+# for ii in range(num_drives):
+#     tn = len(master_data__di__r_fq[ii])
+#     for jj in range(tn):
+#         master_rate_matrix[ii,jj] = master_data__di__r_fq[ii][jj]
+        
+#%% assemble data and change units
+I_di_pad = 10e-9 # amount above the observed max of Isi that the simulation will allow before giving a zero rate
 
-fig, ax = plt.subplots(1,1)
-rates = ax.imshow(np.transpose(master_rate_matrix[:,:]), cmap = plt.cm.viridis, interpolation='none', extent=[I_drive_vec[0],I_drive_vec[-1],0,max_I_di*1e6], aspect = 'auto', origin = 'lower')
-cbar = fig.colorbar(rates, extend='both')
-cbar.minorticks_on()     
-fig.suptitle('$r_{tot}$ versus $I_{drive}$ and $I_{di}$')
-# plt.title(title_string)
-ax.set_xlabel(r'$I_{drive}$ [$\mu$A]')
-ax.set_ylabel(r'$I_{di}$ [$\mu$A]')   
-plt.show()      
+master_rate_array = []
+I_di_array__scaled = []
+    
+for ii in range(num_drives):
+                
+    temp_rate_vec = np.zeros([len(j_di_rate_array[ii])])
+    temp_I_di_vec = np.zeros([len(j_di_rate_array[ii])])
+    for jj in range(len(j_di_rate_array[ii])):
+        temp_rate_vec[jj] = 1e-6*j_di_rate_array[ii][jj] # master_rate_array has units of fluxons per microsecond
+        temp_I_di_vec[jj] = 1e6*( I_di_array[ii][jj]+I_di_array[ii][jj+1] )/2 # this makes I_si_array__scaled have the same dimensions as j_si_rate_array and units of uA
+
+    master_rate_array.append([])
+    master_rate_array[ii] = np.append(temp_rate_vec,0) # this zero is added so that a current that rounds to I_si + I_si_pad will give zero rate
+    I_di_array__scaled.append([])
+    I_di_array__scaled[ii] = np.append(temp_I_di_vec,np.max(temp_I_di_vec)+I_di_pad) # this additional I_si + I_si_pad is included so that a current that rounds to I_si + I_si_pad will give zero rate
+
+
+#%% plot the rate vectors
+
+fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
+fig.suptitle('master _ de _ rates') 
+# plt.title('$I_de = $ {} $\mu$A'.format(I_sy))
+for ii in range(num_drives):
+    ax.plot(I_di_array__scaled[ii][:],master_rate_array[ii][:]*1e-3, '-', label = 'I_drive = {}'.format(I_drive_list[ii]))    
+ax.set_xlabel(r'$I_{si}$ [$\mu$A]')
+ax.set_ylabel(r'$r_{j_{si}}$ [kilofluxons per $\mu$s]')
+# ax.legend()
+plt.show()
+
+
+#%% color plot
+# fig, ax = plt.subplots(1,1)
+# rates = ax.imshow(np.transpose(master_rate_matrix[:,:]), cmap = plt.cm.viridis, interpolation='none', extent=[I_drive_list[0],I_drive_list[-1],0,max_I_di*1e6], aspect = 'auto', origin = 'lower')
+# cbar = fig.colorbar(rates, extend='both')
+# cbar.minorticks_on()     
+# fig.suptitle('$r_{tot}$ versus $I_{drive}$ and $I_{di}$')
+# # plt.title(title_string)
+# ax.set_xlabel(r'$I_{drive}$ [$\mu$A]')
+# ax.set_ylabel(r'$I_{di}$ [$\mu$A]')   
+# plt.show()      
 # fig.savefig('figures/'+save_str+'__log.png')
 
 #%% save data

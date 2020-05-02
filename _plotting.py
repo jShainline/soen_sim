@@ -10,26 +10,88 @@ colors = color_dictionary()
 
 def plot_params():
     
+    plot_type = 'triple_column' # 'four_tiles'
+    
     pp = dict()
-    pp['title_font_size'] = 14
-    pp['subtitle_font_size'] = 10
-    pp['axes_labels_font_size'] = 14
-    pp['tick_labels_font_size'] = 12
-    pp['legend_font_size'] = 10
-    pp['nominal_linewidth'] = 2
-    pp['fine_linewidth'] = 0.75
-    pp['bold_linewidth'] = 3
-    pp['nominal_markersize'] = 3
-    pp['big_markersize'] = 6
-    tn = 4*8.6/2.54
-    pp['fig_size'] = (tn,tn/1.618)
-    pp['axes_linewidth'] = 1.5
     
-    pp['major_tick_width'] = 1
-    pp['major_tick_length'] = 7
-    pp['minor_tick_width'] = 0.5
-    pp['minor_tick_length'] = 3
-    
+    if plot_type == 'single_frame':
+        
+        pp['title_font_size'] = 14
+        pp['subtitle_font_size'] = 10
+        pp['axes_labels_font_size'] = 10
+        pp['axes_labels_pad'] = 0 # 4
+        pp['tick_labels_font_size'] = 10
+        pp['legend_font_size'] = 8
+        pp['nominal_linewidth'] = 0.75
+        pp['fine_linewidth'] = 0.5
+        pp['bold_linewidth'] = 2
+        pp['nominal_markersize'] = 2
+        pp['big_markersize'] = 3
+        tn = 1.075*8.6/2.54
+        pp['fig_size'] = (tn,tn/1.618)
+        # pp['fig_size'] = (tn,tn/1.2)
+        pp['axes_linewidth'] = 1
+        
+        pp['major_tick_width'] = 0.75
+        pp['major_tick_length'] = 3
+        pp['minor_tick_width'] = 0.25
+        pp['minor_tick_length'] = 2
+        
+        pp['xmargin'] = 0 # 0.05 # space between traces and axes
+        pp['ymargin'] = 0.05 # 0.05
+     
+    if plot_type == 'triple_column':
+        
+        pp['title_font_size'] = 14
+        pp['subtitle_font_size'] = 10
+        pp['axes_labels_font_size'] = 10
+        pp['axes_labels_pad'] = 0 # 4
+        pp['tick_labels_font_size'] = 10
+        pp['legend_font_size'] = 8
+        pp['nominal_linewidth'] = 0.75
+        pp['fine_linewidth'] = 0.5
+        pp['bold_linewidth'] = 2
+        pp['nominal_markersize'] = 1
+        pp['big_markersize'] = 2
+        tn = 1.075*8.6/2.54
+        pp['fig_size'] = (tn,3*tn/1.618)
+        # pp['fig_size'] = (tn,tn/1.2)
+        pp['axes_linewidth'] = 1
+        
+        pp['major_tick_width'] = 0.75
+        pp['major_tick_length'] = 3
+        pp['minor_tick_width'] = 0.25
+        pp['minor_tick_length'] = 2
+        
+        pp['xmargin'] = 0.05 # space between traces and axes
+        pp['ymargin'] = 0.05   
+     
+    if plot_type == 'four_tiles':
+        
+        pp['title_font_size'] = 14
+        pp['subtitle_font_size'] = 10
+        pp['axes_labels_font_size'] = 10
+        pp['axes_labels_pad'] = 0 # 4
+        pp['tick_labels_font_size'] = 10
+        pp['legend_font_size'] = 8
+        pp['nominal_linewidth'] = 1
+        pp['fine_linewidth'] = 0.5
+        pp['bold_linewidth'] = 2
+        pp['nominal_markersize'] = 2
+        pp['big_markersize'] = 3
+        tn = 17.2/2.54
+        pp['fig_size'] = (tn,tn/1.618)
+        # pp['fig_size'] = (tn,tn/1.2)
+        pp['axes_linewidth'] = 1
+        
+        pp['major_tick_width'] = 0.75
+        pp['major_tick_length'] = 3
+        pp['minor_tick_width'] = 0.25
+        pp['minor_tick_length'] = 2
+        
+        pp['xmargin'] = 0.05 # space between traces and axes
+        pp['ymargin'] = 0.05
+        
     return pp 
 
 pp = plot_params()
@@ -39,18 +101,35 @@ plt.rcParams['font.sans-serif'] = 'Verdana'#'Computer Modern Sans Serif'
 
 plt.rcParams['figure.figsize'] = pp['fig_size']
 plt.rcParams['figure.titlesize'] = pp['title_font_size']
+plt.rcParams['figure.autolayout'] = True
 
-plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue_3'],colors['red_3'],colors['green_3'],colors['yellow_3']])
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+#                                                     colors['red5'],colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+#                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green3'],
+#                                                     colors['yellow5'],colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],
+#                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],
+#                                                     colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4']])
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue3'],colors['red1'],colors['red3'],colors['green1'],colors['green3'],colors['yellow1'],colors['yellow3']])
+plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],colors['blue4'],colors['blue3'],colors['blue2']])
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue4']])
 plt.rcParams['axes.linewidth'] = pp['axes_linewidth']
 plt.rcParams['axes.grid'] = False
 plt.rcParams['axes.titlesize'] = pp['subtitle_font_size']
 plt.rcParams['axes.labelsize'] = pp['axes_labels_font_size']
+plt.rcParams['axes.labelpad'] = pp['axes_labels_pad']
+plt.rcParams['axes.xmargin'] = pp['xmargin']
+plt.rcParams['axes.ymargin'] = pp['ymargin']
+plt.rcParams['axes.titlepad'] = 0
 
 plt.rcParams['legend.fontsize'] = pp['legend_font_size']
 plt.rcParams['legend.loc'] = 'best'
 
 plt.rcParams['savefig.dpi'] = 300
 plt.rcParams['savefig.format'] = 'png'
+plt.rcParams['savefig.pad_inches'] = 0
 
 plt.rcParams['xtick.labelsize'] = pp['tick_labels_font_size']
 plt.rcParams['xtick.direction'] = 'out'
@@ -73,6 +152,7 @@ plt.rcParams['ytick.minor.size'] = pp['minor_tick_length']
 plt.rcParams['ytick.minor.width'] = pp['minor_tick_width']
 
 plt.rcParams['figure.max_open_warning'] = 100
+
 
 # plt.rcParams[''] = pp['']
 
@@ -612,6 +692,54 @@ def plot_wr_comparison__synapse(main_title,spike_times,wr_drive,target_data,actu
     return
 
 
+def plot_wr_comparison__synapse__tiles(target_data_array,actual_data_array,spike_times,error_array):
+    
+    tt = time.time()    
+   
+    # 
+        
+    # axs[0].plot(wr_drive[0,:]*1e6,wr_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'wr_drive') 
+    # tn1 = np.min(wr_drive[1,:])
+    # tn2 = np.max(wr_drive[1,:])
+    # color_list_actual = ['blue3','red3','green3','yellow3']
+    # color_list_target = ['blue2','red2','green2','yellow2']
+    title_strings = ['Vary $I_{sy}$','Vary $L_{si}$','Vary $tau_{si}$']
+    save_strings = ['vary_Isy','vary_Lsi','vary_tausi']
+    legend_strings = [ ['$I_{sy} = 23\mu A$','$I_{sy} = 28\mu A$','$I_{sy} = 33\mu A$','$I_{sy} = 38\mu A$'],
+                       ['$L_{si} = 7.75nH$','$L_{si} = 77.5nH$','$L_{si} = 775nH$','$L_{si} = 7.75\mu H$'],
+                       ['$tau_{si} = 10ns$','$tau_{si} = 50ns$','$tau_{si} = 250ns$','$tau_{si} = 1.25\mu s$',] ]
+    i1 = [0,1,0,1]
+    i2 = [0,0,1,1]
+    for ii in range(3):
+        
+        save_str = 'soen_sim_wr_cmpr__sy__3tiles__'+save_strings[ii]+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))    
+        fig, axs = plt.subplots(nrows = 2, ncols = 2, sharex = True, sharey = False)
+        fig.suptitle(title_strings[ii])
+        # print(size(axs))     
+        
+        for jj in range(4):
+            
+            axs[i1[jj],i2[jj]].plot(target_data_array[ii*4+jj][0,:]*1e6,target_data_array[ii*4+jj][1,:]*1e6, '-', color = colors['yellow3'], linewidth = pp['bold_linewidth'], label = 'WRSpice')
+            axs[i1[jj],i2[jj]].plot(actual_data_array[ii*4+jj][0,:]*1e6,actual_data_array[ii*4+jj][1,:]*1e6, '-', color = colors['blue3'], linewidth = pp['nominal_linewidth'], label = 'soen_sim')   
+        
+    
+        # for kk in range(len(spike_times)):
+        #     if ii == 0:
+        #         axs[ii].plot([spike_times[kk]*1e6,spike_times[kk]*1e6],[tn1*1e6,tn2*1e6], '-.', color = colors['black'], linewidth = pp['fine_linewidth'], label = 'Spike times')             
+        #     else:
+        #         axs[ii].plot([spike_times[kk]*1e6,spike_times[kk]*1e6],[tn1*1e6,tn2*1e6], '-.', color = colors['black'], linewidth = pp['fine_linewidth'])  
+                
+            if jj == 3:
+                axs[i1[jj],i2[jj]].legend() 
+            axs[i1[jj],i2[jj]].set_xlabel(r'Time [$\mu$s]')
+            axs[i1[jj],i2[jj]].set_ylabel(r'$I_{si}$ [$\mu$A]')
+            axs[i1[jj],i2[jj]].set_title(legend_strings[ii][jj]+'; error = {:7.5e}'.format(error_array[ii*4+jj]))
+    
+        plt.show()
+        fig.savefig('figures/'+save_str+'.png') 
+
+    return
+
 def plot_error_mat(error_mat,vec1,vec2,x_label,y_label,title_string,plot_string):
     
     tt = time.time()    
@@ -661,4 +789,60 @@ def plot_fq_peaks__dt_vs_bias(bias_current,dt_fq_peaks,Ic):
     ax.set_ylabel(r'Time between flux quanta [ns]')
     plt.show()
     
+    return
+
+def plot_syn_rate_array(I_si_array__scaled,master_rate_array,I_drive_list):
+    
+    I_sy = 40
+    #fig, ax = plt
+    # fig.suptitle('master _ sy _ rates') 
+    # plt.title('$Isy =$ {} $\mu$A'.format(I_sy))
+    num_drives = len(I_drive_list)
+    for ii in range(num_drives):
+        plot(I_si_array__scaled[num_drives-ii-1][:],master_rate_array[num_drives-ii-1][:]*1e-3, '-', label = 'I_drive = {}'.format(I_drive_list[num_drives-ii-1]))    
+    plt.xlabel(r'$I_{si}$ [$\mu$A]')
+    plt.ylabel(r'$r_{j_{si}}$ [kilofluxons per $\mu$s]')
+    # ax.legend()
+    plt.show()
+    
+    return
+
+
+def plot__syn__error_vs_dt(dt_vec,error_array):
+    
+    num_cases = 3
+    title_list = ['Vary $I_{sy}$','Vary $L_{si}$','Vary $tau_{si}$']
+    legend_list = [['$I_{sy}$ = 23uA','$I_{sy}$ = 28uA','$I_{sy}$ = 33uA','$I_{sy}$ = 38uA'],
+                   ['$L_{si}$ = 7.75nH','$L_{si}$ = 77.5nH','$L_{si}$ = 775nH','$L_{si}$ = 7.75$\mu$H'],
+                   ['$tau_{si}$ = 10ns','$tau_{si}$ = 50ns','$tau_{si}$ = 250ns','$tau_{si}$ = 1.25$\mu$s']]
+    fig, ax = plt.subplots(nrows =num_cases, ncols = 1)
+    for ii in range(num_cases):
+        for jj in range(4):
+            ax[ii].loglog(dt_vec*1e9,error_array[ii*4+jj,:], '-o', markersize = pp['nominal_markersize'], label = legend_list[ii][jj] )    
+        ax[ii].set_xlabel(r'dt [ns]')
+        ax[ii].set_ylabel(r'$Chi^2$ error')
+        ax[ii].set_title(title_list[ii])
+        ax[ii].legend()
+    # grid(True,which='both')
+    plt.show()
+    
+    return
+
+
+def plot_spd_response(time_vec,time_vec_reduced,I_sy_list,I_spd_array,I_spd_array_reduced):
+    
+    fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
+    # fig.suptitle('spd response') 
+    plot_list = [23,28,33,38]
+    num_plot = len(plot_list)
+    for ii in range(num_plot):  
+        ind = (np.abs(I_sy_list[:]-plot_list[ii])).argmin()
+        ax.plot([xx*1e3 for xx in time_vec],I_spd_array[ind])    
+        ax.plot([xx*1e3 for xx in time_vec_reduced],I_spd_array_reduced[ind], label = 'I_sy = {}uA'.format(I_sy_list[ind]))    
+    ax.set_xlabel(r'Time [ns]')
+    ax.set_ylabel(r'$I_{spd}$ [$\mu$A]')
+    ax.set_xlim([0,150])
+    ax.legend()
+    plt.show()
+
     return
