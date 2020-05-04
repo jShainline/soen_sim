@@ -10,10 +10,36 @@ colors = color_dictionary()
 
 def plot_params():
     
-    plot_type = 'triple_column' # 'four_tiles'
+    plot_type = 'large' # 'single_frame' # 'triple_column' # 'four_tiles'
     
     pp = dict()
     
+    if plot_type == 'large':
+        
+        pp['title_font_size'] = 24
+        pp['subtitle_font_size'] = 20
+        pp['axes_labels_font_size'] = 20
+        pp['axes_labels_pad'] = 0 # 4
+        pp['tick_labels_font_size'] = 20
+        pp['legend_font_size'] = 16
+        pp['nominal_linewidth'] = 2
+        pp['fine_linewidth'] = 1.5
+        pp['bold_linewidth'] = 3
+        pp['nominal_markersize'] = 3
+        pp['big_markersize'] = 5
+        tn = 4*8.6/2.54
+        pp['fig_size'] = (tn,tn/1.618)
+        # pp['fig_size'] = (tn,tn/1.2)
+        pp['axes_linewidth'] = 1
+        
+        pp['major_tick_width'] = 1.5
+        pp['major_tick_length'] = 6
+        pp['minor_tick_width'] = 1
+        pp['minor_tick_length'] = 4
+        
+        pp['xmargin'] = 0 # 0.05 # space between traces and axes
+        pp['ymargin'] = 0.05 # 0.05
+        
     if plot_type == 'single_frame':
         
         pp['title_font_size'] = 14
@@ -104,15 +130,27 @@ plt.rcParams['figure.titlesize'] = pp['title_font_size']
 plt.rcParams['figure.autolayout'] = True
 
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
+
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
 #                                                     colors['red5'],colors['red4'],colors['red3'],colors['red2'],colors['red1'],
 #                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green3'],
 #                                                     colors['yellow5'],colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
+
+plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+                                                    colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+                                                    colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+                                                    colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+                                                    colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+                                                    colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+                                                    colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+                                                    colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
+
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],
 #                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],
 #                                                     colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4']])
+
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue3'],colors['red1'],colors['red3'],colors['green1'],colors['green3'],colors['yellow1'],colors['yellow3']])
-plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],colors['blue4'],colors['blue3'],colors['blue2']])
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue4']])
 plt.rcParams['axes.linewidth'] = pp['axes_linewidth']
@@ -797,11 +835,12 @@ def plot_syn_rate_array(I_si_array__scaled,master_rate_array,I_drive_list):
     #fig, ax = plt
     # fig.suptitle('master _ sy _ rates') 
     # plt.title('$Isy =$ {} $\mu$A'.format(I_sy))
+    fig, ax = plt.subplots(nrows = 1, ncols = 1)
     num_drives = len(I_drive_list)
     for ii in range(num_drives):
-        plot(I_si_array__scaled[num_drives-ii-1][:],master_rate_array[num_drives-ii-1][:]*1e-3, '-', label = 'I_drive = {}'.format(I_drive_list[num_drives-ii-1]))    
-    plt.xlabel(r'$I_{si}$ [$\mu$A]')
-    plt.ylabel(r'$r_{j_{si}}$ [kilofluxons per $\mu$s]')
+        ax.plot(I_si_array__scaled[num_drives-ii-1][:],master_rate_array[num_drives-ii-1][:]*1e-3, '-', label = 'I_drive = {}'.format(I_drive_list[num_drives-ii-1]))    
+    ax.set_xlabel(r'$I_{si}$ [$\mu$A]')
+    ax.set_ylabel(r'$r_{j_{si}}$ [kilofluxons per $\mu$s]')
     # ax.legend()
     plt.show()
     
@@ -815,7 +854,7 @@ def plot__syn__error_vs_dt(dt_vec,error_array):
     legend_list = [['$I_{sy}$ = 23uA','$I_{sy}$ = 28uA','$I_{sy}$ = 33uA','$I_{sy}$ = 38uA'],
                    ['$L_{si}$ = 7.75nH','$L_{si}$ = 77.5nH','$L_{si}$ = 775nH','$L_{si}$ = 7.75$\mu$H'],
                    ['$tau_{si}$ = 10ns','$tau_{si}$ = 50ns','$tau_{si}$ = 250ns','$tau_{si}$ = 1.25$\mu$s']]
-    fig, ax = plt.subplots(nrows =num_cases, ncols = 1)
+    fig, ax = plt.subplots(nrows = num_cases, ncols = 1)
     for ii in range(num_cases):
         for jj in range(4):
             ax[ii].loglog(dt_vec*1e9,error_array[ii*4+jj,:], '-o', markersize = pp['nominal_markersize'], label = legend_list[ii][jj] )    
