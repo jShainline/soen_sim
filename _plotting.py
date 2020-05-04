@@ -2,21 +2,50 @@ import numpy as np
 from matplotlib import pyplot as plt
 from pylab import *
 import time
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.collections import PolyCollection
+import matplotlib.gridspec as gridspec
+import pandas as pd
 
 from util import color_dictionary
-# from _functions import read_wr_data
 colors = color_dictionary()
 
 
 def plot_params():
     
-    plot_type = 'large' # 'single_frame' # 'triple_column' # 'four_tiles'
+    plot_type = 'large' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' #
     
     pp = dict()
     
+    if plot_type == 'four_rows':
+        
+        pp['title_font_size'] = 6
+        pp['subtitle_font_size'] = 4
+        pp['axes_labels_font_size'] = 8
+        pp['axes_labels_pad'] = 0 # 4
+        pp['tick_labels_font_size'] = 8
+        pp['legend_font_size'] = 8
+        pp['nominal_linewidth'] = 1
+        pp['fine_linewidth'] = 0.5
+        pp['bold_linewidth'] = 1.5
+        pp['nominal_markersize'] = 2
+        pp['big_markersize'] = 3
+        tn = 2*8.6/2.54
+        pp['fig_size'] = (tn,1*tn/1.618)
+        # pp['fig_size'] = (tn,tn/1.2)
+        pp['axes_linewidth'] = 1
+        
+        pp['major_tick_width'] = 0.75
+        pp['major_tick_length'] = 3
+        pp['minor_tick_width'] = 0.25
+        pp['minor_tick_length'] = 2
+        
+        pp['xmargin'] = 0 # 0.05 # space between traces and axes
+        pp['ymargin'] = 0.05 # 0.05
+        
     if plot_type == 'large':
         
-        pp['title_font_size'] = 24
+        pp['title_font_size'] = 12
         pp['subtitle_font_size'] = 20
         pp['axes_labels_font_size'] = 20
         pp['axes_labels_pad'] = 0 # 4
@@ -40,13 +69,39 @@ def plot_params():
         pp['xmargin'] = 0 # 0.05 # space between traces and axes
         pp['ymargin'] = 0.05 # 0.05
         
+    if plot_type == 'two_rows':
+        
+        pp['title_font_size'] = 10
+        pp['subtitle_font_size'] = 8
+        pp['axes_labels_font_size'] = 8
+        pp['axes_labels_pad'] = 0 # 4
+        pp['tick_labels_font_size'] = 8
+        pp['legend_font_size'] = 8
+        pp['nominal_linewidth'] = 0.75
+        pp['fine_linewidth'] = 0.5
+        pp['bold_linewidth'] = 2
+        pp['nominal_markersize'] = 2
+        pp['big_markersize'] = 3
+        tn = 1.075*8.6/2.54
+        pp['fig_size'] = (tn,2*tn/1.618)
+        # pp['fig_size'] = (tn,tn/1.2)
+        pp['axes_linewidth'] = 1
+        
+        pp['major_tick_width'] = 0.75
+        pp['major_tick_length'] = 3
+        pp['minor_tick_width'] = 0.25
+        pp['minor_tick_length'] = 2
+        
+        pp['xmargin'] = 0 # 0.05 # space between traces and axes
+        pp['ymargin'] = 0.05 # 0.05
+        
     if plot_type == 'single_frame':
         
-        pp['title_font_size'] = 14
+        pp['title_font_size'] = 10
         pp['subtitle_font_size'] = 10
-        pp['axes_labels_font_size'] = 10
+        pp['axes_labels_font_size'] = 8
         pp['axes_labels_pad'] = 0 # 4
-        pp['tick_labels_font_size'] = 10
+        pp['tick_labels_font_size'] = 8
         pp['legend_font_size'] = 8
         pp['nominal_linewidth'] = 0.75
         pp['fine_linewidth'] = 0.5
@@ -66,7 +121,7 @@ def plot_params():
         pp['xmargin'] = 0 # 0.05 # space between traces and axes
         pp['ymargin'] = 0.05 # 0.05
      
-    if plot_type == 'triple_column':
+    if plot_type == 'three_rows':
         
         pp['title_font_size'] = 14
         pp['subtitle_font_size'] = 10
@@ -129,21 +184,21 @@ plt.rcParams['figure.figsize'] = pp['fig_size']
 plt.rcParams['figure.titlesize'] = pp['title_font_size']
 plt.rcParams['figure.autolayout'] = True
 
-# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
+plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
 
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
 #                                                     colors['red5'],colors['red4'],colors['red3'],colors['red2'],colors['red1'],
 #                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green3'],
 #                                                     colors['yellow5'],colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
 
-plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
-                                                    colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
-                                                    colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
-                                                    colors['red4'],colors['red3'],colors['red2'],colors['red1'],
-                                                    colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
-                                                    colors['green4'],colors['green3'],colors['green2'],colors['green1'],
-                                                    colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
-                                                    colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+#                                                     colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+#                                                     colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+#                                                     colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+#                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+#                                                     colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+#                                                     colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+#                                                     colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
 
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],
 #                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],
@@ -807,6 +862,108 @@ def plot_error_mat(error_mat,vec1,vec2,x_label,y_label,title_string,plot_string)
         
     return
 
+
+def plot_fq_peaks__three_jjs(time_vec,t_lims,j_sf,j_sf_peaks,j_jtl,j_jtl_peaks,j_si,j_si_peaks,I_si,file_name):
+    
+    
+    # fig, ax = plt.subplots(nrows = 3, ncols = 1, sharex = True, sharey = False)
+    # fig.suptitle(file_name)   
+    # ax[0].plot(time_vec*1e9,j_sf*1e3, '-', label = '$J_{sf}$')             
+    # ax[0].plot(time_vec[j_sf_peaks]*1e9,j_sf[j_sf_peaks]*1e3, 'x')
+    # ax[0].set_xlabel(r'Time [ns]')
+    # ax[0].set_ylabel(r'Voltage [mV]')
+    # ax[0].legend()
+    # ax[1].plot(time_vec*1e9,j_jtl*1e3, '-', label = '$J_{jtl}$')             
+    # ax[1].plot(time_vec[j_jtl_peaks]*1e9,j_jtl[j_jtl_peaks]*1e3, 'x')
+    # ax[1].set_xlabel(r'Time [ns]')
+    # ax[1].set_ylabel(r'Voltage [mV]')
+    # ax[1].legend()
+    # ax[2].plot(time_vec*1e9,j_si*1e3, '-', label = '$J_{si}$')             
+    # ax[2].plot(time_vec[j_si_peaks]*1e9,j_si[j_si_peaks]*1e3, 'x')
+    # ax[2].set_xlabel(r'Time [ns]')
+    # ax[2].set_ylabel(r'Voltage [mV]')
+    # ax[2].legend()
+    # ax[2].set_xlim(t_lims)
+    # plt.show()
+    
+    
+    # fig = plt.figure()
+    # fig.suptitle(file_name)   
+    # ax = fig.gca()
+    
+    # ax.plot(time_vec*1e9,j_sf*1e3, '-', color = colors['blue3'], label = '$J_{sf}$')             
+    # ax.plot(time_vec[j_sf_peaks]*1e9,j_sf[j_sf_peaks]*1e3, 'x', color = colors['blue5'])
+    
+    # ax.plot(time_vec*1e9,j_jtl*1e3, '-', color = colors['green3'], label = '$J_{jtl}$')             
+    # ax.plot(time_vec[j_jtl_peaks]*1e9,j_jtl[j_jtl_peaks]*1e3, 'x', color = colors['green5'])
+    
+    # ax.plot(time_vec*1e9,j_si*1e3, '-', color = colors['yellow3'], label = '$J_{si}$')             
+    # ax.plot(time_vec[j_si_peaks]*1e9,j_si[j_si_peaks]*1e3, 'x', color = colors['yellow5'])
+    
+    # ax.set_xlabel(r'Time [ns]')
+    # ax.set_ylabel(r'Voltage [mV]')
+    # ax.legend()
+    
+    # ax.set_xlim(t_lims)
+    # plt.show()
+ 
+    
+     
+    fig = fig, ax = plt.subplots(nrows = 4, ncols = 1, sharex = False, sharey = False)
+    fig.suptitle(file_name)   
+    
+    ax[0].plot(time_vec*1e9,I_si*1e6, '-', linewidth = pp['nominal_linewidth'], color = colors['blue3']) 
+    ax[0].set_ylabel(r'$I_{si}$ [$\mu$A]')
+    for ii in range(3):
+        ax[ii+1].plot(time_vec*1e9,j_sf*1e3, '-', linewidth = pp['nominal_linewidth'], color = colors['yellow3'], label = '$J_{sf}$')             
+        # ax[ii].plot(time_vec[j_sf_peaks]*1e9,j_sf[j_sf_peaks]*1e3, 'x', color = colors['blue5'])
+        ax[ii+1].plot(time_vec*1e9,j_jtl*1e3, '-', linewidth = pp['nominal_linewidth'], color = colors['green3'], label = '$J_{jtl}$')             
+        # ax[ii].plot(time_vec[j_jtl_peaks]*1e9,j_jtl[j_jtl_peaks]*1e3, 'x', color = colors['green5'])
+        ax[ii+1].plot(time_vec*1e9,j_si*1e3, '-', linewidth = pp['nominal_linewidth'], color = colors['blue3'], label = '$J_{si}$')             
+        # ax[ii].plot(time_vec[j_si_peaks]*1e9,j_si[j_si_peaks]*1e3, 'x', color = colors['yellow5'])           
+        ax[ii+1].set_xlim(t_lims[ii])
+        if ii == 1:
+            ax[ii+1].set_ylabel(r'Voltage [mV]')
+        if ii == 2:
+            ax[ii+1].set_xlabel(r'Time [ns]')
+            ax[ii+1].legend()
+    
+    plt.subplots_adjust(wspace=0, hspace=0)
+    # plt.tight_layout(pad = 0, w_pad = 0, h_pad = 0)
+    plt.show()
+        
+    return
+
+
+def plot_fq_rate_and_delay__three_jjs(time_vec,I_si,j_si_ifi,j_si_rate,j_si_peaks,j_sf_peaks,j_jtl_peaks,dt_sf_jtl,dt_jtl_si,dt_si_sf,file_name):
+    
+    
+    fig, ax = plt.subplots(nrows = 2, ncols = 1, sharex = False, sharey = False)
+    # fig.suptitle(file_name) 
+    
+    ax[0].plot(time_vec[j_si_peaks[0:-1]]*1e9,dt_sf_jtl*1e12, '-', color = colors['blue3'], label = '$J_{jtl}-J_{sf}$')     
+    ax[0].plot(time_vec[j_si_peaks[0:-1]]*1e9,dt_jtl_si*1e12, '-', color = colors['green3'], label = '$J_{si}-J_{jtl}$')     
+    ax[0].plot(time_vec[j_si_peaks[0:-1]]*1e9,dt_si_sf*1e12, '-', color = colors['yellow3'], label = '$J_{sf}-J_{si}$') 
+    
+    ax[0].set_xlabel(r'Time [ns]')
+    ax[0].set_ylabel(r'Fluxon generation delay [ps]')
+    ax[0].legend()
+    
+    ax[1].plot(I_si[j_si_peaks[0:-1]]*1e6,j_si_ifi*1e12, '-', color = colors['green3'])  
+    ax[1].set_xlabel(r'$I_{si}$ [$\mu$A]')
+    ax[1].set_ylabel(r'IFI [ps]', color = colors['green3'])
+    ax[1].tick_params(axis = 'y', labelcolor = colors['green3'])
+    
+    ax2 = ax[1].twinx()
+    ax2.plot(I_si[j_si_peaks[0:-1]]*1e6,j_si_rate*1e-9, '-', color = colors['yellow3']) 
+    ax2.set_ylabel(r'Rate [kFQ per $\mu$s]', color = colors['yellow3'])
+    ax2.tick_params(axis = 'y', labelcolor = colors['yellow3'])    
+    
+    plt.show()    
+    
+    return
+
+
 def plot_fq_peaks(data_x,data_y,peak_indices):
     
     fig, ax = plt.subplots(1,1)
@@ -829,21 +986,148 @@ def plot_fq_peaks__dt_vs_bias(bias_current,dt_fq_peaks,Ic):
     
     return
 
+
 def plot_syn_rate_array(I_si_array__scaled,master_rate_array,I_drive_list):
     
-    I_sy = 40
+    # I_sy = 40
     #fig, ax = plt
     # fig.suptitle('master _ sy _ rates') 
     # plt.title('$Isy =$ {} $\mu$A'.format(I_sy))
     fig, ax = plt.subplots(nrows = 1, ncols = 1)
     num_drives = len(I_drive_list)
     for ii in range(num_drives):
-        ax.plot(I_si_array__scaled[num_drives-ii-1][:],master_rate_array[num_drives-ii-1][:]*1e-3, '-', label = 'I_drive = {}'.format(I_drive_list[num_drives-ii-1]))    
+        ax.plot(I_si_array__scaled[num_drives-ii-1][:],master_rate_array[num_drives-ii-1][:]*1e-3, '-', linewidth = pp['nominal_linewidth'], label = 'I_drive = {}'.format(I_drive_list[num_drives-ii-1]))    
     ax.set_xlabel(r'$I_{si}$ [$\mu$A]')
     ax.set_ylabel(r'$r_{j_{si}}$ [kilofluxons per $\mu$s]')
     # ax.legend()
     plt.show()
     
+    return
+
+
+def plot_syn_rate_array__waterfall(I_si_array__scaled,master_rate_array,I_drive_list):
+
+    color_list = [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+                  colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+                  colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+                  colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+                  colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+                  colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+                  colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+                  colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
+                  colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+                  colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+                  colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+                  colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+                  colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+                  colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+                  colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+                  colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
+                  colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+                  colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+                  colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+                  colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+                  colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+                  colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+                  colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+                  colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
+                  colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+                  colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+                  colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+                  colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+                  colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+                  colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+                  colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+                  colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
+                  colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+                  colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+                  colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+                  colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+                  colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+                  colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+                  colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+                  colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
+                  colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+                  colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+                  colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+                  colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+                  colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+                  colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+                  colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+                  colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
+                  ]
+    color_ind = np.arange(0,len(color_list),1)
+    
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    
+    verts = []
+    ys = np.asarray(I_drive_list)
+    for ii in range(len(ys)):
+        xs = I_si_array__scaled[ii][:]
+        zs = [xx*1e-3 for xx in master_rate_array[ii][:]]
+        verts.append(list(zip(xs,zs)))
+
+    poly = PolyCollection(verts, edgecolors = color_list, facecolors = [color_list[aa] for aa in color_ind])#, facecolors = [color_list[aa] for aa in range(len(color_list))]
+    poly.set_alpha(0.7)
+    ax.add_collection3d(poly, zs = ys, zdir = 'z')
+    
+    ax.set_zlabel('Idrive')
+    ax.set_zlim3d(0, 20)
+    ax.set_xlabel('Isi')
+    ax.set_xlim3d(0,20)
+    ax.set_ylabel('rate')
+    ax.set_ylim3d(0, 50)
+    
+    plt.show()
+    
+    
+    # cmap = pl.cm.get_cmap('viridis')
+    # verts = []
+    # zs = alpha_list
+    # for i, z in enumerate(zs):
+    #     ys = B_l2[:, i]
+    #     verts.append(list(zip(x, ys)))
+    
+    # ax = pl.gcf().gca(projection='3d')
+    
+    # poly = PolyCollection(verts, facecolors=[cmap(a) for a in alpha_list])
+    # poly.set_alpha(0.7)
+    # ax.add_collection3d(poly, zs=zs, zdir='y')
+    
+
+    # import matplotlib.pyplot as plt
+    # from matplotlib import colors as mcolors
+    
+    # fig = plt.figure()
+    # ax = fig.gca(projection='3d')
+    
+    
+    # def cc(arg):
+    #     return mcolors.to_rgba(arg, alpha=0.6)
+    
+    # xs = np.arange(0, 10, 0.4)
+    # verts = []
+    # zs = [0.0, 1.0, 2.0, 3.0]
+    # for z in zs:
+    #     ys = np.random.rand(len(xs))
+    #     ys[0], ys[-1] = 0, 0
+    #     verts.append(list(zip(xs, ys)))
+    
+    # poly = PolyCollection(verts, facecolors=[cc('r'), cc('g'), cc('b'),
+    #                                          cc('y')])
+    # poly.set_alpha(0.7)
+    # ax.add_collection3d(poly, zs=zs, zdir='y')
+    
+    # ax.set_xlabel('X')
+    # ax.set_xlim3d(0, 10)
+    # ax.set_ylabel('Y')
+    # ax.set_ylim3d(-1, 4)
+    # ax.set_zlabel('Z')
+    # ax.set_zlim3d(0, 1)
+    
+    # plt.show()
+
     return
 
 

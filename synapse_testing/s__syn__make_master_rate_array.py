@@ -10,7 +10,7 @@ from matplotlib.collections import PolyCollection
 import numpy.matlib
 
 # from soen_sim import input_signal, synapse, dendrite, neuron
-from _plotting import plot_syn_rate_array
+from _plotting import plot_syn_rate_array, plot_syn_rate_array__waterfall
 from _functions import save_session_data, load_session_data, read_wr_data, V_fq__fit, inter_fluxon_interval__fit, inter_fluxon_interval, inter_fluxon_interval__fit_2, inter_fluxon_interval__fit_3
 from util import physical_constants
 p = physical_constants()
@@ -61,11 +61,11 @@ j_si_rate_array = [] # array of fluxon production rate at the synaptic integrati
 I_si_array = [] # array of values of I_si
 
 num_drives = len(I_drive_list) 
+directory = 'wrspice_data/fitting_data'
 for ii in range(num_drives):
     
     print('ii = {:d} of {:d}'.format(ii+1,num_drives))        
     
-    directory = 'wrspice_data/fitting_data'
     file_name = 'syn_cnst_drv_Isy{:5.2f}uA_Idrv{:05.2f}uA_Ldi0077.50nH_taudi0077.5ms_tsim{:04.0f}ns_dt00.1ps.dat'.format(I_sy,I_drive_list[ii],t_sim_list[ii])
     data_dict = read_wr_data(directory+'/'+file_name)
     
@@ -75,42 +75,23 @@ for ii in range(num_drives):
     j_jtl = data_dict['v(4)']
     j_si = data_dict['v(5)']
     
-    initial_ind = (np.abs(time_vec-2.0e-9)).argmin()
-    final_ind = (np.abs(time_vec-t_sim_list[ii]*1e-9)).argmin()
+    # initial_ind = (np.abs(time_vec-2.0e-9)).argmin()
+    # final_ind = (np.abs(time_vec-t_sim_list[ii]*1e-9)).argmin()
 
-    time_vec = time_vec[initial_ind:final_ind]
-    j_sf = j_sf[initial_ind:final_ind]
-    j_jtl = j_jtl[initial_ind:final_ind]
-    j_si = j_si[initial_ind:final_ind]
+    # time_vec = time_vec[initial_ind:final_ind]
+    # j_sf = j_sf[initial_ind:final_ind]
+    # j_jtl = j_jtl[initial_ind:final_ind]
+    # j_si = j_si[initial_ind:final_ind]
   
     j_sf_peaks, _ = find_peaks(j_sf, height = 200e-6)
     j_jtl_peaks, _ = find_peaks(j_jtl, height = 200e-6)
     j_si_peaks, _ = find_peaks(j_si, height = 200e-6)
-
-    # fig, ax = plt.subplots(nrows = 3, ncols = 1, sharex = True, sharey = False)
-    # fig.suptitle(file_name)   
-    # ax[0].plot(time_vec*1e9,j_sf*1e3, '-', label = '$J_{sf}$')             
-    # ax[0].plot(time_vec[j_sf_peaks]*1e9,j_sf[j_sf_peaks]*1e3, 'x')
-    # ax[0].set_xlabel(r'Time [ns]')
-    # ax[0].set_ylabel(r'Voltage [mV]')
-    # ax[0].legend()
-    # ax[1].plot(time_vec*1e9,j_jtl*1e3, '-', label = '$J_{jtl}$')             
-    # ax[1].plot(time_vec[j_jtl_peaks]*1e9,j_jtl[j_jtl_peaks]*1e3, 'x')
-    # ax[1].set_xlabel(r'Time [ns]')
-    # ax[1].set_ylabel(r'Voltage [mV]')
-    # ax[1].legend()
-    # ax[2].plot(time_vec*1e9,j_si*1e3, '-', label = '$J_{si}$')             
-    # ax[2].plot(time_vec[j_si_peaks]*1e9,j_si[j_si_peaks]*1e3, 'x')
-    # ax[2].set_xlabel(r'Time [ns]')
-    # ax[2].set_ylabel(r'Voltage [mV]')
-    # ax[2].legend()
-    # plt.show()
-    
+   
     # find inter-fluxon intervals and fluxon generation rates for each JJ
     I_si = data_dict['L3#branch']
-    I_si = I_si[initial_ind:final_ind]
+    # I_si = I_si[initial_ind:final_ind]
     I_drive = data_dict['L0#branch']
-    I_drive = I_drive[initial_ind:final_ind]            
+    # I_drive = I_drive[initial_ind:final_ind]            
     
     j_sf_ifi = np.diff(time_vec[j_sf_peaks])
     j_jtl_ifi = np.diff(time_vec[j_jtl_peaks])
@@ -131,7 +112,7 @@ for ii in range(num_drives):
     
     
 #%% assemble data and change units
-I_si_pad = 100e-9 # amount above the observed max of Isi that the simulation will allow before giving a zero rate
+I_si_pad = 10e-9 # amount above the observed max of Isi that the simulation will allow before giving a zero rate
 
 master_rate_array = []
 I_si_array__scaled = []
@@ -153,6 +134,7 @@ for ii in range(num_drives):
 #%% plot the rate vectors 
 
 plot_syn_rate_array(I_si_array__scaled,master_rate_array,I_drive_list)
+# plot_syn_rate_array__waterfall(I_si_array__scaled,master_rate_array,I_drive_list)
 
 
 #%% surface plot
