@@ -1,0 +1,21 @@
+SCED spice model library
+
+*rtype 0=jj unshunted rn=ro=Infinity
+*cct 1=fixed critical current
+
+*From christine, she uses the follwing values
+*I will convert them to the appropriate self-shunted models. 
+*.model jjSFQ1 jj(rtype=1, cct=1, icon=10m, vg=2.8m, delv=0.08m,
+*+ icrit=.2m, r0=1.25, rn=1.25, cap=2.1p)
+
+*SFQ junctions used for our circuits (from Manuel)
+*.model jjSFQ1 jj(rtype=0, cct=1, vg=2.8m, icrit=0.20m, cap= 2.3p, vshunt=0.175mV)
+
+
+*for overdamped junctions in circuit
+*.model jj1 jj(rtype=0, cct=1, vg=2.8m, icrit=0.200m, cap= 2.3p, vshunt=0.050mV)
+
+*JJ with lower critical current and capacitance (from Manuel, 20171013)
+.model jjSFQ1 jj(rtype=0, cct=1, vg=2.8m, icrit=1u, cap= 5f, vshunt=0.25mV)
+.model jjSFQ2 jj(rtype=0, cct=1, vg=2.8m, icrit=1u, cap= 0f, vshunt=0.25mV)
+
