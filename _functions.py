@@ -9,7 +9,7 @@ from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from mpl_toolkits.mplot3d import Axes3D
 
 from util import physical_constants
-from _plotting import plot_dendritic_drive, plot_wr_comparison, plot_error_mat
+from _plotting import plot_wr_comparison, plot_error_mat # plot_dendritic_drive, 
 
 #%%
 
@@ -32,7 +32,8 @@ def synapse_time_stepper(time_vec,spike_times,L3,I_sy,tau_si):
         # I_sy_vec__imprt_spd = data_array__imprt['I_sy_vec']
         # time_vec__imprt_spd = data_array__imprt['time_vec']
         
-        file_string = 'master__syn__spd_response__dt{:04.0f}ps.soen'.format(dt*1e6)
+        # file_string = 'master__syn__spd_response__dt{:04.0f}ps.soen'.format(dt*1e6)
+        file_string = 'master__syn__spd_response__1jj__dt{:04.0f}ps.soen'.format(dt*1e6)
         with open('../_circuit_data/'+file_string, 'rb') as data_file:         
             data_array__imported = pickle.load(data_file)
         spd_response_array__imprt = data_array__imported['spd_response_array']
@@ -44,19 +45,17 @@ def synapse_time_stepper(time_vec,spike_times,L3,I_sy,tau_si):
         # spd_t = np.zeros([nt_spd])
         # spd_i = np.zeros([nt_spd])
         
-        I_sy_ind_spd = (np.abs(I_sy_list__imprt_spd[:] - I_sy)).argmin()
-        spd_i = spd_response_array__imprt[I_sy_ind_spd]
+        # I_sy_ind_spd = (np.abs(I_sy_list__imprt_spd[:] - I_sy)).argmin()
+        # spd_i = spd_response_array__imprt[I_sy_ind_spd]
         spd_t = time_vec__imprt_spd
-        # for ii in range(nt_spd):
-        #     ti = (np.abs(np.asarray(time_vec__imprt_spd[:]) - ii*dt)).argmin()
-        #     spd_t[ii] = time_vec__imprt_spd[ti] # spd time vector
-        #     spd_i[ii] = spd_response_array__imprt[I_sy_ind_spd,ti] # spd current vector
-            
         spd_duration = spd_t[-1]
+            
+        # spd_duration = spd_t[-1]
         
         # print('loading rate array')
         
-        with open('../_circuit_data/master__syn__rate_array__Isipad0010nA.soen', 'rb') as data_file:         
+        # with open('../_circuit_data/master__syn__rate_array__Isipad0010nA.soen', 'rb') as data_file:         
+        with open('../_circuit_data/master__syn__1jj__rate_array__Isipad0010nA.soen', 'rb') as data_file:         
             data_array_imprt = pickle.load(data_file)
             
         I_si_array = data_array_imprt['I_si_array'] # entries have units of uA
@@ -70,14 +69,24 @@ def synapse_time_stepper(time_vec,spike_times,L3,I_sy,tau_si):
         I_fq = 1e6*Phi0/L3
         
         I_si_vec = np.zeros([nt])
+        I_spd_vec = np.zeros([nt])
         # print('I_si_vec.size = {}'.format(I_si_vec.size))
         # print('len(I_si_list__imported) = {}'.format(len(I_si_list__imported)))
+        # num_spike_vec = np.zeros([nt])
         for ii in range(nt-1):
             # dt = time_vec[ii+1]-time_vec[ii]
             
             _pt = time_vec[ii] # present time
             # print('ii = {}, present time = {}us'.format(ii,_pt))
             
+            if ii > 0:
+                # tn = I_si_vec[ii-1]
+                tn = 0
+            else:
+                tn = 0
+            I_sy_ind_spd = (np.abs(I_sy_list__imprt_spd[:] - (I_sy-tn) )).argmin()
+            spd_i = spd_response_array__imprt[I_sy_ind_spd]
+
             # find most recent spike time  
             gf = 0
             st_ind = (np.abs(spike_times[:] - _pt)).argmin()
@@ -95,7 +104,8 @@ def synapse_time_stepper(time_vec,spike_times,L3,I_sy,tau_si):
                 # print('code 4')
                 dt_spk = _pt - spike_times[st_ind]
                 spd_t_ind  = (np.abs(spd_t[:] - dt_spk)).argmin()
-                spd_current = spd_i[spd_t_ind]
+                spd_current = spd_i[spd_t_ind]#np.max([I_spd_vec[ii-1],spd_i[spd_t_ind]])
+                I_spd_vec[ii] = spd_current
                 I_tot = spd_current+I_sy
                 I_drive = I_tot-40 # all data so far is with 40uA JJs
                 if I_drive < np.min(I_drive_list):
@@ -104,16 +114,48 @@ def synapse_time_stepper(time_vec,spike_times,L3,I_sy,tau_si):
                     I_drive_ind = (np.abs(I_drive_list[:] - I_drive)).argmin()
                     I_si_ind = (np.abs(np.asarray(I_si_array[I_drive_ind][:]) - I_si_vec[ii])).argmin()
                         
-                    #no interpolation
-                    gf = dt*I_fq*rate_array[I_drive_ind][I_si_ind] # growth factor
-                
-                    # linear interpolation
-                    # gf = dt*I_fq*np.interp(spd_current,I_drive_list,rate_array[:][I_si_ind])
+                    interpolation = False
+                    if interpolation == True:
+                        
+                        # linear interpolation
+                        if I_drive_ind < len(I_drive_list)-1:
                             
+                            if I_drive_list[I_drive_ind] > I_drive:
+                                
+                                I_si_ind_1 = (np.abs(np.asarray(I_si_array[I_drive_ind][:]) - I_si_vec[ii])).argmin()
+                                I_si_ind_2 = (np.abs(np.asarray(I_si_array[I_drive_ind+1][:]) - I_si_vec[ii])).argmin()
+                                
+                                slope = rate_array[I_drive_ind+1][I_si_ind_2] - rate_array[I_drive_ind][I_si_ind_1]
+                                xx = I_drive_list[I_drive_ind] - I_drive
+                                offset = rate_array[I_drive_ind][I_si_ind_1]
+                                rate_term = slope*xx+offset
+                                
+                            else:
+                                
+                                I_si_ind_1 = (np.abs(np.asarray(I_si_array[I_drive_ind][:]) - I_si_vec[ii])).argmin()
+                                I_si_ind_2 = (np.abs(np.asarray(I_si_array[I_drive_ind-1][:]) - I_si_vec[ii])).argmin()
+                                
+                                slope = rate_array[I_drive_ind][I_si_ind_1] - rate_array[I_drive_ind-1][I_si_ind_2]
+                                xx = I_drive - I_drive_list[I_drive_ind]
+                                offset = rate_array[I_drive_ind-1][I_si_ind_2]
+                                rate_term = slope*xx+offset
+                                
+                            gf = dt*I_fq*rate_term# growth factor
+                                
+                        else:
+                            
+                            gf = dt*I_fq*rate_array[I_drive_ind][I_si_ind] # growth factor
+                                                
+                        
+                    else:
+                            
+                        #no interpolation
+                        gf = dt*I_fq*rate_array[I_drive_ind][I_si_ind] # growth factor
+                                                                
             I_si_vec[ii+1] = gf + (1-dt/tau_si)*I_si_vec[ii]        
     
     print('done time stepping')
-    return I_si_vec
+    return I_spd_vec, I_si_vec
 
 # def synapse_time_stepper(time_vec,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
 
@@ -964,3 +1006,16 @@ def inter_fluxon_interval(I):
     ifi_vec = 2.06783375e-15/V_fq_vec
     
     return ifi_vec
+
+
+def syn_1jj_rate_fit(I_sf,mu1,mu2,V0):
+    
+    Ic = 40
+    rn = 4.125
+    Phi0 = 1e6*1e6*2.06783375e-15
+    print('I_sf = {}'.format(I_sf))
+    rate = ( Ic*rn*( (I_sf/Ic)**mu1 - 1 )**mu2 + V0 )/Phi0
+    print('rate = {}'.format(rate))
+    # rate = np.real(rate)
+    
+    return rate

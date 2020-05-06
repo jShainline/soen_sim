@@ -10,6 +10,7 @@ import pandas as pd
 from util import color_dictionary
 colors = color_dictionary()
 
+# from _functions import syn_1jj_rate_fit
 
 def plot_params():
     
@@ -50,7 +51,7 @@ def plot_params():
         pp['axes_labels_font_size'] = 20
         pp['axes_labels_pad'] = 0 # 4
         pp['tick_labels_font_size'] = 20
-        pp['legend_font_size'] = 16
+        pp['legend_font_size'] = 12
         pp['nominal_linewidth'] = 2
         pp['fine_linewidth'] = 1.5
         pp['bold_linewidth'] = 3
@@ -184,21 +185,22 @@ plt.rcParams['figure.figsize'] = pp['fig_size']
 plt.rcParams['figure.titlesize'] = pp['title_font_size']
 plt.rcParams['figure.autolayout'] = True
 
-plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue3'],colors['red1'],colors['red3'],colors['green1'],colors['green3'],colors['yellow1'],colors['yellow3']])
 
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
 #                                                     colors['red5'],colors['red4'],colors['red3'],colors['red2'],colors['red1'],
 #                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green3'],
 #                                                     colors['yellow5'],colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
 
-# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
-#                                                     colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
-#                                                     colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
-#                                                     colors['red4'],colors['red3'],colors['red2'],colors['red1'],
-#                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
-#                                                     colors['green4'],colors['green3'],colors['green2'],colors['green1'],
-#                                                     colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
-#                                                     colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
+plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+                                                    colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+                                                    colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+                                                    colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+                                                    colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+                                                    colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+                                                    colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+                                                    colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
 
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],
 #                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],
@@ -208,6 +210,7 @@ plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],colors['blue4'],colors['blue3'],colors['blue2']])
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue4']])
+
 plt.rcParams['axes.linewidth'] = pp['axes_linewidth']
 plt.rcParams['axes.grid'] = False
 plt.rcParams['axes.titlesize'] = pp['subtitle_font_size']
@@ -751,17 +754,18 @@ def plot_wr_comparison__dend_drive_and_response(main_title,target_data__drive,ac
     return
 
 
-def plot_wr_comparison__synapse(main_title,spike_times,wr_drive,target_data,actual_data,wr_data_file_name,error__si):
+def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive,target_data,actual_data,wr_data_file_name,error_drive,error__si):
     
     tt = time.time()    
     save_str = 'soen_sim_wr_cmpr__sy__'+wr_data_file_name+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
     
     fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)   
-    fig.suptitle(main_title)
+    # fig.suptitle(main_title)
         
-    axs[0].plot(wr_drive[0,:]*1e6,wr_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'wr_drive') 
-    tn1 = np.min(wr_drive[1,:])
-    tn2 = np.max(wr_drive[1,:])
+    axs[0].plot(actual_drive[0,:]*1e6,actual_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['blue3'], label = 'soen_drive')
+    axs[0].plot(target_drive[0,:]*1e6,target_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['red3'], label = 'wr_drive')  
+    tn1 = np.min(target_drive[1,:])
+    tn2 = np.max(target_drive[1,:])
     for ii in range(len(spike_times)):
         if ii == 0:
             axs[0].plot([spike_times[ii]*1e6,spike_times[ii]*1e6],[tn1*1e6,tn2*1e6], '-.', color = colors['black'], linewidth = pp['fine_linewidth'], label = 'Spike times')             
@@ -770,14 +774,14 @@ def plot_wr_comparison__synapse(main_title,spike_times,wr_drive,target_data,actu
     axs[0].set_xlabel(r'Time [$\mu$s]')
     axs[0].set_ylabel(r'$I_{drive}$ [$\mu$A]')
     axs[0].legend()
-    axs[0].set_title('Drive signal input SPD to $J_{sf}$')
+    axs[0].set_title('Drive signal input SPD to Jsf (error = {:7.5e})'.format(error_drive))
      
-    axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim')   
-    axs[1].plot(target_data[0,:]*1e6,target_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
+    axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['blue3'], label = 'soen_sim')   
+    axs[1].plot(target_data[0,:]*1e6,target_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['red3'], label = 'WRSpice')             
     axs[1].set_xlabel(r'Time [$\mu$s]')
     axs[1].set_ylabel(r'$I_{si}$ [$\mu$A]')
     axs[1].legend()
-    axs[1].set_title('Output signal in the SI loop (error = {:1.5e})'.format(error__si))
+    axs[1].set_title('Output signal in the SI loop (error = {:7.5e})'.format(error__si))
     
     plt.show()
     fig.savefig('figures/'+save_str+'.png') 
@@ -989,7 +993,8 @@ def plot_fq_peaks__dt_vs_bias(bias_current,dt_fq_peaks,Ic):
 
 def plot_syn_rate_array(I_si_array__scaled,master_rate_array,I_drive_list):
     
-    # I_sy = 40
+    I_sy = 40
+    I_c = 40
     #fig, ax = plt
     # fig.suptitle('master _ sy _ rates') 
     # plt.title('$Isy =$ {} $\mu$A'.format(I_sy))
@@ -997,6 +1002,44 @@ def plot_syn_rate_array(I_si_array__scaled,master_rate_array,I_drive_list):
     num_drives = len(I_drive_list)
     for ii in range(num_drives):
         ax.plot(I_si_array__scaled[num_drives-ii-1][:],master_rate_array[num_drives-ii-1][:]*1e-3, '-', linewidth = pp['nominal_linewidth'], label = 'I_drive = {}'.format(I_drive_list[num_drives-ii-1]))    
+    ax.set_xlabel(r'$I_{si}$ [$\mu$A]')
+    ax.set_ylabel(r'$r_{j_{si}}$ [kilofluxons per $\mu$s]')
+    # ax.legend()
+    plt.show()
+
+    fig, ax = plt.subplots(nrows = 1, ncols = 1)
+    num_drives = len(I_drive_list)
+    for ii in range(num_drives):
+        jj = ii
+        I_sf = I_sy+I_drive_list[jj]-I_si_array__scaled[jj][:]
+        ax.plot(I_sf/I_c,master_rate_array[jj][:]*1e-3, '-', linewidth = pp['nominal_linewidth'], label = 'I_drive = {}'.format(I_drive_list[jj]))    
+    ax.set_xlabel(r'$I_{sf}/I_{c}$')
+    ax.set_ylabel(r'$r_{j_{si}}$ [kilofluxons per $\mu$s]')
+    ax.legend()
+    plt.show()
+    
+    return
+
+
+def plot_syn_rate_array__fit_cmpr(I_si_array,rate_array,I_drive_list,mu1,mu2,V0):
+    
+    I_sy = 40
+    #fig, ax = plt
+    # fig.suptitle('master _ sy _ rates') 
+    # plt.title('$Isy =$ {} $\mu$A'.format(I_sy))
+    
+    Ic = 40
+    rn = 4.125
+    Phi0 = 1e12*2.06783375e-15 
+    
+    fig, ax = plt.subplots(nrows = 1, ncols = 1)
+    num_drives = len(I_drive_list)
+    for ii in range(num_drives):
+        I_si = I_si_array[num_drives-ii-1][:]
+        ax.plot(I_si,rate_array[num_drives-ii-1][:]*1e-3, '-', linewidth = pp['nominal_linewidth'], label = 'I_drive = {}'.format(I_drive_list[num_drives-ii-1])) 
+        I_sf = I_sy+I_drive_list[ii]-I_si
+        rate = np.real( ( Ic*rn*( ( (I_sf/Ic)**mu1 - 1 )**mu2 ) + V0 )/Phi0 )
+        ax.plot(I_si,rate*1e-3)
     ax.set_xlabel(r'$I_{si}$ [$\mu$A]')
     ax.set_ylabel(r'$r_{j_{si}}$ [kilofluxons per $\mu$s]')
     # ax.legend()
@@ -1156,11 +1199,11 @@ def plot_spd_response(time_vec,time_vec_reduced,I_sy_list,I_spd_array,I_spd_arra
     
     fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
     # fig.suptitle('spd response') 
-    plot_list = [23,28,33,38]
+    plot_list = I_sy_list # [23,28,33,38]
     num_plot = len(plot_list)
     for ii in range(num_plot):  
         ind = (np.abs(I_sy_list[:]-plot_list[ii])).argmin()
-        ax.plot([xx*1e3 for xx in time_vec],I_spd_array[ind])    
+        # ax.plot([xx*1e3 for xx in time_vec],I_spd_array[ind])    
         ax.plot([xx*1e3 for xx in time_vec_reduced],I_spd_array_reduced[ind], label = 'I_sy = {}uA'.format(I_sy_list[ind]))    
     ax.set_xlabel(r'Time [ns]')
     ax.set_ylabel(r'$I_{spd}$ [$\mu$A]')

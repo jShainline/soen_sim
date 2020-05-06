@@ -1,6 +1,8 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from pylab import *
+from util import physical_constants
+
 
 #%%
 dI = 0.01
@@ -26,3 +28,11 @@ ax.plot(I_sy_vec[:],dI_1fq_vec[:,1]*1e3)
 ax.set_xlabel(r'$I_{sy}$ [$\mu$A]')
 ax.set_ylabel(r'$\Delta Isy_{1fq}$ [nA]')
 plt.show()
+
+#%%
+p = physical_constants()
+
+L = 100e-12
+T = 4.2
+I_noise = np.sqrt(2*p['kB']*T/L)
+print('I_noise = {}uA'.format(I_noise*1e6))
