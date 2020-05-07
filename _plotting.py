@@ -47,10 +47,10 @@ def plot_params():
     if plot_type == 'large':
         
         pp['title_font_size'] = 12
-        pp['subtitle_font_size'] = 20
-        pp['axes_labels_font_size'] = 20
+        pp['subtitle_font_size'] = 14
+        pp['axes_labels_font_size'] = 14
         pp['axes_labels_pad'] = 0 # 4
-        pp['tick_labels_font_size'] = 20
+        pp['tick_labels_font_size'] = 14
         pp['legend_font_size'] = 12
         pp['nominal_linewidth'] = 2
         pp['fine_linewidth'] = 1.5
@@ -760,7 +760,7 @@ def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive
     save_str = 'soen_sim_wr_cmpr__sy__'+wr_data_file_name+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
     
     fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)   
-    # fig.suptitle(main_title)
+    fig.suptitle('file: {}; error_drive = {:7.5e}, error_signal = {:7.5e}'.format(main_title,error_drive,error__si))
         
     axs[0].plot(actual_drive[0,:]*1e6,actual_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['blue3'], label = 'soen_drive')
     axs[0].plot(target_drive[0,:]*1e6,target_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['red3'], label = 'wr_drive')  
@@ -774,14 +774,56 @@ def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive
     axs[0].set_xlabel(r'Time [$\mu$s]')
     axs[0].set_ylabel(r'$I_{drive}$ [$\mu$A]')
     axs[0].legend()
-    axs[0].set_title('Drive signal input SPD to Jsf (error = {:7.5e})'.format(error_drive))
+    # axs[0].set_title('Drive signal input SPD to Jsf (error = {:7.5e})'.format(error_drive))
      
     axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['blue3'], label = 'soen_sim')   
     axs[1].plot(target_data[0,:]*1e6,target_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['red3'], label = 'WRSpice')             
     axs[1].set_xlabel(r'Time [$\mu$s]')
     axs[1].set_ylabel(r'$I_{si}$ [$\mu$A]')
     axs[1].legend()
+    # axs[1].set_title('Output signal in the SI loop (error = {:7.5e})'.format(error__si))
+    
+    plt.show()
+    fig.savefig('figures/'+save_str+'.png') 
+
+    return
+
+
+def plot_wr_comparison__synapse__Isi_and_Isf(main_title,spike_times,target_drive,actual_drive,target_data,actual_data,sf_data,I_c,I_reset,wr_data_file_name,error_drive,error__si):
+    
+    tt = time.time()    
+    save_str = 'soen_sim_wr_cmpr__sy__'+wr_data_file_name+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    
+    fig, axs = plt.subplots(nrows = 3, ncols = 1, sharex = True, sharey = False)   
+    # fig.suptitle(main_title)
+        
+    axs[0].plot(actual_drive[0,:]*1e6,actual_drive[1,:]*1e6, '-o', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['blue3'], label = 'soen_drive')
+    axs[0].plot(target_drive[0,:]*1e6,target_drive[1,:]*1e6, '-o', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['red3'], label = 'wr_drive')  
+    tn1 = np.min(target_drive[1,:])
+    tn2 = np.max(target_drive[1,:])
+    for ii in range(len(spike_times)):
+        if ii == 0:
+            axs[0].plot([spike_times[ii]*1e6,spike_times[ii]*1e6],[tn1*1e6,tn2*1e6], '-.', color = colors['black'], linewidth = pp['fine_linewidth'], label = 'Spike times')             
+        else:
+            axs[0].plot([spike_times[ii]*1e6,spike_times[ii]*1e6],[tn1*1e6,tn2*1e6], '-.', color = colors['black'], linewidth = pp['fine_linewidth'])             
+    axs[0].set_xlabel(r'Time [$\mu$s]')
+    axs[0].set_ylabel(r'$I_{drive}$ [$\mu$A]')
+    axs[0].legend()
+    axs[0].set_title('{}; Drive signal input SPD to Jsf (error = {:7.5e})'.format(main_title,error_drive))
+     
+    axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-o', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['blue3'], label = 'soen_sim')   
+    axs[1].plot(target_data[0,:]*1e6,target_data[1,:]*1e6, '-o', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['red3'], label = 'WRSpice')             
+    axs[1].set_xlabel(r'Time [$\mu$s]')
+    axs[1].set_ylabel(r'$I_{si}$ [$\mu$A]')
+    axs[1].legend()
     axs[1].set_title('Output signal in the SI loop (error = {:7.5e})'.format(error__si))
+      
+    axs[2].plot(sf_data[0,:]*1e6,sf_data[1,:]*1e6, '-o', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['blue3'])  
+    axs[2].plot([actual_drive[0,0]*1e6,actual_drive[0,-1]*1e6],[I_c*1e6,I_c*1e6], '-.', color = colors['greyblue1'], linewidth = pp['fine_linewidth'])                        
+    axs[2].plot([actual_drive[0,0]*1e6,actual_drive[0,-1]*1e6],[I_reset*1e6,I_reset*1e6], '-.', color = colors['greyblue5'], linewidth = pp['fine_linewidth'])                        
+    axs[2].set_xlabel(r'Time [$\mu$s]')
+    axs[2].set_ylabel(r'$I_{sf}$ [$\mu$A]')
+    axs[2].set_title('$I_{sf}$')
     
     plt.show()
     fig.savefig('figures/'+save_str+'.png') 

@@ -270,11 +270,15 @@ class synapse():
                  # synapse_time_stepper(time_vec,input_spike_times,     I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
         # I_si_vec = synapse_time_stepper(time_vec,self.input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
         L3 = self.integration_loop_total_inductance
-        I_spd_vec, I_si_vec = synapse_time_stepper(time_vec,self.input_spike_times,L3,I_sy,tau_fall)
+        I_spd_vec, I_si_vec, I_sf_vec, j_sf_state, I_c, I_reset = synapse_time_stepper(time_vec,self.input_spike_times,L3,I_sy,tau_fall)
 
         self.I_si = I_si_vec*1e-6
         self.I_spd = I_spd_vec*1e-6
+        self.I_sf = I_sf_vec*1e-6
+        self.j_sf_state = j_sf_state
         self.time_vec = time_vec*1e-6
+        self.I_c = 1e-6*I_c
+        self.I_reset = 1e-6*I_reset
 
         return self
     

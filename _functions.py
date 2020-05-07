@@ -15,6 +15,12 @@ from _plotting import plot_wr_comparison, plot_error_mat # plot_dendritic_drive,
 
 def synapse_time_stepper(time_vec,spike_times,L3,I_sy,tau_si):
     
+    I_c = 40
+    I_sf_hyst = 1.1768
+    I_reset = I_c - I_sf_hyst
+    I_sf = I_sy
+    st_ind_last = 0
+    spd_current_memory = 0
     if spike_times:
         
         # print('spike_times = {}'.format(spike_times))
@@ -70,92 +76,100 @@ def synapse_time_stepper(time_vec,spike_times,L3,I_sy,tau_si):
         
         I_si_vec = np.zeros([nt])
         I_spd_vec = np.zeros([nt])
+        I_sf_vec = np.zeros([nt])
         # print('I_si_vec.size = {}'.format(I_si_vec.size))
         # print('len(I_si_list__imported) = {}'.format(len(I_si_list__imported)))
         # num_spike_vec = np.zeros([nt])
+        
+        j_sf_state = ['below_Ic']
+        print('starting time stepping ...')
         for ii in range(nt-1):
             # dt = time_vec[ii+1]-time_vec[ii]
             
             _pt = time_vec[ii] # present time
-            # print('ii = {}, present time = {}us'.format(ii,_pt))
+            # print('ii = {:d}, present time = {:6.4f}us, j_sf_state = {}'.format(ii,_pt,j_sf_state[ii]))
             
-            if ii > 0:
-                # tn = I_si_vec[ii-1]
-                tn = 0
-            else:
-                tn = 0
-            I_sy_ind_spd = (np.abs(I_sy_list__imprt_spd[:] - (I_sy-tn) )).argmin()
-            spd_i = spd_response_array__imprt[I_sy_ind_spd]
-
             # find most recent spike time  
-            gf = 0
+            # gf = 0
             st_ind = (np.abs(spike_times[:] - _pt)).argmin()
             
-            if st_ind == 0 and spike_times[st_ind] > _pt:
-                gf = 0 # growth factor
-                # print('code 1: st_ind == 0 and spike_times[st_ind] > _pt')
-            if st_ind > 0 and spike_times[st_ind] > _pt:
-                st_ind -= 1
-                # print('code 2: st_ind > 0 and spike_times[st_ind] > _pt')
-            if _pt - spike_times[st_ind] > spd_duration:
-                gf = 0 # growth factor
-                # print('code 3: _pt - spike_times[st_ind] > spd_duration')
-            if spike_times[st_ind] < _pt and _pt - spike_times[st_ind] < spd_duration:
-                # print('code 4')
-                dt_spk = _pt - spike_times[st_ind]
-                spd_t_ind  = (np.abs(spd_t[:] - dt_spk)).argmin()
-                spd_current = spd_i[spd_t_ind]#np.max([I_spd_vec[ii-1],spd_i[spd_t_ind]])
-                I_spd_vec[ii] = spd_current
-                I_tot = spd_current+I_sy
-                I_drive = I_tot-40 # all data so far is with 40uA JJs
+            if ii > 0:
+                
+                I_sf = I_sy+I_spd_vec[ii-1]-I_si_vec[ii-1]
+                I_sf_vec[ii] = I_sf
+                    
+                if st_ind == 0 and spike_times[st_ind] > _pt: # first spike has not arrived
+                    gf = 0 # growth factor
+                    j_sf_state.append('below_Ic')
+                    # print('code 1: st_ind == 0 and spike_times[st_ind] > _pt')
+                if st_ind > 0 and spike_times[st_ind] > _pt: # go back to previous spike
+                    st_ind -= 1
+                    # print('code 2: st_ind > 0 and spike_times[st_ind] > _pt')
+                if _pt - spike_times[st_ind] > spd_duration: # outside SPD pulse range
+                    gf = 0 # growth factor
+                    j_sf_state.append('below_Ic')
+                    # print('code 3: _pt - spike_times[st_ind] > spd_duration')
+                if spike_times[st_ind] <= _pt and _pt - spike_times[st_ind] < spd_duration: # the case that counts
+                    # print('code 4')                    
+                    
+                    if I_sf > I_c:
+                        j_sf_state.append('above_Ic')
+                        bias_lower = I_si_vec[ii-1] # np.max([I_si_vec[ii-1]-I_sf_hyst,0])
+                        
+                    if I_sf <= I_c and I_sf >= I_reset:
+                        if j_sf_state[ii-1] == 'above_Ic' or j_sf_state[ii-1] == 'latched':
+                            j_sf_state.append('latched')
+                            bias_lower = I_si_vec[ii-1] # np.max([I_si_vec[ii-1]-I_sf_hyst,0])
+                        else:
+                            j_sf_state.append('below_Ic')
+                            bias_lower = I_si_vec[ii-1] # np.max([I_si_vec[ii-1]-I_sf_hyst,0])
+                            
+                    if I_sf < I_reset:
+                        j_sf_state.append('below_Ic')
+                        # if I_si_vec[ii-1] > 
+                        bias_lower = I_si_vec[ii-1] # np.max([I_si_vec[ii-1]-I_sf_hyst,0]) # 0 # 
+                        
+            else:
+                bias_lower = 0
+                    
+            I_sy_ind_spd = (np.abs(I_sy_list__imprt_spd[:] - (I_sy-bias_lower) )).argmin()
+            spd_i = spd_response_array__imprt[I_sy_ind_spd]            
+            dt_spk = _pt - spike_times[st_ind]                
+            spd_t_ind  = (np.abs(spd_t[:] - dt_spk)).argmin()
+            if st_ind - st_ind_last == 1:
+                spd_current = np.max([I_spd_vec[ii-1],spd_i[spd_t_ind]])
+                spd_current_memory = spd_current
+            if spd_current_memory > 0 and spd_i[spd_t_ind] < spd_current_memory:
+                spd_current = spd_current_memory
+            else:
+                spd_current = spd_i[spd_t_ind]
+                spd_current_memory = 0
+            I_spd_vec[ii] = spd_current
+            
+            st_ind_last = st_ind
+            
+            I_drive_real = spd_current+I_sy
+            # I_sf = spd_current+I_sy-I_si_vec[ii-1]
+            I_drive = I_drive_real-I_c # -I_c in there because all data so far is with 40uA JJs and this is how I_drive is defined when making rate array
+            
+            if j_sf_state[ii] == 'latched' or j_sf_state[ii] == 'above_Ic':
+                
                 if I_drive < np.min(I_drive_list):
                     gf = 0
                 else:                    
-                    I_drive_ind = (np.abs(I_drive_list[:] - I_drive)).argmin()
+                    I_drive_ind = (np.abs(I_drive_list[:] - I_drive )).argmin() 
                     I_si_ind = (np.abs(np.asarray(I_si_array[I_drive_ind][:]) - I_si_vec[ii])).argmin()
-                        
-                    interpolation = False
-                    if interpolation == True:
-                        
-                        # linear interpolation
-                        if I_drive_ind < len(I_drive_list)-1:
-                            
-                            if I_drive_list[I_drive_ind] > I_drive:
-                                
-                                I_si_ind_1 = (np.abs(np.asarray(I_si_array[I_drive_ind][:]) - I_si_vec[ii])).argmin()
-                                I_si_ind_2 = (np.abs(np.asarray(I_si_array[I_drive_ind+1][:]) - I_si_vec[ii])).argmin()
-                                
-                                slope = rate_array[I_drive_ind+1][I_si_ind_2] - rate_array[I_drive_ind][I_si_ind_1]
-                                xx = I_drive_list[I_drive_ind] - I_drive
-                                offset = rate_array[I_drive_ind][I_si_ind_1]
-                                rate_term = slope*xx+offset
-                                
-                            else:
-                                
-                                I_si_ind_1 = (np.abs(np.asarray(I_si_array[I_drive_ind][:]) - I_si_vec[ii])).argmin()
-                                I_si_ind_2 = (np.abs(np.asarray(I_si_array[I_drive_ind-1][:]) - I_si_vec[ii])).argmin()
-                                
-                                slope = rate_array[I_drive_ind][I_si_ind_1] - rate_array[I_drive_ind-1][I_si_ind_2]
-                                xx = I_drive - I_drive_list[I_drive_ind]
-                                offset = rate_array[I_drive_ind-1][I_si_ind_2]
-                                rate_term = slope*xx+offset
-                                
-                            gf = dt*I_fq*rate_term# growth factor
-                                
-                        else:
-                            
-                            gf = dt*I_fq*rate_array[I_drive_ind][I_si_ind] # growth factor
-                                                
-                        
-                    else:
-                            
-                        #no interpolation
-                        gf = dt*I_fq*rate_array[I_drive_ind][I_si_ind] # growth factor
+                                                             
+                    #no interpolation
+                    gf = dt*I_fq*rate_array[I_drive_ind][I_si_ind] # growth factor
+                    
+            else:
+                gf = 0
                                                                 
             I_si_vec[ii+1] = gf + (1-dt/tau_si)*I_si_vec[ii]        
     
     print('done time stepping')
-    return I_spd_vec, I_si_vec
+    return I_spd_vec, I_si_vec, I_sf_vec, j_sf_state, I_c, I_reset
 
 # def synapse_time_stepper(time_vec,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
 

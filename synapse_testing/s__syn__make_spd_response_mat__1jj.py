@@ -10,7 +10,8 @@ from _plotting import plot_spd_response
 plt.close('all')
 
 #%% load wr data
-I_sy_list = np.concatenate([np.array([20.01,20.1]),np.arange(21,39+1,1)])
+dI = 0.25
+I_sy_list = np.concatenate([np.array([20.01,20.1]),np.arange(20.25,40+dI,dI)])
 directory = 'wrspice_data/fitting_data/1jj'
 # file_name = 'syn__single_spd_pulse__no_jj_biases.dat'
 
@@ -40,7 +41,7 @@ for ii in range(len(I_sy_list)):
 #%% reduce temporal resolution
 
 print('\nreducing temporal resolution ...')
-dt = 0.01e-9 # desired temporal resolution
+dt = 0.1e-9 # desired temporal resolution
 
 time_vec_reduced = np.arange(time_vec[0],time_vec[-1]+dt*1e6,dt*1e6)
 nt_spd = len(time_vec_reduced)
@@ -82,9 +83,10 @@ save_session_data(data_array,save_string)
 print('\n\ndone saving session data.')
 
 #%% load test
-with open('../_circuit_data/master__syn__spd_response__dt0100ns.soen', 'rb') as data_file:         
-    data_array__imported = pickle.load(data_file)
-spd_response_array__imprt = data_array__imported['spd_response_array']
-I_sy_list__imprt = data_array__imported['I_sy_list']
-time_vec__imprt = data_array__imported['time_vec']
+if 1 == 2:
+    with open('../_circuit_data/master__syn__spd_response__dt0100ns.soen', 'rb') as data_file:         
+        data_array__imported = pickle.load(data_file)
+    spd_response_array__imprt = data_array__imported['spd_response_array']
+    I_sy_list__imprt = data_array__imported['I_sy_list']
+    time_vec__imprt = data_array__imported['time_vec']
 

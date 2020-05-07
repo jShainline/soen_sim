@@ -17,7 +17,7 @@ from _functions import save_session_data, load_session_data, read_wr_data, syn_1
 from util import physical_constants
 p = physical_constants()
 
-plt.close('all')
+# plt.close('all')
 
 #%% load master rate array
 I_sy = 40
