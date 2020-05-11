@@ -21,7 +21,7 @@ def synapse_time_stepper(time_vec,spike_times,L3,I_sy,tau_si):
     I_sf = I_sy
     st_ind_last = 0
     spd_current_memory = 0
-    if spike_times:
+    if len(spike_times) > 0:
         
         # print('spike_times = {}'.format(spike_times))
         

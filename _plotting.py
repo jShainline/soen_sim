@@ -14,7 +14,7 @@ colors = color_dictionary()
 
 def plot_params():
     
-    plot_type = 'large' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' #
+    plot_type = 'single_frame' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' #
     
     pp = dict()
     
@@ -189,19 +189,19 @@ plt.rcParams['figure.autolayout'] = True
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue3'],colors['red1'],colors['red3'],colors['green1'],colors['green3'],colors['yellow1'],colors['yellow3']])
 
-# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
-#                                                     colors['red5'],colors['red4'],colors['red3'],colors['red2'],colors['red1'],
-#                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green3'],
-#                                                     colors['yellow5'],colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
-
 plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
-                                                    colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
-                                                    colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
-                                                    colors['red4'],colors['red3'],colors['red2'],colors['red1'],
-                                                    colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
-                                                    colors['green4'],colors['green3'],colors['green2'],colors['green1'],
-                                                    colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
-                                                    colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
+                                                    colors['red5'],colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+                                                    colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green3'],
+                                                    colors['yellow5'],colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
+
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+#                                                     colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+#                                                     colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+#                                                     colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+#                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+#                                                     colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+#                                                     colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+#                                                     colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
 
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],
 #                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],
@@ -253,28 +253,125 @@ plt.rcParams['figure.max_open_warning'] = 100
 
 # plt.rcParams[''] = pp['']
 
-def plot_synaptic_integration_loop_current(synapse_instance,time_vec):
+def plot_synaptic_integration_loop_current(synapse_instance):
     
     input_spike_times = synapse_instance.input_spike_times
+    time_vec = synapse_instance.time_vec
 
-    fig, axes = plt.subplots(1,1)
-    # axes.plot(time_vec*1e6,input_spike_times, 'o-', linewidth = 1, markersize = 3, label = 'input pulses'.format())
-    axes.plot(time_vec*1e6,synapse_instance.I_si*1e6, '-', linewidth = pp['nominal_linewidth'], label = 'synaptic response'.format())
-    axes.set_xlabel(r'Time [us]')
-    axes.set_ylabel(r'Isi [uA]')
+    if synapse_instance.integration_loop_time_constant < 1e-3:
+        
+        main_title = 'Synapse: {} ({})\nI_sy = {:7.4f} uA; tau_si = {:7.4f} ns; L_si = {:7.4f} nH'.format(synapse_instance.name,
+                                                                                                   synapse_instance.unique_label,
+                                                                                                   synapse_instance.synaptic_bias_current*1e6,
+                                                                                                   synapse_instance.integration_loop_time_constant*1e9,
+                                                                                                   synapse_instance.integration_loop_total_inductance*1e9)
+    else:
+        
+                
+        main_title = 'Synapse: {} ({})\nI_sy = {:7.4f} uA; tau_si = inf; L_si = {:7.4f} nH'.format(synapse_instance.name,
+                                                                                                   synapse_instance.unique_label,
+                                                                                                   synapse_instance.synaptic_bias_current*1e6,
+                                                                                                   synapse_instance.integration_loop_total_inductance*1e9)
 
-    #ylim((ymin_plot,ymax_plot))
-    #xlim((xmin_plot,xmax_plot))
+    fig = plt.figure()
+    fig.suptitle(main_title)    
+    ax = fig.gca()
+    
+    ax.plot(time_vec*1e6,synapse_instance.I_si*1e6, '-', linewidth = pp['nominal_linewidth'], color = colors['blue3'], label = 'synaptic response')
+    ylim = ax.get_ylim()
+    for ii in range(len(input_spike_times)):
+        if ii == 0:
+            ax.plot([input_spike_times[ii]*1e6, input_spike_times[ii]*1e6], [ylim[0], ylim[1]], ':', color = colors['bluegrey1'], linewidth = pp['fine_linewidth'], label = 'spike times')
+        else:
+            ax.plot([input_spike_times[ii]*1e6, input_spike_times[ii]*1e6], [ylim[0], ylim[1]], ':', color = colors['bluegrey1'], linewidth = pp['fine_linewidth'])
+    ax.set_xlabel(r'Time [us]')
+    ax.set_ylabel(r'Isi [uA]')
 
-    axes.legend(loc='best')
+    ax.legend()
     # grid(True,which='both')
-    title('Synapse: '+synapse_instance.name+' ('+synapse_instance.unique_label+')'+\
-          '\nI_sy = '+str(synapse_instance.synaptic_bias_current*1e6)+' uA'+\
-          '; tau_si = '+str(synapse_instance.time_constant*1e9)+' ns'+\
-          '; L_si = '+str(synapse_instance.integration_loop_total_inductance*1e9)+' nH',fontsize = pp['title_font_size'])
+    
     plt.show()
-
+    
     return
+
+
+def plot_synaptic_integration_loop_current__multiple_synapses(synapse_list):
+
+
+    fig = plt.figure()
+    # fig.suptitle('Synapse saturation vs Isy; tau_si = inf; L_si = {:7.4f} nH'.format(synapse_list[0].integration_loop_total_inductance*1e9))    
+    ax = fig.gca()
+    
+    for jj in range(len(synapse_list)):  
+        
+        synapse_instance = synapse_list[jj]
+        time_vec = synapse_instance.time_vec
+        
+        legend_text = 'I_sy = {:7.4f} uA'.format(synapse_instance.synaptic_bias_current*1e6)                                                                                            
+            
+        ax.plot(time_vec*1e6,synapse_instance.I_si*1e6, '-', linewidth = pp['nominal_linewidth'], label = legend_text)
+        
+        if jj == len(synapse_list)-1:
+            
+            ylim = ax.get_ylim()            
+            input_spike_times = synapse_instance.input_spike_times
+            for ii in range(len(input_spike_times)):
+                if ii == 0:
+                    ax.plot([input_spike_times[ii]*1e6, input_spike_times[ii]*1e6], [ylim[0], ylim[1]], ':', color = colors['bluegrey1'], linewidth = pp['fine_linewidth'], label = 'spike times')
+                else:
+                    ax.plot([input_spike_times[ii]*1e6, input_spike_times[ii]*1e6], [ylim[0], ylim[1]], ':', color = colors['bluegrey1'], linewidth = pp['fine_linewidth'])
+                    
+        ax.set_xlabel(r'Time [$\mu$s]')
+        ax.set_ylabel(r'$I_{si}$ [$\mu$A]')
+    
+        # ax.legend()
+    
+    plt.show()
+    
+    return
+
+
+def plot_Isisat_vs_Isy(synapse_list):
+    
+    I_sy_vec = np.zeros([len(synapse_list)])
+    I_si_sat_vec = np.zeros([len(synapse_list)])
+    for ii in range(len(synapse_list)):
+        I_sy_vec[ii] = 1e6*synapse_list[ii].synaptic_bias_current
+        I_si_sat_vec[ii] = 1e6*synapse_list[ii].I_si[-1]
+    
+    fig = plt.figure()
+    # fig.suptitle('Synapse saturation vs Isy; tau_si = inf; L_si = {:7.4f} nH'.format(synapse_list[0].integration_loop_total_inductance*1e9)) 
+    ax = fig.gca()
+    
+    ax.plot(I_sy_vec,I_si_sat_vec, '-', linewidth = pp['nominal_linewidth'], color = colors['blue3'])
+    ax.set_xlabel(r'$I_{sy}$ [$\mu$A]')
+    ax.set_ylabel(r'$I_{si}^{sat}$ [$\mu$A]')
+    
+    plt.show()
+    
+    return
+
+
+def plot_Isi_vs_Isy(synapse_list):
+    
+    I_sy_vec = np.zeros([len(synapse_list)])
+    I_si_sat_vec = np.zeros([len(synapse_list)])
+    for ii in range(len(synapse_list)):
+        I_sy_vec[ii] = 1e6*synapse_list[ii].synaptic_bias_current
+        I_si_sat_vec[ii] = 1e6*synapse_list[ii].I_si[-1]
+    
+    fig = plt.figure()
+    # fig.suptitle('Isi vs Isy; tau_si = inf; L_si = {:7.4f} nH'.format(synapse_list[0].integration_loop_total_inductance*1e9)) 
+    ax = fig.gca()
+    
+    ax.plot(I_sy_vec,I_si_sat_vec, '-', linewidth = pp['nominal_linewidth'], color = colors['blue3'])
+    ax.set_xlabel(r'$I_{sy}$ [$\mu$A]')
+    ax.set_ylabel(r'$I_{si}$ [$\mu$A]')
+    
+    plt.show()
+    
+    return
+
 
 def plot_receiving_loop_current(neuron_instance,plot_save_string = ''):
         

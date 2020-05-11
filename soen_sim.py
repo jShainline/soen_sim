@@ -279,6 +279,8 @@ class synapse():
         self.time_vec = time_vec*1e-6
         self.I_c = 1e-6*I_c
         self.I_reset = 1e-6*I_reset
+        for ii in range(len(self.input_spike_times)):
+            self.input_spike_times[ii] = self.input_spike_times[ii]*1e-6
 
         return self
     
