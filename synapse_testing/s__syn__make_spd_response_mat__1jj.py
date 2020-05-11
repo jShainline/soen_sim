@@ -41,7 +41,7 @@ for ii in range(len(I_sy_list)):
 #%% reduce temporal resolution
 
 print('\nreducing temporal resolution ...')
-dt = 0.1e-9 # desired temporal resolution
+dt = 1e-9 # desired temporal resolution
 
 time_vec_reduced = np.arange(time_vec[0],time_vec[-1]+dt*1e6,dt*1e6)
 nt_spd = len(time_vec_reduced)

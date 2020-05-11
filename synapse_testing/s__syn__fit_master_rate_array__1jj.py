@@ -56,6 +56,10 @@ V0 = popt[2]
     
 #%% plot
 plot_syn_rate_array__fit_cmpr(I_si_array,rate_array,I_drive_list,mu1,mu2,V0)
+
+#%% plot
+
+# plot_Vsf_vs_Isf()
     
 #%%
 abc_1 = syn_1jj_rate_fit(41,2,0.5,200)

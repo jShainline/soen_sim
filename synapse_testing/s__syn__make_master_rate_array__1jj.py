@@ -21,10 +21,8 @@ plt.close('all')
 
 I_sy = 40#uA
 
-# I_drive_list = ( [0.01,0.1,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5,10.0,10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,14.5,15.0,15.5,16.0,16.5,17.0,17.5,18.0,18.5,19.0,19.5,20.0] ) # units of uA
-dI = 0.5
-I_drive_list = np.concatenate([np.array([0.01,0.1]),np.arange(0.5,20+dI,dI)])
-t_sim_list = (   [ 2.0,2.0,2.0,2.0,2.0,3.0,3.0,3.0,3.0,4.0,4.0,4.0,4.0,4.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0] ) # units of ns
+dI = 0.25
+I_drive_list = np.concatenate([np.array([0.01,0.1]),np.arange(0.25,20.0+dI,dI)])
 
 #%%
     
@@ -43,7 +41,7 @@ for ii in range(num_drives):
     
     print('ii = {:d} of {:d}'.format(ii+1,num_drives))        
     
-    file_name = 'syn_1jj_cnst_drv_Isy{:5.2f}uA_Idrv{:05.2f}uA_Ldi0077.50nH_taudi0077.5ms_tsim{:04.0f}ns_dt00.1ps.dat'.format(I_sy,I_drive_list[ii],t_sim_list[ii])
+    file_name = 'syn_1jj_cnst_drv_Isy{:5.2f}uA_Idrv{:05.2f}uA_Ldi0077.50nH_taudi0077.5ms_dt00.01ps.dat'.format(I_sy,I_drive_list[ii])
     data_dict = read_wr_data(directory+'/'+file_name)
     
     # find peaks for each jj
@@ -77,7 +75,7 @@ for ii in range(num_drives):
     
     
 #%% assemble data and change units
-I_si_pad = 10e-9 # amount above the observed max of Isi that the simulation will allow before giving a zero rate
+I_si_pad = 100e-9 # amount above the observed max of Isi that the simulation will allow before giving a zero rate
 
 master_rate_array = []
 I_si_array__scaled = []
@@ -152,7 +150,7 @@ plt.show()
 
 #%% save the data    
  
-save_string = 'master__syn__rate_array__I_si_pad{:04.0f}nA'.format(I_si_pad*1e9)
+save_string = 'master__syn__1jj__rate_array__Isipad{:04.0f}nA'.format(I_si_pad*1e9)
 data_array = dict()
 data_array['rate_array'] = master_rate_array
 data_array['I_drive_list'] = I_drive_list#[x*1e-6 for x in I_drive_vec]

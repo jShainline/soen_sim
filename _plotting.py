@@ -55,8 +55,9 @@ def plot_params():
         pp['nominal_linewidth'] = 2
         pp['fine_linewidth'] = 1.5
         pp['bold_linewidth'] = 3
-        pp['nominal_markersize'] = 3
-        pp['big_markersize'] = 5
+        pp['small_markersize'] = 3
+        pp['nominal_markersize'] = 5
+        pp['big_markersize'] = 7
         tn = 4*8.6/2.54
         pp['fig_size'] = (tn,tn/1.618)
         # pp['fig_size'] = (tn,tn/1.2)
@@ -100,10 +101,10 @@ def plot_params():
         
         pp['title_font_size'] = 10
         pp['subtitle_font_size'] = 10
-        pp['axes_labels_font_size'] = 8
+        pp['axes_labels_font_size'] = 10
         pp['axes_labels_pad'] = 0 # 4
-        pp['tick_labels_font_size'] = 8
-        pp['legend_font_size'] = 8
+        pp['tick_labels_font_size'] = 10
+        pp['legend_font_size'] = 10
         pp['nominal_linewidth'] = 0.75
         pp['fine_linewidth'] = 0.5
         pp['bold_linewidth'] = 2
@@ -112,7 +113,7 @@ def plot_params():
         tn = 1.075*8.6/2.54
         pp['fig_size'] = (tn,tn/1.618)
         # pp['fig_size'] = (tn,tn/1.2)
-        pp['axes_linewidth'] = 1
+        pp['axes_linewidth'] = 0.75
         
         pp['major_tick_width'] = 0.75
         pp['major_tick_length'] = 3
@@ -789,6 +790,155 @@ def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive
     return
 
 
+def plot_wr_comparison__synapse__vary_Isy(I_sy_vec,target_data_array,actual_data_array):
+    
+    fig = plt.figure()
+    # fig.suptitle(main_title)   
+    ax = fig.gca()
+    
+    color_list_1 = ['blue3','red3','green3','yellow3','blue3','red3','green3','yellow3','blue3','red3','green3','yellow3','blue3','red3','green3','yellow3','blue3','red3','green3','yellow3']
+    color_list_2 = ['blue2','red2','green2','yellow2','blue2','red2','green2','yellow2','blue2','red2','green2','yellow2','blue2','red2','green2','yellow2','blue2','red2','green2','yellow2']
+    for ii in range(len(I_sy_vec)):
+        ax.plot(target_data_array[ii][0,:]*1e9,target_data_array[ii][1,:]*1e6, '-', color = colors[color_list_1[ii]], label = '$Isy$ = {:2.0f}$\mu$A'.format(I_sy_vec[ii]))             
+        ax.plot(actual_data_array[ii][0,:]*1e9,actual_data_array[ii][1,:]*1e6, '-', color = colors[color_list_2[ii]])             
+    
+    ax.set_xlabel(r'Time [ns]')
+    ax.set_ylabel(r'$I_{si}$ [$\mu$V]')
+    ax.legend()
+    
+    # dt1 = time_vec[j_sf_peaks[1]]-time_vec[j_sf_peaks[0]]
+    # dt2 = time_vec[j_sf_peaks[-1]]-time_vec[j_sf_peaks[-2]]
+    # t_lims = [1e9*(time_vec[j_sf_peaks[0]]-2*dt1),1e9*(time_vec[j_sf_peaks[-1]]+2*dt2)]
+    # ax.set_xlim(t_lims)
+    plt.show()
+    
+    return
+
+
+
+def plot_rate_vs_Isf(j_si_rate_array,Isf_array,V_sf_fit):
+    
+    Ic = 40
+    Ir = 1.1768
+    Phi0 = 2.06783375e-15
+    
+    fig = plt.figure()
+    # fig.suptitle('mu1 = {:8.6f}, mu2  = {:8.6f}, V0 = {:7.3f}'.format(mu1,mu2,V0))   
+    ax = fig.gca()
+    
+    # color_list_1 = ['blue3','red3','green3','yellow3','blue3','red3','green3','yellow3','blue3','red3','green3','yellow3','blue3','red3','green3','yellow3','blue3','red3','green3','yellow3']
+    # color_list_2 = ['blue2','red2','green2','yellow2','blue2','red2','green2','yellow2','blue2','red2','green2','yellow2','blue2','red2','green2','yellow2','blue2','red2','green2','yellow2']
+    for ii in range(len(j_si_rate_array)):
+        ax.plot(Isf_array[ii][:]/(Ic-Ir),1e-9*j_si_rate_array[ii][:], linewidth = pp['nominal_linewidth']) 
+    ax.plot(Isf_array[-1][:]/(Ic-Ir),1e-9*1e-6*V_sf_fit/Phi0, color = colors['red3'], linewidth = pp['fine_linewidth'], label = 'fit (V/$\Phi_0$)') # label = 'fit; IcRn = {:6.2f}'.format(40*4.125)
+    V_sf_fit                 
+    
+    locs, labels = xticks()  # Get the current locations and labels.
+    xticks(np.arange(1.0, 1.6, 0.1))  # Set label locations.
+
+    ax.set_xlabel(r'$I_{sf}/(I_c-I_r)$')
+    ax.set_ylabel(r'$r_{sf}$ [kilofluxons per $\mu$s]')
+    ax.legend()  
+    
+    return
+
+
+def plot_Vsf_vs_Isf(Vsf_array,Isf_array,V_sf_fit,mu1,mu2,V0):
+    
+    Ic = 40
+    Ir = 1.1768
+    
+    fig = plt.figure()
+    fig.suptitle('mu1 = {:8.6f}, mu2  = {:8.6f}, V0 = {:7.3f}'.format(mu1,mu2,V0))   
+    ax = fig.gca()
+    
+    # color_list_1 = ['blue3','red3','green3','yellow3','blue3','red3','green3','yellow3','blue3','red3','green3','yellow3','blue3','red3','green3','yellow3','blue3','red3','green3','yellow3']
+    # color_list_2 = ['blue2','red2','green2','yellow2','blue2','red2','green2','yellow2','blue2','red2','green2','yellow2','blue2','red2','green2','yellow2','blue2','red2','green2','yellow2']
+    for ii in range(len(Vsf_array)):
+        ax.plot(Isf_array[ii][:]/(Ic-Ir),Vsf_array[ii][:], linewidth = pp['nominal_linewidth']) 
+    ax.plot(Isf_array[-1][:]/(Ic-Ir),V_sf_fit, color = colors['red3'], linewidth = pp['fine_linewidth'], label = 'fit') # label = 'fit; IcRn = {:6.2f}'.format(40*4.125)
+    V_sf_fit                 
+    
+    locs, labels = xticks()  # Get the current locations and labels.
+    xticks(np.arange(1.0, 1.6, 0.1))  # Set label locations.
+
+    ax.set_xlabel(r'$I_{sf}/(I_c-I_r)$')
+    ax.set_ylabel(r'$V_{sf}$ [$\mu$V]')
+    ax.legend()  
+    
+    return
+
+
+def plot_fq_peaks_and_average_voltage_vs_time__1jj(time_vec,V_sf,j_sf_peaks,time_vec_avg,V_sf_avg,main_title):
+    
+    fig = plt.figure()
+    fig.suptitle(main_title)   
+    ax = fig.gca()
+    
+    ax.plot(time_vec*1e9,V_sf*1e6, '-', color = colors['blue3'], label = 'Voltage trace of $J_{sf}$')             
+    ax.plot(time_vec[j_sf_peaks]*1e9,V_sf[j_sf_peaks]*1e6, 'x', markersize = pp['big_markersize'], color = colors['red3'], label = 'Fluxon peaks of $J_{sf}$')      
+    ax.plot(time_vec_avg,V_sf_avg, '-o', color = colors['green3'], markerfacecolor = colors['green5'], markeredgecolor = colors['green5'], markersize = pp['nominal_markersize'], label = 'Time-averaged voltage')
+    
+    ax.set_xlabel(r'Time [ns]')
+    ax.set_ylabel(r'Voltage [$\mu$V]')
+    ax.legend()
+    
+    dt1 = time_vec[j_sf_peaks[1]]-time_vec[j_sf_peaks[0]]
+    dt2 = time_vec[j_sf_peaks[-1]]-time_vec[j_sf_peaks[-2]]
+    t_lims = [1e9*(time_vec[j_sf_peaks[0]]-2*dt1),1e9*(time_vec[j_sf_peaks[-1]]+2*dt2)]
+    ax.set_xlim(t_lims)
+    plt.show()
+    
+    return
+
+
+def plot_fq_peaks_and_average_voltage_vs_Isf__1jj(I_sf,V_sf,j_sf_peaks,I_sf_avg,V_sf_avg,main_title):
+    
+    fig = plt.figure()
+    fig.suptitle(main_title)   
+    ax = fig.gca()
+    
+    ax.plot(I_sf,V_sf*1e6, '-', color = colors['blue3'], label = 'Voltage trace of $J_{sf}$')             
+    ax.plot(I_sf[j_sf_peaks],V_sf[j_sf_peaks]*1e6, 'x', markersize = pp['big_markersize'], color = colors['red3'], label = 'Fluxon peaks of $J_{sf}$')      
+    ax.plot(I_sf_avg,V_sf_avg, '-o', color = colors['green3'], markerfacecolor = colors['green5'], markeredgecolor = colors['green5'], markersize = pp['nominal_markersize'], label = 'Time-averaged voltage')
+    
+    ax.set_xlabel(r'$I_{sf}$ [$\mu$A]')
+    ax.set_ylabel(r'Voltage [$\mu$V]')
+    ax.legend()
+    
+    dI1 = I_sf[j_sf_peaks[1]]-I_sf[j_sf_peaks[0]]
+    dI2 = I_sf[j_sf_peaks[-1]]-I_sf[j_sf_peaks[-2]]
+    I_lims = [I_sf[j_sf_peaks[0]]-2*dI1,I_sf[j_sf_peaks[-1]]+2*dI2]
+    ax.set_xlim(I_lims)
+    plt.show()
+    
+    return
+
+
+def plot_Vsf_vs_Isf_fit(I_sf,V_sf,j_sf_peaks,I_sf_avg,V_sf_avg,V_sf_fit,V_sf_fixed,main_title,mu1,mu2,V0):
+        
+    fig = plt.figure()
+    fig.suptitle(main_title)   
+    ax = fig.gca()
+    
+    ax.plot(I_sf,V_sf*1e6, '-', color = colors['blue3'], label = 'Voltage trace of $J_{sf}$')             
+    ax.plot(I_sf[j_sf_peaks],V_sf[j_sf_peaks]*1e6, 'x', markersize = pp['big_markersize'], color = colors['red3'], label = 'Fluxon peaks of $J_{sf}$')      
+    ax.plot(I_sf_avg,V_sf_avg, '-o', color = colors['green3'], markerfacecolor = colors['green5'], markeredgecolor = colors['green5'], markersize = pp['nominal_markersize'], label = 'Time-averaged voltage')
+    ax.plot(I_sf_avg,V_sf_fit, '-o', color = colors['yellow3'], markerfacecolor = colors['yellow5'], markeredgecolor = colors['yellow5'], markersize = pp['nominal_markersize'], label = 'Fit; mu1 = {:6.4f}, mu2 = {:6.4f}, V0 = {:6.2f}'.format(mu1,mu2,V0))
+    # ax.plot(I_sf_avg,V_sf_fixed, '-o', color = colors['red3'], markerfacecolor = colors['red5'], markeredgecolor = colors['red5'], markersize = pp['nominal_markersize'], label = 'Fixed; mu1 = {:6.4f}, mu2 = {:6.4f}, V0 = {:6.2f}'.format(2,0.5,40*4.125))
+    
+    ax.set_xlabel(r'$I_{sf}$ [$\mu$A]')
+    ax.set_ylabel(r'Voltage [$\mu$V]')
+    ax.legend()
+    
+    dI1 = I_sf[j_sf_peaks[1]]-I_sf[j_sf_peaks[0]]
+    dI2 = I_sf[j_sf_peaks[-1]]-I_sf[j_sf_peaks[-2]]
+    I_lims = [I_sf[j_sf_peaks[0]]-2*dI1,I_sf[j_sf_peaks[-1]]+2*dI2]
+    ax.set_xlim(I_lims)
+    plt.show()
+    
+    return
+
 def plot_wr_comparison__synapse__Isi_and_Isf(main_title,spike_times,target_drive,actual_drive,target_data,actual_data,sf_data,I_c,I_reset,wr_data_file_name,error_drive,error__si):
     
     tt = time.time()    
@@ -844,7 +994,7 @@ def plot_wr_comparison__synapse__tiles(target_data_array,actual_data_array,spike
     # color_list_target = ['blue2','red2','green2','yellow2']
     title_strings = ['Vary $I_{sy}$','Vary $L_{si}$','Vary $tau_{si}$']
     save_strings = ['vary_Isy','vary_Lsi','vary_tausi']
-    legend_strings = [ ['$I_{sy} = 23\mu A$','$I_{sy} = 28\mu A$','$I_{sy} = 33\mu A$','$I_{sy} = 38\mu A$'],
+    legend_strings = [ ['$I_{sy} = 21\mu A$','$I_{sy} = 27\mu A$','$I_{sy} = 33\mu A$','$I_{sy} = 39\mu A$'],
                        ['$L_{si} = 7.75nH$','$L_{si} = 77.5nH$','$L_{si} = 775nH$','$L_{si} = 7.75\mu H$'],
                        ['$tau_{si} = 10ns$','$tau_{si} = 50ns$','$tau_{si} = 250ns$','$tau_{si} = 1.25\mu s$',] ]
     i1 = [0,1,0,1]
@@ -1037,6 +1187,7 @@ def plot_syn_rate_array(I_si_array__scaled,master_rate_array,I_drive_list):
     
     I_sy = 40
     I_c = 40
+    Ir = 1.1768
     #fig, ax = plt
     # fig.suptitle('master _ sy _ rates') 
     # plt.title('$Isy =$ {} $\mu$A'.format(I_sy))
@@ -1054,10 +1205,10 @@ def plot_syn_rate_array(I_si_array__scaled,master_rate_array,I_drive_list):
     for ii in range(num_drives):
         jj = ii
         I_sf = I_sy+I_drive_list[jj]-I_si_array__scaled[jj][:]
-        ax.plot(I_sf/I_c,master_rate_array[jj][:]*1e-3, '-', linewidth = pp['nominal_linewidth'], label = 'I_drive = {}'.format(I_drive_list[jj]))    
-    ax.set_xlabel(r'$I_{sf}/I_{c}$')
+        ax.plot(I_sf/(I_c-Ir),master_rate_array[jj][:]*1e-3, '-', linewidth = pp['nominal_linewidth'], label = 'I_drive = {}'.format(I_drive_list[jj]))    
+    ax.set_xlabel(r'$I_{sf}/(I_{c}-I_{r})$')
     ax.set_ylabel(r'$r_{j_{si}}$ [kilofluxons per $\mu$s]')
-    ax.legend()
+    # ax.legend()
     plt.show()
     
     return
@@ -1216,21 +1367,36 @@ def plot_syn_rate_array__waterfall(I_si_array__scaled,master_rate_array,I_drive_
     return
 
 
-def plot__syn__error_vs_dt(dt_vec,error_array):
+def plot__syn__error_vs_dt(dt_vec,error_array,error_drive_array):
     
     num_cases = 3
     title_list = ['Vary $I_{sy}$','Vary $L_{si}$','Vary $tau_{si}$']
-    legend_list = [['$I_{sy}$ = 23uA','$I_{sy}$ = 28uA','$I_{sy}$ = 33uA','$I_{sy}$ = 38uA'],
+    legend_list = [['$I_{sy}$ = 21uA','$I_{sy}$ = 27uA','$I_{sy}$ = 33uA','$I_{sy}$ = 39uA'],
                    ['$L_{si}$ = 7.75nH','$L_{si}$ = 77.5nH','$L_{si}$ = 775nH','$L_{si}$ = 7.75$\mu$H'],
                    ['$tau_{si}$ = 10ns','$tau_{si}$ = 50ns','$tau_{si}$ = 250ns','$tau_{si}$ = 1.25$\mu$s']]
-    fig, ax = plt.subplots(nrows = num_cases, ncols = 1)
+    
+    color_list = ['blue3','red3','green3','yellow3']
+    fig, ax = plt.subplots(nrows = num_cases, ncols = 2)
     for ii in range(num_cases):
+        
         for jj in range(4):
-            ax[ii].loglog(dt_vec*1e9,error_array[ii*4+jj,:], '-o', markersize = pp['nominal_markersize'], label = legend_list[ii][jj] )    
-        ax[ii].set_xlabel(r'dt [ns]')
-        ax[ii].set_ylabel(r'$Chi^2$ error')
-        ax[ii].set_title(title_list[ii])
-        ax[ii].legend()
+            ax[ii,0].loglog(dt_vec*1e9,error_drive_array[ii*4+jj,:], '-o', color = colors[color_list[jj]], markersize = pp['nominal_markersize'], label = legend_list[ii][jj] )    
+            ax[ii,1].loglog(dt_vec*1e9,error_array[ii*4+jj,:], '-o', color = colors[color_list[jj]], markersize = pp['nominal_markersize'], label = legend_list[ii][jj] )    
+        
+        ax[ii,0].set_xlabel(r'dt [ns]')
+        ax[ii,0].set_ylabel(r'Drive $Chi^2$ error')
+        ax[ii,0].set_title(title_list[ii])
+        ax[ii,0].legend()        
+        plt.sca(ax[ii,0])
+        plt.yticks([1e-4,1e-3,1e-2,1e-1,1e0])
+        
+        ax[ii,1].set_xlabel(r'dt [ns]')
+        ax[ii,1].set_ylabel(r'Signal $Chi^2$ error')
+        ax[ii,1].set_title(title_list[ii])
+        ax[ii,1].legend()       
+        plt.sca(ax[ii,1])
+        plt.yticks([1e-4,1e-3,1e-2,1e-1,1e0])
+        
     # grid(True,which='both')
     plt.show()
     
@@ -1246,11 +1412,11 @@ def plot_spd_response(time_vec,time_vec_reduced,I_sy_list,I_spd_array,I_spd_arra
     for ii in range(num_plot):  
         ind = (np.abs(I_sy_list[:]-plot_list[ii])).argmin()
         # ax.plot([xx*1e3 for xx in time_vec],I_spd_array[ind])    
-        ax.plot([xx*1e3 for xx in time_vec_reduced],I_spd_array_reduced[ind], label = 'I_sy = {}uA'.format(I_sy_list[ind]))    
+        ax.plot([xx*1e3 for xx in time_vec_reduced],I_spd_array_reduced[ind], linewidth = pp['fine_linewidth'], label = 'I_sy = {}uA'.format(I_sy_list[ind]))    
     ax.set_xlabel(r'Time [ns]')
     ax.set_ylabel(r'$I_{spd}$ [$\mu$A]')
     ax.set_xlim([0,150])
-    ax.legend()
+    # ax.legend()
     plt.show()
 
     return

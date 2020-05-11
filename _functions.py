@@ -157,11 +157,16 @@ def synapse_time_stepper(time_vec,spike_times,L3,I_sy,tau_si):
                 if I_drive < np.min(I_drive_list):
                     gf = 0
                 else:                    
+                    
                     I_drive_ind = (np.abs(I_drive_list[:] - I_drive )).argmin() 
                     I_si_ind = (np.abs(np.asarray(I_si_array[I_drive_ind][:]) - I_si_vec[ii])).argmin()
-                                                             
+                    r_sf = rate_array[I_drive_ind][I_si_ind]
+                    
+                                      
+                    # r_sf = syn_1jj_rate_vs_Isf(I_sf) 
+                      
                     #no interpolation
-                    gf = dt*I_fq*rate_array[I_drive_ind][I_si_ind] # growth factor
+                    gf = dt*I_fq*r_sf # growth factor
                     
             else:
                 gf = 0
@@ -1033,3 +1038,21 @@ def syn_1jj_rate_fit(I_sf,mu1,mu2,V0):
     # rate = np.real(rate)
     
     return rate
+
+
+def syn_1jj_Vsf_vs_Isf_fit(I_sf,mu1,mu2,V0):
+    
+    Ic = 40
+    # Rn = 4.125
+    Ir = 1.1768
+    
+    V_sf = V0*( (I_sf/(Ic-Ir))**mu1 - 1 )**mu2
+    # V_sf = V0*( I_sf**mu1 - (Ic-Ir)**mu1 )**(1/mu1)
+    
+    return V_sf
+
+def syn_1jj_rate_vs_Isf(I_sf):
+    
+    r_sf = 1e3*( 233.966*( (I_sf/(38.8232))**3.464271 - 1 )**0.306768 )/2.06783375
+    
+    return r_sf

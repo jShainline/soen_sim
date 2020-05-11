@@ -168,7 +168,7 @@ class synapse():
 
         if 'synaptic_bias_current' in kwargs:
             # if type(kwargs['synaptic_bias_current']) == int or type(kwargs['synaptic_bias_current']) == float or type(kwargs['synaptic_bias_current']) == np.float64:
-            if kwargs['synaptic_bias_current'] < 22e-6 or kwargs['synaptic_bias_current'] > 40e-6:
+            if kwargs['synaptic_bias_current'] < 20e-6 or kwargs['synaptic_bias_current'] > 40e-6:
                 raise ValueError('[soens_sim] synaptic_bias_current associated with synaptic integration loop must be a real number between 22e-6 and 40e-6 (units of amps)')
             else:
                  self.synaptic_bias_current = kwargs['synaptic_bias_current']
