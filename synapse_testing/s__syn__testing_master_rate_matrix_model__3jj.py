@@ -38,34 +38,34 @@ tau_si = 250e-9
 
 num_files = len(I_sy_vec)
 t_tot = time.time()
-for ii in range(num_files):
+for ii in range(num_files): # range(1): # 
     
     print('\nvary Isy, ii = {} of {}\n'.format(ii+1,num_files))
     
     #load WR data
     file_name = 'syn_Ispd20.00uA_Isy{:04.2f}uA_Lsi{:07.2f}nH_tausi{:04.0f}ns_dt10.0ps_tsim1000ns.dat'.format(I_sy_vec[ii]*1e6,L_si*1e9,tau_si*1e9)
-    data_dict = read_wr_data('wrspice_data/test_data/'+file_name)
-    wr_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))
+    data_dict = read_wr_data('wrspice_data/test_data/3jj/'+file_name)
+    target_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))
     target_data = np.vstack((data_dict['time'],data_dict['L3#branch']))
     target_data_array.append(target_data)
 
     # initialize input signal
-    name__i = 'in'
-    input_1 = input_signal(name__i, input_temporal_form = 'arbitrary_spike_train', spike_times = spike_times)
+    input_1 = input_signal('in', input_temporal_form = 'arbitrary_spike_train', spike_times = spike_times)
         
     # initialize synapse
-    name_s = 'sy'
-    synapse_1 = synapse(name_s, integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si, 
+    synapse_1 = synapse('sy', num_jjs = 3, integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si, 
                         integration_loop_self_inductance = L_si, integration_loop_output_inductance = 0e-12, 
                         synaptic_bias_current = I_sy_vec[ii], integration_loop_bias_current = 35e-6,
                         input_signal_name = 'in', synapse_model_params = sim_params)
     
     synapse_1.run_sim()    
+    actual_drive = np.vstack((synapse_1.time_vec[:],synapse_1.I_spd[:]))
     actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:])) 
     actual_data_array.append(actual_data)
+    error_drive = chi_squared_error(target_drive,actual_drive)
     error_signal = chi_squared_error(target_data,actual_data)
     error_array.append(error_signal)
-    plot_wr_comparison__synapse(file_name,spike_times,wr_drive,target_data,actual_data,file_name,error_signal)    
+    plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
 
 elapsed = time.time() - t_tot
 print('soen_sim duration = '+str(elapsed)+' s for vary I_sy')
@@ -84,8 +84,8 @@ for ii in range(num_files):
     
     #load WR data
     file_name = 'syn_Ispd20.00uA_Isy{:05.2f}uA_Lsi{:07.2f}nH_tausi{:04.0f}ns_dt10.0ps_tsim1000ns.dat'.format(I_sy*1e6,L_si_vec[ii]*1e9,tau_si*1e9)
-    data_dict = read_wr_data('wrspice_data/test_data/'+file_name)
-    wr_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))
+    data_dict = read_wr_data('wrspice_data/test_data/3jj/'+file_name)
+    target_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))
     target_data = np.vstack((data_dict['time'],data_dict['L3#branch']))
     target_data_array.append(target_data)
 
@@ -101,11 +101,13 @@ for ii in range(num_files):
                         input_signal_name = 'in', synapse_model_params = sim_params)
     
     synapse_1.run_sim()    
-    actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:]))   
+    actual_drive = np.vstack((synapse_1.time_vec[:],synapse_1.I_spd[:]))
+    actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:])) 
     actual_data_array.append(actual_data)
+    error_drive = chi_squared_error(target_drive,actual_drive)
     error_signal = chi_squared_error(target_data,actual_data)
     error_array.append(error_signal)
-    plot_wr_comparison__synapse(file_name,spike_times,wr_drive,target_data,actual_data,file_name,error_signal) 
+    plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)   
     
 elapsed = time.time() - t_tot
 print('soen_sim duration = '+str(elapsed)+' s for vary L_si')
@@ -124,8 +126,8 @@ for ii in range(num_files):
     
     #load WR data
     file_name = 'syn_Ispd20.00uA_Isy{:05.2f}uA_Lsi{:07.2f}nH_tausi{:04.0f}ns_dt10.0ps_tsim1000ns.dat'.format(I_sy*1e6,L_si*1e9,tau_si_vec[ii]*1e9)
-    data_dict = read_wr_data('wrspice_data/test_data/'+file_name)
-    wr_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))
+    data_dict = read_wr_data('wrspice_data/test_data/3jj/'+file_name)
+    target_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))
     target_data = np.vstack((data_dict['time'],data_dict['L3#branch']))
     target_data_array.append(target_data)
 
@@ -141,11 +143,13 @@ for ii in range(num_files):
                         input_signal_name = 'in', synapse_model_params = sim_params)
     
     synapse_1.run_sim()    
+    actual_drive = np.vstack((synapse_1.time_vec[:],synapse_1.I_spd[:]))
     actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:])) 
     actual_data_array.append(actual_data)
+    error_drive = chi_squared_error(target_drive,actual_drive)
     error_signal = chi_squared_error(target_data,actual_data)
     error_array.append(error_signal)
-    plot_wr_comparison__synapse(file_name,spike_times,wr_drive,target_data,actual_data,file_name,error_signal)
+    plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)   
 
 elapsed = time.time() - t_tot
 print('soen_sim duration = '+str(elapsed)+' s for vary tau_si')

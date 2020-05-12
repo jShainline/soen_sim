@@ -61,7 +61,7 @@ j_si_rate_array = [] # array of fluxon production rate at the synaptic integrati
 I_si_array = [] # array of values of I_si
 
 num_drives = len(I_drive_list) 
-directory = 'wrspice_data/fitting_data'
+directory = 'wrspice_data/fitting_data/3jj'
 for ii in range(num_drives):
     
     print('ii = {:d} of {:d}'.format(ii+1,num_drives))        
@@ -112,7 +112,7 @@ for ii in range(num_drives):
     
     
 #%% assemble data and change units
-I_si_pad = 10e-9 # amount above the observed max of Isi that the simulation will allow before giving a zero rate
+I_si_pad = 100e-9 # amount above the observed max of Isi that the simulation will allow before giving a zero rate
 
 master_rate_array = []
 I_si_array__scaled = []
@@ -187,7 +187,7 @@ plt.show()
 
 #%% save the data    
  
-save_string = 'master__syn__rate_array__I_si_pad{:04.0f}nA'.format(I_si_pad*1e9)
+save_string = 'master__syn__rate_array__3jj__Isipad{:04.0f}nA'.format(I_si_pad*1e9)
 data_array = dict()
 data_array['rate_array'] = master_rate_array
 data_array['I_drive_list'] = I_drive_list#[x*1e-6 for x in I_drive_vec]
@@ -198,9 +198,9 @@ save_session_data(data_array,save_string)
 
 #%% load test
 
-if 1 == 2:
+if 1 == 1:
     
-    with open('../_circuit_data/master__syn__rate_array__Isipad0100nA.soen', 'rb') as data_file:         
+    with open('../_circuit_data/master__syn__rate_array__3jj__Isipad0010nA.soen', 'rb') as data_file:         
             data_array_imprt = pickle.load(data_file)
     # data_array_imported = load_session_data('session_data__master_rate_matrix__syn__2020-04-24_10-24-23.dat')
     I_si_array__imprt = data_array_imprt['I_si_array']

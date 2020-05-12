@@ -109,6 +109,11 @@ class synapse():
         else:
             _name = 'unnamed_synapse'
         self.name = _name
+        
+        if 'num_jjs' in kwargs:
+            self.num_jjs = kwargs['num_jjs']
+        else:
+            self.num_jjs = 3
 
         if 'inhibitory_or_excitatory' in kwargs:
             if kwargs['inhibitory_or_excitatory'] == 'inhibitory' or kwargs['inhibitory_or_excitatory'] == 'excitatory':
@@ -270,7 +275,7 @@ class synapse():
                  # synapse_time_stepper(time_vec,input_spike_times,     I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
         # I_si_vec = synapse_time_stepper(time_vec,self.input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
         L3 = self.integration_loop_total_inductance
-        I_spd_vec, I_si_vec, I_sf_vec, j_sf_state, I_c, I_reset = synapse_time_stepper(time_vec,self.input_spike_times,L3,I_sy,tau_fall)
+        I_spd_vec, I_si_vec, I_sf_vec, j_sf_state, I_c, I_reset = synapse_time_stepper(time_vec,self.input_spike_times,self.num_jjs,L3,I_sy,tau_fall)
 
         self.I_si = I_si_vec*1e-6
         self.I_spd = I_spd_vec*1e-6

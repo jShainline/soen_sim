@@ -40,7 +40,7 @@ for ii in range(num_files): # range(1): #
     input_1 = input_signal('in', input_temporal_form = 'arbitrary_spike_train', spike_times = spike_times)
         
     # initialize synapse    
-    synapse_1 = synapse('sy', integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si, 
+    synapse_1 = synapse('sy', num_jjs = 1, integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si, 
                         integration_loop_self_inductance = L_si, integration_loop_output_inductance = 0e-12, 
                         synaptic_bias_current = I_sy_vec[ii], integration_loop_bias_current = 35e-6,
                         input_signal_name = 'in', synapse_model_params = sim_params)

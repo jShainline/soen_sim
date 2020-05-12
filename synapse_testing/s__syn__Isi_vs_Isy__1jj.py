@@ -9,10 +9,12 @@ plt.close('all')
 
 #%%
 t0 = 5e-9
-tf = 100e-9
+tf = 1e-6 # 100e-9
 dt = 0.1e-9
+num_jjs = 1
 
-spike_times = [t0]
+dt_isi = 50e-9
+spike_times = np.arange(t0,tf+dt_isi,dt_isi) # [t0]
 
 
 #%%  calculate I_si vs I_sy
@@ -27,7 +29,7 @@ sim_params['dt'] = dt
 sim_params['tf'] = tf
 
 
-L_si = 775e-9
+L_si = 77.5e-9
 tau_si = 1e6 # 250e-9
 
 num_files = len(I_sy_vec)
@@ -39,10 +41,10 @@ for ii in range(num_files): # range(1): #
     input_1 = input_signal('in', input_temporal_form = 'arbitrary_spike_train', spike_times = spike_times)
         
     # initialize synapse    
-    synapse_1 = synapse('sy', integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si, 
-                        integration_loop_self_inductance = L_si, integration_loop_output_inductance = 0e-12, 
-                        synaptic_bias_current = I_sy_vec[ii], integration_loop_bias_current = 35e-6,
-                        input_signal_name = 'in', synapse_model_params = sim_params)
+    synapse_1 = synapse('sy', num_jjs = num_jjs, integration_loop_temporal_form = 'exponential', 
+                        integration_loop_time_constant = tau_si, integration_loop_self_inductance = L_si, synaptic_bias_current = I_sy_vec[ii], 
+                        integration_loop_output_inductance = 0e-12,integration_loop_bias_current = 35e-6, input_signal_name = 'in', 
+                        synapse_model_params = sim_params)
     
     synapse_1.run_sim() 
     synapse_list.append(synapse_1)

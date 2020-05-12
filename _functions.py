@@ -13,14 +13,21 @@ from _plotting import plot_wr_comparison, plot_error_mat # plot_dendritic_drive,
 
 #%%
 
-def synapse_time_stepper(time_vec,spike_times,L3,I_sy,tau_si):
+def synapse_time_stepper(time_vec,spike_times,num_jjs,L3,I_sy,tau_si):
     
     I_c = 40
     I_sf_hyst = 1.1768
     I_reset = I_c - I_sf_hyst
-    I_sf = I_sy
+    
     st_ind_last = 0
     spd_current_memory = 0
+        
+    p = physical_constants()
+    Phi0 = p['Phi0']
+    I_fq = 1e6*Phi0/L3
+        
+    # print('Isy = {}'.format(I_sy))
+    
     if len(spike_times) > 0:
         
         # print('spike_times = {}'.format(spike_times))
@@ -29,149 +36,237 @@ def synapse_time_stepper(time_vec,spike_times,L3,I_sy,tau_si):
         dt = time_vec[1]-time_vec[0]
         
         # print('loading spd response data')
-        # tic = time.time()
-        
-        #make reduced spd response
-        # with open('../_circuit_data/master__syn__spd_response.soen', 'rb') as data_file:         
-        #     data_array__imprt = pickle.load(data_file)
-        # spd_response_matrix__imprt = data_array__imprt['master_spd_response_matrix']
-        # I_sy_vec__imprt_spd = data_array__imprt['I_sy_vec']
-        # time_vec__imprt_spd = data_array__imprt['time_vec']
-        
-        # file_string = 'master__syn__spd_response__dt{:04.0f}ps.soen'.format(dt*1e6)
-        file_string = 'master__syn__spd_response__1jj__dt{:04.0f}ps.soen'.format(dt*1e6)
-        with open('../_circuit_data/'+file_string, 'rb') as data_file:         
-            data_array__imported = pickle.load(data_file)
-        spd_response_array__imprt = data_array__imported['spd_response_array']
-        I_sy_list__imprt_spd = data_array__imported['I_sy_list']
-        time_vec__imprt_spd = data_array__imported['time_vec']
-        
-        # tf = time_vec__imprt_spd[-1]
-        # nt_spd = np.floor(tf/dt).astype(int)
-        # spd_t = np.zeros([nt_spd])
-        # spd_i = np.zeros([nt_spd])
-        
-        # I_sy_ind_spd = (np.abs(I_sy_list__imprt_spd[:] - I_sy)).argmin()
-        # spd_i = spd_response_array__imprt[I_sy_ind_spd]
-        spd_t = time_vec__imprt_spd
-        spd_duration = spd_t[-1]
+        if num_jjs == 1:
+            file_string__spd = 'master__syn__spd_response__1jj__dt{:04.0f}ps.soen'.format(dt*1e6)
+            file_string__rate_array = 'master__syn__rate_array__1jj__Isipad0010nA.soen'
+        elif num_jjs == 3:
+            file_string__spd = 'master__syn__spd_response__3jj__dt{:04.0f}ps.soen'.format(dt*1e6)
+            file_string__rate_array = 'master__syn__rate_array__3jj__Isipad0010nA.soen'
+
+        with open('../_circuit_data/{}'.format(file_string__spd), 'rb') as data_file:         
+            data_array__spd = pickle.load(data_file)
             
-        # spd_duration = spd_t[-1]
+        spd_response_array = data_array__spd['spd_response_array'] # entries have units of uA
+        I_sy_list__spd = data_array__spd['I_sy_list'] # entries have units of uA
+        # print('I_sy_list__spd = {}'.format(I_sy_list__spd))
+        spd_t = data_array__spd['time_vec'] # entries have units of us
+        spd_duration = spd_t[-1]
         
         # print('loading rate array')
-        
-        # with open('../_circuit_data/master__syn__rate_array__Isipad0010nA.soen', 'rb') as data_file:         
-        with open('../_circuit_data/master__syn__1jj__rate_array__Isipad0010nA.soen', 'rb') as data_file:         
-            data_array_imprt = pickle.load(data_file)
+        with open('../_circuit_data/{}'.format(file_string__rate_array), 'rb') as data_file:         
+            data_array__rate = pickle.load(data_file)                        
             
-        I_si_array = data_array_imprt['I_si_array'] # entries have units of uA
-        I_drive_list = data_array_imprt['I_drive_list'] # entries have units of uA
-        rate_array = data_array_imprt['rate_array'] # entries have units of fluxons per microsecond
-            
-        # print('done loading rate array\nstarting time stepping')        
+        I_si_array = data_array__rate['I_si_array'] # entries have units of uA
+        I_drive_list = data_array__rate['I_drive_list'] # entries have units of uA
+        rate_array = data_array__rate['rate_array'] # entries have units of fluxons per microsecond                  
         
-        p = physical_constants()
-        Phi0 = p['Phi0']
-        I_fq = 1e6*Phi0/L3
         
         I_si_vec = np.zeros([nt])
         I_spd_vec = np.zeros([nt])
         I_sf_vec = np.zeros([nt])
-        # print('I_si_vec.size = {}'.format(I_si_vec.size))
-        # print('len(I_si_list__imported) = {}'.format(len(I_si_list__imported)))
-        # num_spike_vec = np.zeros([nt])
         
         j_sf_state = ['below_Ic']
         print('starting time stepping ...')
-        for ii in range(nt-1):
-            # dt = time_vec[ii+1]-time_vec[ii]
+        
+        if num_jjs == 1:
             
-            _pt = time_vec[ii] # present time
-            # print('ii = {:d}, present time = {:6.4f}us, j_sf_state = {}'.format(ii,_pt,j_sf_state[ii]))
-            
-            # find most recent spike time  
-            # gf = 0
-            st_ind = (np.abs(spike_times[:] - _pt)).argmin()
-            
-            if ii > 0:
+            I_sf = I_sy
+            for ii in range(nt-1):
+                # dt = time_vec[ii+1]-time_vec[ii]
                 
-                I_sf = I_sy+I_spd_vec[ii-1]-I_si_vec[ii-1]
-                I_sf_vec[ii] = I_sf
+                _pt = time_vec[ii] # present time
+                # print('ii = {:d}, present time = {:6.4f}us, j_sf_state = {}'.format(ii,_pt,j_sf_state[ii]))
+                
+                # find most recent spike time  
+                # gf = 0
+                st_ind = (np.abs(spike_times[:] - _pt)).argmin()
+                
+                if ii > 0:
                     
-                if st_ind == 0 and spike_times[st_ind] > _pt: # first spike has not arrived
-                    gf = 0 # growth factor
-                    j_sf_state.append('below_Ic')
-                    # print('code 1: st_ind == 0 and spike_times[st_ind] > _pt')
-                if st_ind > 0 and spike_times[st_ind] > _pt: # go back to previous spike
-                    st_ind -= 1
-                    # print('code 2: st_ind > 0 and spike_times[st_ind] > _pt')
-                if _pt - spike_times[st_ind] > spd_duration: # outside SPD pulse range
-                    gf = 0 # growth factor
-                    j_sf_state.append('below_Ic')
-                    # print('code 3: _pt - spike_times[st_ind] > spd_duration')
-                if spike_times[st_ind] <= _pt and _pt - spike_times[st_ind] < spd_duration: # the case that counts
-                    # print('code 4')                    
-                    
-                    if I_sf > I_c:
-                        j_sf_state.append('above_Ic')
-                        bias_lower = I_si_vec[ii-1] # np.max([I_si_vec[ii-1]-I_sf_hyst,0])
+                    I_sf = I_sy+I_spd_vec[ii-1]-I_si_vec[ii-1]
+                    I_sf_vec[ii] = I_sf
                         
-                    if I_sf <= I_c and I_sf >= I_reset:
-                        if j_sf_state[ii-1] == 'above_Ic' or j_sf_state[ii-1] == 'latched':
-                            j_sf_state.append('latched')
-                            bias_lower = I_si_vec[ii-1] # np.max([I_si_vec[ii-1]-I_sf_hyst,0])
-                        else:
-                            j_sf_state.append('below_Ic')
+                    if st_ind == 0 and spike_times[st_ind] > _pt: # first spike has not arrived
+                        gf = 0 # growth factor
+                        j_sf_state.append('below_Ic')
+                        # print('code 1: st_ind == 0 and spike_times[st_ind] > _pt')
+                    if st_ind > 0 and spike_times[st_ind] > _pt: # go back to previous spike
+                        st_ind -= 1
+                        # print('code 2: st_ind > 0 and spike_times[st_ind] > _pt')
+                    if _pt - spike_times[st_ind] > spd_duration: # outside SPD pulse range
+                        gf = 0 # growth factor
+                        j_sf_state.append('below_Ic')
+                        # print('code 3: _pt - spike_times[st_ind] > spd_duration')
+                    if spike_times[st_ind] <= _pt and _pt - spike_times[st_ind] < spd_duration: # the case that counts
+                        # print('code 4')                    
+                        
+                        if I_sf > I_c:
+                            j_sf_state.append('above_Ic')
                             bias_lower = I_si_vec[ii-1] # np.max([I_si_vec[ii-1]-I_sf_hyst,0])
                             
-                    if I_sf < I_reset:
-                        j_sf_state.append('below_Ic')
-                        # if I_si_vec[ii-1] > 
-                        bias_lower = I_si_vec[ii-1] # np.max([I_si_vec[ii-1]-I_sf_hyst,0]) # 0 # 
+                        if I_sf <= I_c and I_sf >= I_reset:
+                            if j_sf_state[ii-1] == 'above_Ic' or j_sf_state[ii-1] == 'latched':
+                                j_sf_state.append('latched')
+                                bias_lower = I_si_vec[ii-1] # np.max([I_si_vec[ii-1]-I_sf_hyst,0])
+                            else:
+                                j_sf_state.append('below_Ic')
+                                bias_lower = I_si_vec[ii-1] # np.max([I_si_vec[ii-1]-I_sf_hyst,0])
+                                
+                        if I_sf < I_reset:
+                            j_sf_state.append('below_Ic')
+                            # if I_si_vec[ii-1] > 
+                            bias_lower = I_si_vec[ii-1] # np.max([I_si_vec[ii-1]-I_sf_hyst,0]) # 0 # 
+                            
+                else:
+                    bias_lower = 0
                         
-            else:
-                bias_lower = 0
-                    
-            I_sy_ind_spd = (np.abs(I_sy_list__imprt_spd[:] - (I_sy-bias_lower) )).argmin()
-            spd_i = spd_response_array__imprt[I_sy_ind_spd]            
-            dt_spk = _pt - spike_times[st_ind]                
-            spd_t_ind  = (np.abs(spd_t[:] - dt_spk)).argmin()
-            if st_ind - st_ind_last == 1:
-                spd_current = np.max([I_spd_vec[ii-1],spd_i[spd_t_ind]])
-                spd_current_memory = spd_current
-            if spd_current_memory > 0 and spd_i[spd_t_ind] < spd_current_memory:
-                spd_current = spd_current_memory
-            else:
-                spd_current = spd_i[spd_t_ind]
-                spd_current_memory = 0
-            I_spd_vec[ii] = spd_current
-            
-            st_ind_last = st_ind
-            
-            I_drive_real = spd_current+I_sy
-            # I_sf = spd_current+I_sy-I_si_vec[ii-1]
-            I_drive = I_drive_real-I_c # -I_c in there because all data so far is with 40uA JJs and this is how I_drive is defined when making rate array
-            
-            if j_sf_state[ii] == 'latched' or j_sf_state[ii] == 'above_Ic':
+                #this block to avoid spd drive going too low at the onset of each spike
+                I_sy_ind_spd = (np.abs(I_sy_list__spd[:] - (I_sy-bias_lower) )).argmin()
+                spd_i = spd_response_array[I_sy_ind_spd]            
+                dt_spk = _pt - spike_times[st_ind]                
+                spd_t_ind  = (np.abs(spd_t[:] - dt_spk)).argmin()
+                if st_ind - st_ind_last == 1:
+                    spd_current = np.max([I_spd_vec[ii-1],spd_i[spd_t_ind]])
+                    spd_current_memory = spd_current
+                if spd_current_memory > 0 and spd_i[spd_t_ind] < spd_current_memory:
+                    spd_current = spd_current_memory
+                else:
+                    spd_current = spd_i[spd_t_ind]
+                    spd_current_memory = 0
+                I_spd_vec[ii] = spd_current
                 
-                if I_drive < np.min(I_drive_list):
+                st_ind_last = st_ind
+                
+                I_drive = spd_current+I_sy-I_c # -I_c in there because all data so far is with 40uA JJs and this is how I_drive is defined when making rate array
+                # # I_sf = spd_current+I_sy-I_si_vec[ii-1]
+                # I_drive = I_drive_real-I_c # -I_c in there because all data so far is with 40uA JJs and this is how I_drive is defined when making rate array
+                
+                if j_sf_state[ii] == 'latched' or j_sf_state[ii] == 'above_Ic':
+                    
+                    if I_drive < np.min(I_drive_list):
+                        gf = 0
+                    else:                    
+                        
+                        I_drive_ind = (np.abs(I_drive_list[:] - I_drive )).argmin() 
+                        I_si_ind = (np.abs(np.asarray(I_si_array[I_drive_ind][:]) - I_si_vec[ii])).argmin()
+                        r_sf = rate_array[I_drive_ind][I_si_ind]
+                        # r_sf = syn_1jj_rate_vs_Isf(I_sf) 
+                          
+                        #no interpolation
+                        gf = dt*I_fq*r_sf # growth factor
+                        
+                else:
                     gf = 0
-                else:                    
-                    
-                    I_drive_ind = (np.abs(I_drive_list[:] - I_drive )).argmin() 
-                    I_si_ind = (np.abs(np.asarray(I_si_array[I_drive_ind][:]) - I_si_vec[ii])).argmin()
-                    r_sf = rate_array[I_drive_ind][I_si_ind]
-                    
-                                      
-                    # r_sf = syn_1jj_rate_vs_Isf(I_sf) 
-                      
-                    #no interpolation
-                    gf = dt*I_fq*r_sf # growth factor
-                    
-            else:
+                                                                    
+                I_si_vec[ii+1] = gf + (1-dt/tau_si)*I_si_vec[ii]   
+                
+        if num_jjs == 3:
+            
+            spd_duration = spd_t[-1]
+            I_sy_ind_spd = (np.abs( I_sy_list__spd[:] - I_sy )).argmin()
+            # print('I_sy_ind_spd = {}'.format(I_sy_ind_spd))
+            spd_i = spd_response_array[I_sy_ind_spd]
+            for ii in range(nt-1):
+                
+                _pt = time_vec[ii] # present time
+                # print('ii = {}, present time = {}us'.format(ii,_pt))
+               
+                # find most recent spike time  
+                st_ind = (np.abs(spike_times[:] - _pt)).argmin()
                 gf = 0
-                                                                
-            I_si_vec[ii+1] = gf + (1-dt/tau_si)*I_si_vec[ii]        
+                if st_ind == 0 and spike_times[st_ind] > _pt:
+                    gf = 0 # growth factor
+                    # print('code 1: st_ind == 0 and spike_times[st_ind] > _pt')
+                if st_ind > 0 and spike_times[st_ind] > _pt:
+                    st_ind -= 1
+                    # print('code 2: st_ind > 0 and spike_times[st_ind] > _pt')
+                if _pt - spike_times[st_ind] > spd_duration:
+                    gf = 0 # growth factor
+                    # print('code 3: _pt - spike_times[st_ind] > spd_duration')
+                if spike_times[st_ind] <= _pt and _pt - spike_times[st_ind] < spd_duration:
+                    # print('code 4')
+                    
+                    dt_spk = _pt - spike_times[st_ind]
+                    spd_t_ind  = (np.abs(spd_t[:] - dt_spk)).argmin()
+                    # spd_current = spd_i[spd_t_ind]
+                                    
+                    # this block to avoid spd drive going too low at the onset of each spike 
+                    if st_ind - st_ind_last == 1:
+                        spd_current = np.max([I_spd_vec[ii-1],spd_i[spd_t_ind]])
+                        spd_current_memory = spd_current
+                    if spd_current_memory > 0 and spd_i[spd_t_ind] < spd_current_memory:
+                        spd_current = spd_current_memory
+                    else:
+                        spd_current = spd_i[spd_t_ind]
+                        spd_current_memory = 0
+                        
+                    I_spd_vec[ii] = spd_current
+                    
+                    st_ind_last = st_ind
+                    
+                    I_drive = I_sy+spd_current-I_c
+                    if I_drive < np.min(I_drive_list):
+                        gf = 0
+                    else:
+                        I_drive_ind = (np.abs(I_drive_list[:] - I_drive)).argmin()
+                        I_si_ind = (np.abs(I_si_array[I_drive_ind] - I_si_vec[ii])).argmin()
+                        gf = dt*I_fq*rate_array[I_drive_ind][I_si_ind]
+                        # gf = dt*I_fq*master_rate_matrix__imported[I_drive_ind,I_si_ind] # growth factor
+                       
+                        # linear interpolation
+                        # rate = np.interp(spd_current,I_drive_vec__imported,master_rate_matrix__imported[:,I_si_ind])
+                        # gf = dt*I_fq*rate                                
+               
+                I_si_vec[ii+1] = gf + (1-dt/tau_si)*I_si_vec[ii] 
+                
+            # I_sy_ind_spd = (np.abs(I_sy_list__imprt_spd[:] - I_sy )).argmin()
+            # for ii in range(nt-1):
+            
+            #     _pt = time_vec[ii] # present time
+            #     # print('ii = {:d}, present time = {:6.4f}us, j_sf_state = {}'.format(ii,_pt,j_sf_state[ii]))
+                
+            #     # find most recent spike time  
+            #     # gf = 0
+            #     st_ind = (np.abs(spike_times[:] - _pt)).argmin()
+                
+            #     if st_ind == 0 and spike_times[st_ind] > _pt: # first spike has not arrived
+            #         gf = 0 # growth factor
+            #         j_sf_state.append('below_Ic')
+            #         # print('code 1: st_ind == 0 and spike_times[st_ind] > _pt')
+            #     if st_ind > 0 and spike_times[st_ind] > _pt: # go back to previous spike
+            #         st_ind -= 1
+            #         # print('code 2: st_ind > 0 and spike_times[st_ind] > _pt')
+            #     if _pt - spike_times[st_ind] > spd_duration: # outside SPD pulse range
+            #         gf = 0 # growth factor
+            #         j_sf_state.append('below_Ic')
+            #         # print('code 3: _pt - spike_times[st_ind] > spd_duration')
+            #     if spike_times[st_ind] <= _pt and _pt - spike_times[st_ind] < spd_duration: # the case that counts
+            #         # print('code 4') 
+                
+            #         spd_i = spd_response_array__imprt[I_sy_ind_spd]            
+            #         dt_spk = _pt - spike_times[st_ind]                
+            #         spd_t_ind  = (np.abs(spd_t[:] - dt_spk)).argmin()
+            #         if st_ind - st_ind_last == 1:
+            #             spd_current = np.max([I_spd_vec[ii-1],spd_i[spd_t_ind]])
+            #             spd_current_memory = spd_current
+            #         if spd_current_memory > 0 and spd_i[spd_t_ind] < spd_current_memory:
+            #             spd_current = spd_current_memory
+            #         else:
+            #             spd_current = spd_i[spd_t_ind]
+            #             spd_current_memory = 0
+            #         I_spd_vec[ii] = spd_current
+                
+            #         I_drive = spd_current+I_sy
+            #         I_drive_ind = (np.abs(I_drive_list[:] - I_drive )).argmin() 
+            #         I_si_ind = (np.abs(np.asarray(I_si_array[I_drive_ind][:]) - I_si_vec[ii])).argmin()
+            #         r_si = rate_array[I_drive_ind][I_si_ind]
+            #         # r_sf = syn_1jj_rate_vs_Isf(I_sf) 
+                      
+            #         #no interpolation
+            #         gf = dt*I_fq*r_si # growth factor
+                    
+            #     I_si_vec[ii+1] = gf + (1-dt/tau_si)*I_si_vec[ii]   
+                
     
     print('done time stepping')
     return I_spd_vec, I_si_vec, I_sf_vec, j_sf_state, I_c, I_reset

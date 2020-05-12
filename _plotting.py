@@ -14,7 +14,7 @@ colors = color_dictionary()
 
 def plot_params():
     
-    plot_type = 'single_frame' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' #
+    plot_type = 'large' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' #
     
     pp = dict()
     
