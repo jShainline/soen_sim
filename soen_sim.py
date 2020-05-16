@@ -5,7 +5,7 @@ import time
 import pickle
 import copy
 
-from _functions import synaptic_response_function, synapse_time_stepper, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR, dendrite_time_stepper
+from _functions import synapse_time_stepper, synapse_time_stepper__Isf_ode, synapse_time_stepper__Isf_ode__spd_jj_test, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR, dendrite_time_stepper
 from _plotting import plot_dendritic_drive, plot_dendritic_integration_loop_current
 from util import physical_constants
 
@@ -111,7 +111,10 @@ class synapse():
         self.name = _name
         
         if 'num_jjs' in kwargs:
-            self.num_jjs = kwargs['num_jjs']
+            if 1 <= kwargs['num_jjs'] and kwargs['num_jjs'] <= 3:
+                self.num_jjs = kwargs['num_jjs']
+            else:
+                raise ValueError('[soens_sim] num_jjs must be 1, 2, or 3')
         else:
             self.num_jjs = 3
 
@@ -170,16 +173,56 @@ class synapse():
         else: 
             self.integration_loop_output_inductance = 200e-12 #default value, units of henries
         self.integration_loop_total_inductance = self.integration_loop_self_inductance+self.integration_loop_output_inductance
+        self.L_si = self.integration_loop_total_inductance
 
-        if 'synaptic_bias_current' in kwargs:
+        if 'synaptic_bias_currents' in kwargs:
             # if type(kwargs['synaptic_bias_current']) == int or type(kwargs['synaptic_bias_current']) == float or type(kwargs['synaptic_bias_current']) == np.float64:
-            if kwargs['synaptic_bias_current'] < 20e-6 or kwargs['synaptic_bias_current'] > 40e-6:
-                raise ValueError('[soens_sim] synaptic_bias_current associated with synaptic integration loop must be a real number between 22e-6 and 40e-6 (units of amps)')
-            else:
-                 self.synaptic_bias_current = kwargs['synaptic_bias_current']
+            self.synaptic_bias_currents = kwargs['synaptic_bias_currents']
+            if self.num_jjs == 1:
+                self.I_sy = self.synaptic_bias_currents[0]
+            if self.num_jjs == 2:
+                if len(self.synaptic_bias_currents) == 1:
+                    self.I_sy = self.synaptic_bias_currents[0]
+                    self.I_jtl = 36e-6
+                if len(self.synaptic_bias_currents) == 2:
+                    self.I_sy = self.synaptic_bias_currents[0]
+                    self.I_jtl = self.synaptic_bias_currents[1]
+            if self.num_jjs == 3:
+                if len(self.synaptic_bias_currents) == 1:
+                    self.I_sy = self.synaptic_bias_currents[0]
+                    self.I_jtl = 36e-6
+                    self.I_si = 35e-6
+                if len(self.synaptic_bias_currents) == 2:
+                    self.I_sy = self.synaptic_bias_currents[0]
+                    self.I_jtl = 36e-6
+                    self.I_si = self.synaptic_bias_currents[1]
+                if len(self.synaptic_bias_currents) == 3:
+                    self.I_sy = self.synaptic_bias_currents[0]
+                    self.I_jtl = self.synaptic_bias_currents[1]
+                    self.I_si = self.synaptic_bias_currents[2]
         else:
-            _synaptic_bias_current_default = 28e-6 #units of amps
-            self.synaptic_bias_current = _synaptic_bias_current_default
+            self.synaptic_bias_currents = [28e-6,36e-6,35e-6] #units of amps
+            self.I_sy = self.synaptic_bias_currents[0]
+            self.I_jtl = self.synaptic_bias_currents[1]
+            self.I_si = self.synaptic_bias_currents[2]
+            
+        if 'jtl_inductance' in kwargs:            
+            self.jtl_inductance = kwargs['jtl_inductance']
+            if self.num_jjs == 2:
+                self.L_jtl = self.jtl_inductance
+            if self.num_jjs == 3:
+                if len(self.jtl_inductance) == 1:
+                    self.L_jtl1 = self.jtl_inductance
+                    self.L_jtl2 = self.jtl_inductance
+                if len(self.jtl_inductance) == 2:
+                    self.L_jtl1 = self.jtl_inductance[0]
+                    self.L_jtl2 = self.jtl_inductance[1]
+        else:
+            if self.num_jjs == 2:
+                self.L_jtl = 77.5e-12 #units of henries
+            if self.num_jjs == 3:
+                self.L_jtl1 = 77.5e-12 #units of henries
+                self.L_jtl2 = 77.5e-12 #units of henries
 
         if 'integration_loop_bias_current' in kwargs:
             # if type(kwargs['loop_bias_current']) == int or type(kwargs['loop_bias_current']) == float:
@@ -223,8 +266,9 @@ class synapse():
         sim_params = self.synapse_model_params
         tf = sim_params['tf']
         dt = sim_params['dt']
-        time_vec = 1e6*np.arange(0,tf+dt,dt)
-        p = physical_constants()
+        # time_vec = 1e6*np.arange(0,tf+dt,dt)
+        time_vec = np.arange(0,tf+dt,dt)
+        # p = physical_constants()
         # input_spike_times = self.input_spike_times
         
         #setup input signal
@@ -233,59 +277,107 @@ class synapse():
         else:
             self.input_spike_times = []
         for ii in range(len(self.input_spike_times)):
-            self.input_spike_times[ii] = self.input_spike_times[ii]*1e6
+            # self.input_spike_times[ii] = self.input_spike_times[ii]*1e6
+            self.input_spike_times[ii] = self.input_spike_times[ii]
                 
-        #here currents are in uA. they are converted to A before passing back
-        I_sy = self.synaptic_bias_current*1e6
+        
+        # I_jtl = self.synaptic_bias_current
 
         #these values obtained by fitting to spice simulations
         #see matlab scripts in a4/calculations/nC/phenomenological_modeling...
-        if 'gamma1' in sim_params:
-            gamma1 = sim_params['gamma1']
-        else:
-            gamma1 = 0.9
-        if 'gamma2' in sim_params:
-            gamma2 = sim_params['gamma2']
-        else:
-            gamma2 = 0.158
-        if 'gamma3' in sim_params:
-            gamma3 = sim_params['gamma3']
-        else:
-            gamma3 = 3/4
+        # if 'gamma1' in sim_params:
+        #     gamma1 = sim_params['gamma1']
+        # else:
+        #     gamma1 = 0.9
+        # if 'gamma2' in sim_params:
+        #     gamma2 = sim_params['gamma2']
+        # else:
+        #     gamma2 = 0.158
+        # if 'gamma3' in sim_params:
+        #     gamma3 = sim_params['gamma3']
+        # else:
+        #     gamma3 = 3/4
 
         #these fits were obtained by comparing to spice simulations
         #see matlab scripts in a4/calculations/nC/phenomenological_modeling...
         
         # tau_rise = (1.294*I_sy-43.01)*1e-9
-        tau_rise = (0.038359*I_sy**2-0.778850*I_sy-0.441682)#*1e-9
-        self.integration_loop_total_inductance = self.integration_loop_self_inductance+self.integration_loop_output_inductance
-        _reference_inductance = 775e-9 #inductance at which I_0 fit was performed
-        _scale_factor = _reference_inductance/self.integration_loop_total_inductance
+        # tau_rise = (0.038359*I_sy**2-0.778850*I_sy-0.441682)#*1e-9
+        # self.integration_loop_total_inductance = self.integration_loop_self_inductance+self.integration_loop_output_inductance
+        # _reference_inductance = 775e-9 #inductance at which I_0 fit was performed
+        # _scale_factor = _reference_inductance/self.integration_loop_total_inductance
         #I_0 = (0.06989*I_sy**2-3.948*I_sy+53.73)*_scale_factor #from earlier model assuming 10uA spd
         
         # I_0 = (0.006024*I_sy**2-0.202821*I_sy+1.555543)*_scale_factor # in terms of currents
-        I_0 = 1e6*(2.257804*I_sy**2-76.01606*I_sy+583.005805)*p['Phi0']/self.integration_loop_total_inductance # in terms of n_fq
+        # I_0 = 1e6*(2.257804*I_sy**2-76.01606*I_sy+583.005805)*p['Phi0']/self.integration_loop_total_inductance # in terms of n_fq
         
         #I_si_sat is actually a function of I_b (loop_current_bias). The fit I_si_sat(I_b) has not yet been performed (20200319)
-        I_si_sat = 19.7
+        # I_si_sat = 19.7
 
-        tau_fall = copy.deepcopy(self.integration_loop_time_constant)*1e6
+        # tau_fall = copy.deepcopy(self.integration_loop_time_constant)*1e6
+        tau_fall = copy.deepcopy(self.integration_loop_time_constant)
 
         # I_si_vec = synaptic_response_function(time_vec,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
                  # synapse_time_stepper(time_vec,input_spike_times,     I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
         # I_si_vec = synapse_time_stepper(time_vec,self.input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall)
-        L3 = self.integration_loop_total_inductance
-        I_spd_vec, I_si_vec, I_sf_vec, j_sf_state, I_c, I_reset = synapse_time_stepper(time_vec,self.input_spike_times,self.num_jjs,L3,I_sy,tau_fall)
-
-        self.I_si = I_si_vec*1e-6
-        self.I_spd = I_spd_vec*1e-6
-        self.I_sf = I_sf_vec*1e-6
-        self.j_sf_state = j_sf_state
-        self.time_vec = time_vec*1e-6
-        self.I_c = 1e-6*I_c
-        self.I_reset = 1e-6*I_reset
+        # L3 = self.integration_loop_total_inductance
+        
+        # currents are in uA for time stepper
+        # inductances are in pH for time stepper
+        if self.num_jjs == 1:
+            I_bias_list = [copy.deepcopy(self.I_sy)*1e6]
+            L_list = [copy.deepcopy(self.L_si)*1e12,]
+        if self.num_jjs == 2:
+            I_bias_list = [copy.deepcopy(self.I_sy)*1e6,copy.deepcopy(self.I_si)*1e6]
+            L_list = [copy.deepcopy(self.L_jtl)*1e12,copy.deepcopy(self.L_si)*1e12]
+        if self.num_jjs == 3:
+            I_bias_list = [copy.deepcopy(self.I_sy)*1e6,copy.deepcopy(self.I_jtl)*1e6,copy.deepcopy(self.I_si)*1e6]
+            L_list = [copy.deepcopy(self.L_jtl1)*1e12,copy.deepcopy(self.L_jtl2)*1e12,copy.deepcopy(self.L_si)*1e12]
+                 
+        # I_spd_vec, I_si_vec, I_sf_vec, j_sf_state, I_c, I_reset = synapse_time_stepper(time_vec,self.input_spike_times,self.num_jjs,L_list,I_bias_list,tau_fall)
+        
+        L_list = [247.5e-9,copy.deepcopy(self.L_si)]
+        r_list = [8.25,L_list[1]/tau_fall]
+        I_bias_list = [20e-6,copy.deepcopy(self.I_sy)]
+        I_si_vec, I_sf_vec, j_sf_state = synapse_time_stepper__Isf_ode(time_vec,self.input_spike_times,L_list,r_list,I_bias_list)
+        
+        self.I_si = I_si_vec
+        self.I_sf = I_sf_vec
+        # self.I_spd = I_sf_vec+I_si_vec-copy.deepcopy(self.I_sy)
+        self.I_spd = I_sf_vec-copy.deepcopy(self.I_sy)
+        self.time_vec = time_vec
         for ii in range(len(self.input_spike_times)):
-            self.input_spike_times[ii] = self.input_spike_times[ii]*1e-6
+            self.input_spike_times[ii] = self.input_spike_times[ii]
+        
+        # L_list = [247.5e-9]
+        # r_list = [8.25]
+        # I_bias_list = [20e-6,copy.deepcopy(self.I_sy)]
+        # I_sf_vec, V_sf_vec, r_spd1_vec, j_sf_state = synapse_time_stepper__Isf_ode__spd_jj_test(time_vec,self.input_spike_times,L_list,r_list,I_bias_list)
+        
+        # self.V_sf = V_sf_vec
+        # self.I_sf = I_sf_vec
+        # self.r_spd1 = r_spd1_vec
+        # self.j_sf_state = j_sf_state
+        # self.time_vec = time_vec
+        # for ii in range(len(self.input_spike_times)):
+        #     self.input_spike_times[ii] = self.input_spike_times[ii]
+
+        # self.I_si = I_si_vec*1e-6
+        # self.I_spd = I_spd_vec*1e-6
+        # self.I_sf = I_sf_vec*1e-6
+        # # self.j_sf_state = j_sf_state
+        # self.time_vec = time_vec*1e-6
+        # # self.I_c = 1e-6*I_c
+        # # self.I_reset = 1e-6*I_reset
+        # for ii in range(len(self.input_spike_times)):
+        #     self.input_spike_times[ii] = self.input_spike_times[ii]*1e-6
+        
+        # self.I_si = I_si_vec
+        # self.I_spd = I_spd_vec
+        # self.I_sf = I_sf_vec
+        # self.time_vec = time_vec
+        # for ii in range(len(self.input_spike_times)):
+        #     self.input_spike_times[ii] = self.input_spike_times[ii]
 
         return self
     

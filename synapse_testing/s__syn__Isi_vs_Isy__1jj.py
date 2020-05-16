@@ -42,8 +42,8 @@ for ii in range(num_files): # range(1): #
         
     # initialize synapse    
     synapse_1 = synapse('sy', num_jjs = num_jjs, integration_loop_temporal_form = 'exponential', 
-                        integration_loop_time_constant = tau_si, integration_loop_self_inductance = L_si, synaptic_bias_current = I_sy_vec[ii], 
-                        integration_loop_output_inductance = 0e-12,integration_loop_bias_current = 35e-6, input_signal_name = 'in', 
+                        integration_loop_time_constant = tau_si, integration_loop_self_inductance = L_si, synaptic_bias_currents = [I_sy_vec[ii]], 
+                        integration_loop_output_inductance = 0e-12, integration_loop_bias_current = 35e-6, input_signal_name = 'in', 
                         synapse_model_params = sim_params)
     
     synapse_1.run_sim() 

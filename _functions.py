@@ -13,18 +13,233 @@ from _plotting import plot_wr_comparison, plot_error_mat # plot_dendritic_drive,
 
 #%%
 
-def synapse_time_stepper(time_vec,spike_times,num_jjs,L3,I_sy,tau_si):
+def synapse_time_stepper__Isf_ode__spd_jj_test(time_vec,spike_times,L_list,r_list,I_bias_list):
     
-    I_c = 40
+    L_spd = L_list[0]
+        
+    r_spd2 = r_list[0]
+    
+    I_spd = I_bias_list[0]
+    I_sy = I_bias_list[1] 
+    
+    # Ic = 40
+    Ic = 40e-6
+    I_reset = 38.80656547520097e-6 # 38.81773424470013e-6
+    
+    # print('L_spd = {}'.format(L_spd))
+    # print('r_spd2 = {}'.format(r_spd2))
+    # print('I_spd = {}'.format(I_spd))  
+    # print('I_sy = {}'.format(I_sy))
+    # pause(2)
+    
+    nt = len(time_vec)
+    dt = time_vec[1]-time_vec[0]
+        
+    I_sf_vec = np.zeros([nt]) 
+    I_sf_vec[0] = I_sy # initial condition
+    V_sf_vec = np.zeros([nt])
+    r_spd1_vec = np.zeros([nt])
+
+    j_sf_state = ['below_Ic']
+    print('starting time stepping ...')
+    for ii in range(nt-1):
+            
+        _pt = time_vec[ii] # present time
+        # print('_pt = {}'.format(_pt))
+                
+        # find most recent spike time  
+        st_ind = (np.abs(spike_times[:] - _pt)).argmin()
+        
+        if ii > 0:
+                        
+            if st_ind == 0 and spike_times[st_ind] > _pt: # first spike has not arrived
+                j_sf_state.append('below_Ic')
+            if st_ind > 0 and spike_times[st_ind] > _pt: # go back to previous spike
+                st_ind -= 1
+            if spike_times[st_ind] <= _pt: # the case that counts                  
+                
+                if I_sf_vec[ii] > Ic:
+                    j_sf_state.append('above_Ic')                    
+                if I_sf_vec[ii] <= Ic and I_sf_vec[ii] > I_reset:
+                    if j_sf_state[ii-1] == 'above_Ic' or j_sf_state[ii-1] == 'latched':
+                        j_sf_state.append('latched')
+                    else:
+                        j_sf_state.append('below_Ic')
+                if I_sf_vec[ii] <= I_reset:
+                    j_sf_state.append('below_Ic')
+                
+                # step forward Isf
+                r_spd1_vec[ii+1] = r_spd1_form(_pt - spike_times[st_ind])
+                if j_sf_state[ii] == 'above_Ic' or j_sf_state[ii] == 'latched':
+                    V_sf_vec[ii+1] = Vsf_of_Isf(I_sf_vec[ii])
+                elif j_sf_state[ii] == 'below_Ic':
+                    V_sf_vec[ii+1] = 0
+                
+        I_sf_vec[ii+1] = I_sf_vec[ii] + dt*(r_spd1_vec[ii+1]/L_spd)*(I_spd+I_sy-I_sf_vec[ii]) - dt*(r_spd2/L_spd)*(I_sf_vec[ii]-I_sy) - dt*V_sf_vec[ii+1]/L_spd
+                
+    print('done time stepping')
+    return I_sf_vec, V_sf_vec, r_spd1_vec, j_sf_state
+
+
+def r_spd1_form(t):
+    
+    _dt = 100e-12 # units of s
+    _Dt = 200e-12 # units of s
+    _r_spd1_max = 5e3
+    
+    r_spd1 = 0
+    if t <= _dt:
+        r_spd1 = (_r_spd1_max/_dt)*t
+    if _dt < t and t < _dt+_Dt:
+        r_spd1 = _r_spd1_max
+    if _dt+_Dt <= t and t <= 2*_dt+_Dt:
+        r_spd1 = _r_spd1_max-(_r_spd1_max/_dt)*(t-(_dt+_Dt))
+    
+    return r_spd1
+
+
+def Vsf_of_Isf(Isf):
+    
+    # print('Isf = {}'.format(Isf))
+    # return 235.19243476368464*( (Isf/38.81773424470013e-6)**3.4193613971219454 - 1 )**0.3083945546392435 # unit of uV
+    return 1e-6*236.878860808991*( (Isf/38.80656547520097e-6)**3.3589340685815574 - 1 )**0.310721713450461 # unit of V
+
+
+def synapse_time_stepper__Isf_ode(time_vec,spike_times,L_list,r_list,I_bias_list):
+    
+    L_spd = L_list[0]
+    L_si = L_list[1]
+        
+    r_spd2 = r_list[0]
+    r_si = r_list[1]
+    
+    I_spd = I_bias_list[0]
+    I_sy = I_bias_list[1] 
+    
+    Ic = 40e-6
+    I_reset = 38.80656547520097e-6
+    
+    # print('L_spd = {}'.format(L_spd))
+    # print('L_si = {}'.format(L_si))
+    # print('r_spd2 = {}'.format(r_spd2))
+    # print('r_si = {}'.format(r_si))
+    # print('I_spd = {}'.format(I_spd))  
+    # print('I_sy = {}'.format(I_sy)) 
+    # print('I_fq = {}'.format(I_fq))
+    # pause(2)
+    
+    nt = len(time_vec)
+    dt = time_vec[1]-time_vec[0]
+        
+    I_si_vec = np.zeros([nt])
+    I_sf_vec = np.zeros([nt])
+    I_sf_vec[0] = I_sy # initial condition
+    V_sf_vec = np.zeros([nt])
+    r_spd1_vec = np.zeros([nt])
+    
+    j_sf_state = ['below_Ic']
+    print('starting time stepping ...')
+    I_sy_0 = I_sy
+    for ii in range(nt-1):
+                   
+        _pt = time_vec[ii] # present time
+                
+        # find most recent spike time  
+        st_ind = (np.abs(spike_times[:] - _pt)).argmin()
+        # print('\nii = {}'.format(ii))
+        # print('_pt = {}'.format(_pt))
+        # print('st_ind = {}'.format(st_ind))
+        # print('spike_times[st_ind] = {}'.format(spike_times[st_ind]))
+                
+        if ii > 0:
+                        
+            if st_ind == 0 and spike_times[st_ind] > _pt: # first spike has not arrived
+                j_sf_state.append('below_Ic')
+                # print('case a1')
+            if st_ind > 0 and spike_times[st_ind] > _pt: # go back to previous spike
+                st_ind -= 1
+                # print('case a2')
+            if spike_times[st_ind] <= _pt: # the case that counts                  
+                # print('case a3')
+                
+                I_sf_tot = I_sf_vec[ii] - I_si_vec[ii]
+                if I_sf_tot > Ic:
+                    j_sf_state.append('above_Ic')    
+                    # print('case b1')
+                if I_sf_tot <= Ic and I_sf_tot > I_reset:
+                    # print('case b2')
+                    if j_sf_state[ii-1] == 'above_Ic' or j_sf_state[ii-1] == 'latched':
+                        j_sf_state.append('latched')
+                        # print('case b3')
+                    else:
+                        j_sf_state.append('below_Ic')
+                        # print('case b4')
+                if I_sf_tot <= I_reset:
+                    j_sf_state.append('below_Ic')
+                    # print('case b5')
+                
+                # calculate r_spd1, V_sf
+                r_spd1_vec[ii+1] = r_spd1_form(_pt - spike_times[st_ind])
+                
+                if j_sf_state[ii] == 'above_Ic' or j_sf_state[ii] == 'latched':
+                    V_sf_vec[ii+1] = Vsf_of_Isf(I_sf_tot)                    
+                elif j_sf_state[ii] == 'below_Ic':
+                    V_sf_vec[ii+1] = 0                       
+           
+        # update I_sf and I_si
+        # I_sy = I_sy_0 - I_si_vec[ii]
+        I_sf_vec[ii+1] = ( I_sf_vec[ii] 
+                          + dt*(r_spd1_vec[ii+1]/L_spd)*(I_spd+I_sy-I_sf_vec[ii]) 
+                          - dt*(r_spd2/L_spd)*(I_sf_vec[ii]-I_sy)
+                          -dt*V_sf_vec[ii+1]/L_spd )
+        # I_sf_vec[ii+1] = ( I_sf_vec[ii] 
+        #                   + dt*(r_spd1_vec[ii+1]/L_spd)*(I_spd+I_sy-I_sf_vec[ii]-I_si_vec[ii]) 
+        #                   - dt*(r_spd2/L_spd)*(I_sf_vec[ii]+I_si_vec[ii]-I_sy)
+        #                   -dt*(r_si/L_si)*I_si_vec[ii]
+        #                   -dt*V_sf_vec[ii+1]*(1/L_spd+1/L_si) )
+        # I_sf_vec[ii+1] = ( I_sf_vec[ii] 
+        #                   + dt*(r_spd1_vec[ii+1]/L_spd)*(I_spd-I_sf_vec[ii]+I_si_vec[ii]+I_sy) 
+        #                   - dt*(r_spd2/L_spd)*(I_sf_vec[ii]-I_si_vec[ii]-I_sy)
+        #                   -dt*(r_si/L_si)*I_si_vec[ii]
+        #                   +dt*V_sf_vec[ii+1]*(1/L_si-1/L_spd) )
+        
+        I_si_vec[ii+1] = dt*V_sf_vec[ii+1]/L_si + (1-dt*r_si/L_si)*I_si_vec[ii]
+            # print('ii = {}; I_si_vec[ii+1] = {}'.format(ii,I_si_flux_vec[ii+1]))
+        
+        # print('j_sf_state = {}'.format(j_sf_state[ii]))
+        
+    print('done time stepping')
+    return I_si_vec, I_sf_vec, j_sf_state
+
+
+def synapse_time_stepper(time_vec,spike_times,num_jjs,L_list,I_bias_list,tau_si): 
+    
+    # inductances in L_list = [L_jtl1,L_jtl2,L_si] with units of picohenries 
+    
+    I_bias_sy = I_bias_list[0]
+    if num_jjs == 1:
+        L_si = L_list[0]
+    if num_jjs == 2:
+        I_bias_si = I_bias_list[1]
+        L_jtl = L_list[0]
+        L_si = L_list[1]
+    if num_jjs == 3:
+        I_bias_jtl = I_bias_list[1]
+        I_bias_si = I_bias_list[2]
+        L_jtl1 = L_list[0]
+        L_jtl2 = L_list[1]
+        L_si = L_list[2]
+    
+    Ic = 40
     I_sf_hyst = 1.1768
-    I_reset = I_c - I_sf_hyst
+    I_reset = Ic - I_sf_hyst
     
     st_ind_last = 0
     spd_current_memory = 0
         
     p = physical_constants()
     Phi0 = p['Phi0']
-    I_fq = 1e6*Phi0/L3
+    I_fq = 1e6*Phi0/(L_si*1e-12)
         
     # print('Isy = {}'.format(I_sy))
     
@@ -70,7 +285,7 @@ def synapse_time_stepper(time_vec,spike_times,num_jjs,L3,I_sy,tau_si):
         
         if num_jjs == 1:
             
-            I_sf = I_sy
+            I_sf = I_bias_sy
             for ii in range(nt-1):
                 # dt = time_vec[ii+1]-time_vec[ii]
                 
@@ -83,7 +298,7 @@ def synapse_time_stepper(time_vec,spike_times,num_jjs,L3,I_sy,tau_si):
                 
                 if ii > 0:
                     
-                    I_sf = I_sy+I_spd_vec[ii-1]-I_si_vec[ii-1]
+                    I_sf = I_bias_sy+I_spd_vec[ii-1]-I_si_vec[ii-1]
                     I_sf_vec[ii] = I_sf
                         
                     if st_ind == 0 and spike_times[st_ind] > _pt: # first spike has not arrived
@@ -100,11 +315,11 @@ def synapse_time_stepper(time_vec,spike_times,num_jjs,L3,I_sy,tau_si):
                     if spike_times[st_ind] <= _pt and _pt - spike_times[st_ind] < spd_duration: # the case that counts
                         # print('code 4')                    
                         
-                        if I_sf > I_c:
+                        if I_sf > Ic:
                             j_sf_state.append('above_Ic')
                             bias_lower = I_si_vec[ii-1] # np.max([I_si_vec[ii-1]-I_sf_hyst,0])
                             
-                        if I_sf <= I_c and I_sf >= I_reset:
+                        if I_sf <= Ic and I_sf >= I_reset:
                             if j_sf_state[ii-1] == 'above_Ic' or j_sf_state[ii-1] == 'latched':
                                 j_sf_state.append('latched')
                                 bias_lower = I_si_vec[ii-1] # np.max([I_si_vec[ii-1]-I_sf_hyst,0])
@@ -121,7 +336,7 @@ def synapse_time_stepper(time_vec,spike_times,num_jjs,L3,I_sy,tau_si):
                     bias_lower = 0
                         
                 #this block to avoid spd drive going too low at the onset of each spike
-                I_sy_ind_spd = (np.abs(I_sy_list__spd[:] - (I_sy-bias_lower) )).argmin()
+                I_sy_ind_spd = (np.abs(I_sy_list__spd[:] - (I_bias_sy-bias_lower) )).argmin()
                 spd_i = spd_response_array[I_sy_ind_spd]            
                 dt_spk = _pt - spike_times[st_ind]                
                 spd_t_ind  = (np.abs(spd_t[:] - dt_spk)).argmin()
@@ -137,7 +352,7 @@ def synapse_time_stepper(time_vec,spike_times,num_jjs,L3,I_sy,tau_si):
                 
                 st_ind_last = st_ind
                 
-                I_drive = spd_current+I_sy-I_c # -I_c in there because all data so far is with 40uA JJs and this is how I_drive is defined when making rate array
+                I_drive = spd_current+I_bias_sy-Ic # -Ic in there because all data so far is with 40uA JJs and this is how I_drive is defined when making rate array
                 # # I_sf = spd_current+I_sy-I_si_vec[ii-1]
                 # I_drive = I_drive_real-I_c # -I_c in there because all data so far is with 40uA JJs and this is how I_drive is defined when making rate array
                 
@@ -162,16 +377,22 @@ def synapse_time_stepper(time_vec,spike_times,num_jjs,L3,I_sy,tau_si):
                 
         if num_jjs == 3:
             
-            spd_duration = spd_t[-1]
-            I_sy_ind_spd = (np.abs( I_sy_list__spd[:] - I_sy )).argmin()
-            # print('I_sy_ind_spd = {}'.format(I_sy_ind_spd))
-            spd_i = spd_response_array[I_sy_ind_spd]
-            for ii in range(nt-1):
-                
-                _pt = time_vec[ii] # present time
-                # print('ii = {}, present time = {}us'.format(ii,_pt))
+            # make I_sf list
+            I_sf_list__spd = np.zeros([len(I_sy_list__spd)])
+            for qq in range(len(I_sy_list__spd)):
+                I1, I2, I3, Ijsf, Ijtl, Ijsi, Lj1, Lj2, Lj3  = synapse_current_distribution(Ic,L_jtl1,L_jtl2,L_si,I_bias_list,I_bias_sy,I_bias_jtl,I_bias_si)
+                for pp in range(5):
+                    I1, I2, I3, Ijsf, Ijtl, Ijsi, Ljsf, Ljtl, Ljsi = synapse_current_distribution(Ic,L_jtl1,L_jtl2,L_si,I_bias_list,Ijsf,Ijtl,Ijsi)
+                I_sf_list__spd[qq] = Ijsf
+            
+            # spd_duration = spd_t[-1]
+            # print('L_jtl1 = {}; L_jtl2 = {}; L_si = {}'.format(L_jtl1,L_jtl2,L_si))
+            I1, I2, I3, Ijsf, Ijtl, Ijsi, Lj1, Lj2, Lj3  = synapse_current_distribution(Ic,L_jtl1,L_jtl2,L_si,I_bias_list,I_bias_sy,I_bias_jtl,I_bias_si)
+            I_bias_list_2_perm = I_bias_list[2]
+            for ii in range(nt-1):                
                
-                # find most recent spike time  
+                # find most recent spike time
+                _pt = time_vec[ii] # present time  
                 st_ind = (np.abs(spike_times[:] - _pt)).argmin()
                 gf = 0
                 if st_ind == 0 and spike_times[st_ind] > _pt:
@@ -188,8 +409,16 @@ def synapse_time_stepper(time_vec,spike_times,num_jjs,L3,I_sy,tau_si):
                     
                     dt_spk = _pt - spike_times[st_ind]
                     spd_t_ind  = (np.abs(spd_t[:] - dt_spk)).argmin()
-                    # spd_current = spd_i[spd_t_ind]
                                     
+                    # update current distribution throughout circuit and JJ inductances
+                    I_bias_list[2] = I_bias_list_2_perm - I_si_vec[ii]                                
+                    I1, I2, I3, Ijsf, Ijtl, Ijsi, Ljsf, Ljtl, Ljsi = synapse_current_distribution(Ic,L_jtl1,L_jtl2,L_si,I_bias_list,Ijsf,Ijtl,Ijsi)
+                    I_sf_ind_spd = (np.abs( I_sf_list__spd[:] - Ijsf )).argmin()
+                    spd_i = spd_response_array[I_sf_ind_spd]
+                    
+                    # I_sy_ind_spd = (np.abs( I_sy_list__spd[:] - I_bias_sy )).argmin()
+                    # spd_i = spd_response_array[I_sy_ind_spd]
+                    
                     # this block to avoid spd drive going too low at the onset of each spike 
                     if st_ind - st_ind_last == 1:
                         spd_current = np.max([I_spd_vec[ii-1],spd_i[spd_t_ind]])
@@ -204,14 +433,28 @@ def synapse_time_stepper(time_vec,spike_times,num_jjs,L3,I_sy,tau_si):
                     
                     st_ind_last = st_ind
                     
-                    I_drive = I_sy+spd_current-I_c
+                    # La = L_si*Ljsi/(L_si+Ljsi)
+                    # Lb = (L_jtl2+La)*Ljtl/(L_jtl2+La+Ljtl)
+                    # tn = (L_jtl2+La)/(L_jtl2+La+Ljtl)
+                    # print('La = {}, tn = {}'.format(La,tn))
+                    # I_drive = Ijsf+spd_current*tn-Ic
+                    # I_drive = I_bias_sy+spd_current*tn-Ic
+                    # I_drive = I_bias_sy+spd_current-Ic
+                    # I_drive = Ijsf+spd_current-Ic
+                    # I_drive = Ijsf-Ic
+                    
+                    # I_loop2_from_si = ( Ljsi/(L_jtl2+Ljtl) )*I_si_vec[ii]
+                    # I_loop1_from_loop2 = ( Ljtl/(L_jtl1+Ljsf) )*I_loop2_from_si
+                    # I_drive = I_bias_sy+spd_current-I_loop1_from_loop2-Ic
+                    
+                    I_drive = I_bias_sy+spd_current-Ic
                     if I_drive < np.min(I_drive_list):
                         gf = 0
                     else:
                         I_drive_ind = (np.abs(I_drive_list[:] - I_drive)).argmin()
                         I_si_ind = (np.abs(I_si_array[I_drive_ind] - I_si_vec[ii])).argmin()
-                        gf = dt*I_fq*rate_array[I_drive_ind][I_si_ind]
-                        # gf = dt*I_fq*master_rate_matrix__imported[I_drive_ind,I_si_ind] # growth factor
+                        gf = dt*I_fq*rate_array[I_drive_ind][I_si_ind] # growth factor
+                        # gf = dt*I_fq*master_rate_matrix__imported[I_drive_ind,I_si_ind] 
                        
                         # linear interpolation
                         # rate = np.interp(spd_current,I_drive_vec__imported,master_rate_matrix__imported[:,I_si_ind])
@@ -219,165 +462,41 @@ def synapse_time_stepper(time_vec,spike_times,num_jjs,L3,I_sy,tau_si):
                
                 I_si_vec[ii+1] = gf + (1-dt/tau_si)*I_si_vec[ii] 
                 
-            # I_sy_ind_spd = (np.abs(I_sy_list__imprt_spd[:] - I_sy )).argmin()
-            # for ii in range(nt-1):
-            
-            #     _pt = time_vec[ii] # present time
-            #     # print('ii = {:d}, present time = {:6.4f}us, j_sf_state = {}'.format(ii,_pt,j_sf_state[ii]))
-                
-            #     # find most recent spike time  
-            #     # gf = 0
-            #     st_ind = (np.abs(spike_times[:] - _pt)).argmin()
-                
-            #     if st_ind == 0 and spike_times[st_ind] > _pt: # first spike has not arrived
-            #         gf = 0 # growth factor
-            #         j_sf_state.append('below_Ic')
-            #         # print('code 1: st_ind == 0 and spike_times[st_ind] > _pt')
-            #     if st_ind > 0 and spike_times[st_ind] > _pt: # go back to previous spike
-            #         st_ind -= 1
-            #         # print('code 2: st_ind > 0 and spike_times[st_ind] > _pt')
-            #     if _pt - spike_times[st_ind] > spd_duration: # outside SPD pulse range
-            #         gf = 0 # growth factor
-            #         j_sf_state.append('below_Ic')
-            #         # print('code 3: _pt - spike_times[st_ind] > spd_duration')
-            #     if spike_times[st_ind] <= _pt and _pt - spike_times[st_ind] < spd_duration: # the case that counts
-            #         # print('code 4') 
-                
-            #         spd_i = spd_response_array__imprt[I_sy_ind_spd]            
-            #         dt_spk = _pt - spike_times[st_ind]                
-            #         spd_t_ind  = (np.abs(spd_t[:] - dt_spk)).argmin()
-            #         if st_ind - st_ind_last == 1:
-            #             spd_current = np.max([I_spd_vec[ii-1],spd_i[spd_t_ind]])
-            #             spd_current_memory = spd_current
-            #         if spd_current_memory > 0 and spd_i[spd_t_ind] < spd_current_memory:
-            #             spd_current = spd_current_memory
-            #         else:
-            #             spd_current = spd_i[spd_t_ind]
-            #             spd_current_memory = 0
-            #         I_spd_vec[ii] = spd_current
-                
-            #         I_drive = spd_current+I_sy
-            #         I_drive_ind = (np.abs(I_drive_list[:] - I_drive )).argmin() 
-            #         I_si_ind = (np.abs(np.asarray(I_si_array[I_drive_ind][:]) - I_si_vec[ii])).argmin()
-            #         r_si = rate_array[I_drive_ind][I_si_ind]
-            #         # r_sf = syn_1jj_rate_vs_Isf(I_sf) 
-                      
-            #         #no interpolation
-            #         gf = dt*I_fq*r_si # growth factor
-                    
-            #     I_si_vec[ii+1] = gf + (1-dt/tau_si)*I_si_vec[ii]   
-                
-    
     print('done time stepping')
-    return I_spd_vec, I_si_vec, I_sf_vec, j_sf_state, I_c, I_reset
+    return I_spd_vec, I_si_vec, I_sf_vec, j_sf_state, Ic, I_reset
 
-# def synapse_time_stepper(time_vec,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
-
-#     I_si_mat = np.zeros([len(time_vec),len(input_spike_times)])
-
-#     for ii in range(len(input_spike_times)):
-#         ind_vec = np.argwhere( time_vec > input_spike_times[ii] )
-#         I_si_vec_temp = np.sum(I_si_mat, axis = 1)
-#         # I_si_mat(ind_vec(1:end),ii) = f__synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si_vec_temp(ind_vec(ii)-1))*(1-exp(-(time_vec(ind_vec(1:end))-input_spike_times(ii))/tau_rise)).*exp(-(time_vec(ind_vec(1:end))-input_spike_times(ii))/tau_fall);
-#         for jj in range(len(ind_vec)):
-#             if time_vec[ind_vec[jj]]-input_spike_times[ii] <= tau_rise:
-#                 I_si_mat[ind_vec[jj],ii] = synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si_vec_temp[ind_vec[jj]-1],tau_rise,tau_fall)*\
-#                 ( (1/tau_rise**gamma3)*( time_vec[ind_vec[jj]] - input_spike_times[ii] )**gamma3 )*\
-#                 np.exp(tau_rise/tau_fall)*\
-#                 np.exp(-(time_vec[ind_vec[jj]]-input_spike_times[ii])/tau_fall)
-#             else:
-#                 I_si_mat[ind_vec[jj],ii] = synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si_vec_temp[ind_vec[jj]-1],tau_rise,tau_fall)*\
-#                 np.exp(tau_rise/tau_fall)*\
-#                 np.exp(-(time_vec[ind_vec[jj]]-input_spike_times[ii])/tau_fall)
-#     I_si_vec = np.sum(I_si_mat, axis = 1);
-
-#     return I_si_vec
-
-
-# def synapse_time_stepper(time_vec,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
     
-#     # print('I_0 = {}, I_si_sat = {}, tau_rise = {}, tau_fall = {}'.format(I_0,I_si_sat,tau_rise,tau_fall))
-#     # print('gamma1 = {}, gamma2 = {}, gamma3 = {}'.format(gamma1,gamma2,gamma3))
-#     # num_tau_retain = 15    
-#     # idx_start = (np.abs(input_spike_times-(_pt-num_tau_retain*tau_fall))).argmin()
-#     num_spikes = len(input_spike_times)
-#     # print(input_spike_times)
-#     I_si_vec = np.zeros([len(time_vec),1])    
-#     for kk in range(len(time_vec)):
-#         _pt = time_vec[kk]#present time
-#         I_si = 0
-#         for ii in range(num_spikes):
-#             _st = input_spike_times[ii]#spike time under consideration
-            
-#             if _pt > _st:
-                
-#                 if _pt-_st <= tau_rise:
-                    
-#                     I_si += ( synaptic_response_prefactor(I_0,I_si_vec[kk-1],I_si_sat,gamma1,gamma2,tau_rise,tau_fall)
-#                          *( (_pt-_st)/tau_rise )**gamma3
-#                          *np.exp(-(_pt-_st)/tau_fall) )
-#                          #                          *np.exp(tau_rise/tau_fall)
-                    
-#                 else:
-                    
-#                     I_si += ( synaptic_response_prefactor(I_0,I_si_vec[kk-1],I_si_sat,gamma1,gamma2,tau_rise,tau_fall)     
-#                          *np.exp(-(_pt-_st)/tau_fall) )                    
-#                         # *np.exp(tau_rise/tau_fall)
-#                     #
-                 
-#                 I_si_vec[kk] = I_si
-                
-#     return I_si_vec
+def synapse_current_distribution(Ic,L1,L2,L3,Ib,Ij1,Ij2,Ij3):
+    
+    Ib1 = Ib[0]
+    Ib2 = Ib[1]
+    Ib3 = Ib[2]
+    
+    Lj1 = Ljj_pH(Ic,Ij1)
+    Lj2 = Ljj_pH(Ic,Ij2)
+    Lj3 = Ljj_pH(Ic,Ij3)
+    
+    # print('Lj1 = {}; Lj2 = {}; Lj3 = {}'.format(Lj1,Lj2,Lj3))
+        
+    I1 = ( (-Lj2*(Ib2*L2*L3+Ib3*L3*Lj3+Ib2*(L2+L3)*Lj3)+Ib1*Lj1*(L3*(L2+Lj2)+(L2+L3+Lj2)*Lj3))/
+                (L2*L3*(L1+Lj1)+L3*(L1+L2+Lj1)*Lj2+((L2+L3)*(L1+Lj1)+(L1+L2+L3+Lj1)*Lj2)*Lj3) )
 
-def synaptic_response_prefactor(I_0,I_si,I_si_sat,gamma1,gamma2,tau_rise,tau_fall):
+    I2 = ( (-Ib3*L3*(L1+Lj1+Lj2)*Lj3+Ib1*Lj1*Lj2*(L3+Lj3)+Ib2*(L1+Lj1)*Lj2*(L3+Lj3))/
+                (L2*L3*(L1+Lj1)+L3*(L1+L2+Lj1)*Lj2+((L2+L3)*(L1+Lj1)+(L1+L2+L3+Lj1)*Lj2)*Lj3) )
 
-    if I_si >= 0 and I_si < I_si_sat:
-        # I_prefactor = min([I_0*(1-(I_si/I_si_sat)**gamma1)**gamma2, (I_si_sat-I_si)*np.exp(tau_rise/tau_fall)]);
-        I_prefactor = np.min([I_0*(1-(I_si/I_si_sat)**gamma1)**gamma2,(I_si_sat-I_si)])
-    else:
-        I_prefactor = 0
-
-    return I_prefactor
-
-
-# def synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si,tau_rise,tau_fall):
-
-#     if I_si >= 0 and I_si < I_si_sat:
-#         A = I_0
-#         I_prefactor = min([A*(1-(I_si/I_si_sat)**gamma1)**gamma2, (I_si_sat-I_si)*np.exp(tau_rise/tau_fall)]);
-#         # I_prefactor = A*(1-log(I_si/I_si_sat)/log(gamma1))^gamma2;
-#         # I_prefactor = I_0*(I_si_sat-I_si)/I_si_sat
-#         # I_prefactor = I_0*(1-exp((I_si_sat-I_si)/I_si_sat))
-#     else:
-#         I_prefactor = 0
-
-#     #print('\n\nI_si = %g',I_si)
-#     #print('\n\nI_prefactor = %g',I_prefactor)
-
-#     return I_prefactor
-
-
-def synaptic_response_function(time_vec,input_spike_times,I_0,I_si_sat,gamma1,gamma2,gamma3,tau_rise,tau_fall):
-
-    I_si_mat = np.zeros([len(time_vec),len(input_spike_times)])
-
-    for ii in range(len(input_spike_times)):
-        ind_vec = np.argwhere( time_vec > input_spike_times[ii] )
-        I_si_vec_temp = np.sum(I_si_mat, axis = 1)
-        # I_si_mat(ind_vec(1:end),ii) = f__synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si_vec_temp(ind_vec(ii)-1))*(1-exp(-(time_vec(ind_vec(1:end))-input_spike_times(ii))/tau_rise)).*exp(-(time_vec(ind_vec(1:end))-input_spike_times(ii))/tau_fall);
-        for jj in range(len(ind_vec)):
-            if time_vec[ind_vec[jj]]-input_spike_times[ii] <= tau_rise:
-                I_si_mat[ind_vec[jj],ii] = synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si_vec_temp[ind_vec[jj]-1],tau_rise,tau_fall)*\
-                ( (1/tau_rise**gamma3)*( time_vec[ind_vec[jj]] - input_spike_times[ii] )**gamma3 )*\
-                np.exp(tau_rise/tau_fall)*\
-                np.exp(-(time_vec[ind_vec[jj]]-input_spike_times[ii])/tau_fall)
-            else:
-                I_si_mat[ind_vec[jj],ii] = synaptic_response_prefactor(I_0,I_si_sat,gamma1,gamma2,I_si_vec_temp[ind_vec[jj]-1],tau_rise,tau_fall)*\
-                np.exp(tau_rise/tau_fall)*\
-                np.exp(-(time_vec[ind_vec[jj]]-input_spike_times[ii])/tau_fall)
-        I_si_vec = np.sum(I_si_mat, axis = 1);
-
-    return I_si_vec
+    I3 = ( ((Ib3*L2*(L1+Lj1)+(Ib1*Lj1+Ib2*(L1+Lj1)+Ib3*(L1+L2+Lj1))*Lj2)*Lj3)/
+                (L2*L3*(L1+Lj1)+L3*(L1+L2+Lj1)*Lj2+((L2+L3)*(L1+Lj1)+(L1+L2+L3+Lj1)*Lj2)*Lj3) )
+    
+    Ij1 = ( (L3*(Ib1*L1*L2+Ib2*L2*Lj2+Ib1*(L1+L2)*Lj2)+(Ib1*L1*(L2+L3)+(Ib3*L3+Ib2*(L2+L3)+Ib1*(L1+L2+L3))*Lj2)*Lj3)/
+                 (L2*L3*(L1+Lj1)+L3*(L1+L2+Lj1)*Lj2+((L2+L3)*(L1+Lj1)+(L1+L2+L3+Lj1)*Lj2)*Lj3) )
+    
+    Ij2 = ( (Ib3*L3*(L1+Lj1)*Lj3+Ib1*Lj1*(L2*L3+(L2+L3)*Lj3)+Ib2*(L1+Lj1)*(L3*Lj3+L2*(L3+Lj3)))/
+                 (L2*L3*(L1+Lj1)+L3*(L1+L2+Lj1)*Lj2+((L2+L3)*(L1+Lj1)+(L1+L2+L3+Lj1)*Lj2)*Lj3) )
+    
+    Ij3 = ( (Ib3*L2*L3*(L1+Lj1)+L3*(Ib1*Lj1+Ib2*(L1+Lj1)+Ib3*(L1+L2+Lj1))*Lj2)/
+                 (L2*L3*(L1+Lj1)+L3*(L1+L2+Lj1)*Lj2+((L2+L3)*(L1+Lj1)+(L1+L2+L3+Lj1)*Lj2)*Lj3) )
+      
+    return I1, I2, I3, Ij1, Ij2, Ij3, Lj1, Lj2, Lj3 
 
 
 def dendrite_time_stepper(time_vec,I_drive,L3,tau_di):
@@ -863,6 +982,13 @@ def Ljj(critical_current,current):
     
     return L
 
+def Ljj_pH(critical_current,current):
+    
+    norm_current = np.max([np.min([current/critical_current,1]),1e-9])
+    L = (3.2910596281416393e2/critical_current)*np.arcsin(norm_current)/(norm_current)
+    
+    return L
+
 def I_di_sat_of_I_dr_2(Idr2):
     
     if Idr2 < 40e-6:
@@ -946,13 +1072,17 @@ def mu_fitter_3_4(data_dict,time_vec,I_di,mu3,mu4):
 def chi_squared_error(target_data,actual_data):
     
     print('calculating chi^2 ...')
+    dt1 = actual_data[0,1]-actual_data[0,0]
     error = 0
-    norm = 0
     for ii in range(len(actual_data[0,:])):
         ind = (np.abs(target_data[0,:]-actual_data[0,ii])).argmin()        
         error += np.abs( target_data[1,ind]-actual_data[1,ii] )**2
-        norm += np.abs( target_data[1,ind] )**2    
-    error = error/norm     
+        
+    dt2 = target_data[0,1]-target_data[0,0]
+    norm = 0
+    for ii in range(len(target_data[0,:])):
+        norm += np.abs( target_data[1,ii] )**2    
+    error = dt1*error/(dt2*norm)     
     # for ii in range(len(actual_data[0,0:-1])):
     #     dt = actual_data[0,ii+1]-actual_data[0,ii]
     #     ind = (np.abs(target_data[0,:]-actual_data[0,ii])).argmin()        
@@ -1028,7 +1158,7 @@ def load_neuron_data(load_string):
 def save_session_data(data_array = [],save_string = 'soen_sim'):
     
     tt = time.time()     
-    s_str = 'session_data__'+save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))+'.dat'
+    s_str = save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))+'.dat'
     with open('soen_sim_data/'+s_str, 'wb') as data_file:
             pickle.dump(data_array, data_file)
             
@@ -1151,3 +1281,19 @@ def syn_1jj_rate_vs_Isf(I_sf):
     r_sf = 1e3*( 233.966*( (I_sf/(38.8232))**3.464271 - 1 )**0.306768 )/2.06783375
     
     return r_sf
+
+
+def syn_isolatedjj_voltage_fit(I_bias,V0,mu1,mu2,Ir):
+    
+    Ic = 40e-6
+    V = V0*( ( I_bias/(Ic-Ir) )**mu1 - 1 )**mu2
+    
+    return V
+
+
+# def syn_isolatedjj_voltage_fit(I_bias,V0,mu,Ir):
+    
+#     Ic = 40
+#     V = V0*( ( I_bias/(Ic-Ir) )**mu - 1 )**(1/mu)
+    
+#     return V

@@ -56,8 +56,8 @@ def plot_params():
         pp['fine_linewidth'] = 1.5
         pp['bold_linewidth'] = 3
         pp['small_markersize'] = 3
-        pp['nominal_markersize'] = 5
-        pp['big_markersize'] = 7
+        pp['nominal_markersize'] = 4
+        pp['big_markersize'] = 5
         tn = 4*8.6/2.54
         pp['fig_size'] = (tn,tn/1.618)
         # pp['fig_size'] = (tn,tn/1.2)
@@ -860,8 +860,8 @@ def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive
     fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)   
     fig.suptitle('file: {}; error_drive = {:7.5e}, error_signal = {:7.5e}'.format(main_title,error_drive,error__si))
         
-    axs[0].plot(actual_drive[0,:]*1e6,actual_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['blue3'], label = 'soen_drive')
-    axs[0].plot(target_drive[0,:]*1e6,target_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['red3'], label = 'wr_drive')  
+    axs[0].plot(actual_drive[0,:]*1e6,actual_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['green3'], label = 'soen_drive')
+    axs[0].plot(target_drive[0,:]*1e6,target_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['yellow3'], label = 'wr_drive')  
     tn1 = np.min(target_drive[1,:])
     tn2 = np.max(target_drive[1,:])
     for ii in range(len(spike_times)):
@@ -874,8 +874,8 @@ def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive
     axs[0].legend()
     # axs[0].set_title('Drive signal input SPD to Jsf (error = {:7.5e})'.format(error_drive))
      
-    axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['blue3'], label = 'soen_sim')   
-    axs[1].plot(target_data[0,:]*1e6,target_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['red3'], label = 'WRSpice')             
+    axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['green3'], label = 'soen_sim')   
+    axs[1].plot(target_data[0,:]*1e6,target_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['yellow3'], label = 'WRSpice')             
     axs[1].set_xlabel(r'Time [$\mu$s]')
     axs[1].set_ylabel(r'$I_{si}$ [$\mu$A]')
     axs[1].legend()
@@ -883,6 +883,52 @@ def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive
     
     plt.show()
     fig.savefig('figures/'+save_str+'.png') 
+
+    return
+
+
+def plot_wr_comparison__synapse__spd_jj_test(main_title,spike_times,target_drive,actual_drive,target_data,actual_data,wr_data_file_name,V_fq,j_peaks,V_avg,time_avg,V_sf):
+    
+    tt = time.time()    
+    save_str = 'soen_sim_wr_cmpr__sy__'+wr_data_file_name+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    
+    fig, axs = plt.subplots(nrows = 3, ncols = 1, sharex = True, sharey = False)   
+    # fig.suptitle('file: {}; error_drive = {:7.5e}, error_signal = {:7.5e}'.format(main_title,error_drive,error__si))
+        
+    axs[0].plot(actual_drive[0,:]*1e9,actual_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['red3'], label = 'soen_drive')
+    axs[0].plot(target_drive[0,:]*1e9,target_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['blue3'], label = 'wr_drive')  
+    tn1 = np.min(target_drive[1,:])
+    tn2 = np.max(target_drive[1,:])
+    for ii in range(len(spike_times)):
+        if ii == 0:
+            axs[0].plot([spike_times[ii]*1e9,spike_times[ii]*1e9],[tn1*1e6,tn2*1e6], '-.', color = colors['black'], linewidth = pp['fine_linewidth'], label = 'Spike times')             
+        else:
+            axs[0].plot([spike_times[ii]*1e9,spike_times[ii]*1e9],[tn1*1e6,tn2*1e6], '-.', color = colors['black'], linewidth = pp['fine_linewidth'])             
+    axs[0].set_xlabel(r'Time [ns]')
+    axs[0].set_ylabel(r'$I_{spd2}$ [$\mu$A]')
+    # axs[0].set_ylim([np.min(target_drive[1,:])*1e6,np.max(target_drive[1,:])*1e6])
+    axs[0].legend()
+    # axs[0].set_title('Drive signal input SPD to Jsf (error = {:7.5e})'.format(error_drive))
+     
+    axs[1].plot(actual_data[0,:]*1e9,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['red3'], label = 'soen_sim')   
+    axs[1].plot(target_data[0,:]*1e9,target_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['blue3'], label = 'WRSpice')             
+    axs[1].set_xlabel(r'Time [ns]')
+    axs[1].set_ylabel(r'$I_{sf}$ [$\mu$A]')
+    # axs[1].set_ylim([np.min(target_data[1,:])*1e6,np.max(target_data[1,:])*1e6])
+    axs[1].legend()
+    # axs[1].set_title('Output signal in the SI loop (error = {:7.5e})'.format(error__si))
+      
+    axs[2].plot(target_drive[0,:]*1e9,V_fq*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['blue3'], label = 'WRSpice')   
+    axs[2].plot(target_drive[0,j_peaks[:]]*1e9,V_fq[j_peaks[:]]*1e6, 'x', markersize = pp['big_markersize'], color = colors['green3'], label = 'WR peaks')   
+    axs[2].plot(time_avg*1e9,V_avg*1e6, '-o', linewidth = pp['nominal_linewidth'], markersize = pp['small_markersize'], color = colors['yellow3'], label = 'WRSpice')             
+    axs[2].plot(actual_drive[0,:]*1e9,V_sf*1e6, '-o', markersize = pp['small_markersize'], linewidth = pp['nominal_linewidth'], color = colors['red3'], label = 'soen_sim')             
+    axs[2].set_xlabel(r'Time [ns]')
+    axs[2].set_ylabel(r'$V_{sf}$ [$\mu$V]')
+    # axs[2].set_ylim([np.min(V_fq[:])*1e6,np.max(V_fq[:])*1e6])
+    axs[2].legend()
+    
+    plt.show()
+    # fig.savefig('figures/'+save_str+'.png') 
 
     return
 
@@ -1011,6 +1057,59 @@ def plot_fq_peaks_and_average_voltage_vs_Isf__1jj(I_sf,V_sf,j_sf_peaks,I_sf_avg,
     
     return
 
+
+def plot_fq_peaks_and_average_voltage__isolated_JJ(time_vec,I_bias,V_fq,j_peaks,time_avg,I_avg,V_avg,V_fit,V0,mu1,mu2,Ir):
+    
+    fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = False, sharey = False)   
+    # fig.suptitle(main_title)
+        
+    axs[0].plot(time_vec*1e9,V_fq*1e6, '-', linewidth = pp['nominal_linewidth'], color = colors['blue3'], label = 'JJ response')
+    axs[0].plot(time_vec[j_peaks]*1e9,V_fq[j_peaks]*1e6, 'x', linewidth = pp['nominal_linewidth'], markersize = pp['big_markersize'], color = colors['red3'], label = 'FQ peaks')
+    axs[0].plot(time_avg,V_avg, '-o', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['green3'], label = 'Average voltage')     
+    axs[0].set_xlabel(r'Time [ns]')
+    axs[0].set_ylabel(r'Voltage [$\mu$V]')
+    axs[0].set_xlim([time_vec[j_peaks[0]]*1e9,time_vec[j_peaks[-1]]*1e9])
+    axs[0].legend()
+    axs[0].set_title('JJ voltage versus time as bias current is ramped up and down')
+     
+    axs[1].plot(I_bias*1e6,V_fq*1e6, '-', linewidth = pp['nominal_linewidth'], color = colors['blue3'], label = 'JJ response')
+    axs[1].plot(I_bias[j_peaks]*1e6,V_fq[j_peaks]*1e6, 'x', linewidth = pp['nominal_linewidth'], markersize = pp['big_markersize'], color = colors['red3'], label = 'FQ peaks')
+    axs[1].plot(I_avg,V_avg, '-o', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['green3'], label = 'Average voltage')     
+    axs[1].plot(I_avg,V_fit, '-', linewidth = pp['nominal_linewidth'], color = colors['yellow3'], label = '\nVoltage fit:\nV0 = {:10.6f}uV\nmu1 = {:8.6f}\nmu2 = {:8.6f}\nIr = {:9.6f}'.format(V0,mu1,mu2,Ir))     
+    axs[1].set_xlabel(r'$I_{bias}$ [$\mu$A]')
+    axs[1].set_ylabel(r'Voltage [$\mu$V]')
+    axs[1].set_xlim([38,61])
+    axs[1].legend()
+    axs[1].set_title('JJ voltage versus bias current as bias current is ramped up and down')
+    
+    return
+
+
+# def plot_fq_peaks_and_average_voltage__isolated_JJ(time_vec,I_bias,V_fq,j_peaks,time_avg,I_avg,V_avg,V_fit,V0,mu,Ir):
+    
+#     fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = False, sharey = False)   
+#     # fig.suptitle(main_title)
+        
+#     axs[0].plot(time_vec*1e9,V_fq*1e6, '-', linewidth = pp['nominal_linewidth'], color = colors['blue3'], label = 'JJ response')
+#     axs[0].plot(time_vec[j_peaks]*1e9,V_fq[j_peaks]*1e6, 'x', linewidth = pp['nominal_linewidth'], markersize = pp['big_markersize'], color = colors['red3'], label = 'FQ peaks')
+#     axs[0].plot(time_avg,V_avg, '-o', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['green3'], label = 'Average voltage')     
+#     axs[0].set_xlabel(r'Time [ns]')
+#     axs[0].set_ylabel(r'Voltage [$\mu$V]')
+#     axs[0].set_xlim([time_vec[j_peaks[0]]*1e9,time_vec[j_peaks[-1]]*1e9])
+#     axs[0].legend()
+#     axs[0].set_title('JJ voltage versus time as bias current is ramped up and down')
+     
+#     axs[1].plot(I_bias*1e6,V_fq*1e6, '-', linewidth = pp['nominal_linewidth'], color = colors['blue3'], label = 'JJ response')
+#     axs[1].plot(I_bias[j_peaks]*1e6,V_fq[j_peaks]*1e6, 'x', linewidth = pp['nominal_linewidth'], markersize = pp['big_markersize'], color = colors['red3'], label = 'FQ peaks')
+#     axs[1].plot(I_avg,V_avg, '-o', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['green3'], label = 'Average voltage')     
+#     axs[1].plot(I_avg,V_fit, '-', linewidth = pp['nominal_linewidth'], color = colors['yellow3'], label = '\nVoltage fit:\nV0 = {:10.6f}uV\nmu = {:8.6f}\nIr = {:9.6f}'.format(V0,mu,Ir))     
+#     axs[1].set_xlabel(r'$I_{bias}$ [$\mu$A]')
+#     axs[1].set_ylabel(r'Voltage [$\mu$V]')
+#     axs[1].set_xlim([38,61])
+#     axs[1].legend()
+#     axs[1].set_title('JJ voltage versus bias current as bias current is ramped up and down')
+    
+#     return
 
 def plot_Vsf_vs_Isf_fit(I_sf,V_sf,j_sf_peaks,I_sf_avg,V_sf_avg,V_sf_fit,V_sf_fixed,main_title,mu1,mu2,V0):
         
@@ -1513,7 +1612,7 @@ def plot_spd_response(time_vec,time_vec_reduced,I_sy_list,I_spd_array,I_spd_arra
     ax.set_xlabel(r'Time [ns]')
     ax.set_ylabel(r'$I_{spd}$ [$\mu$A]')
     ax.set_xlim([0,150])
-    # ax.legend()
+    ax.legend()
     plt.show()
 
     return

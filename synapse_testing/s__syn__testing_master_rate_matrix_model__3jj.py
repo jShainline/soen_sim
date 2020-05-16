@@ -2,13 +2,10 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import time
-from scipy.signal import find_peaks
-from scipy.optimize import curve_fit
 
 # from soen_sim import input_signal, synapse, dendrite, neuron
-from _plotting import plot_fq_peaks, plot_fq_peaks__dt_vs_bias, plot_wr_data__currents_and_voltages, plot_wr_comparison__synapse, plot_error_mat, plot_wr_comparison__synapse__tiles
-from _functions import save_session_data, load_session_data, read_wr_data, V_fq__fit, inter_fluxon_interval__fit, inter_fluxon_interval, inter_fluxon_interval__fit_2, inter_fluxon_interval__fit_3, chi_squared_error
-from _functions__more import synapse_model__parameter_sweep
+from _plotting import plot_wr_comparison__synapse, plot_wr_comparison__synapse__tiles
+from _functions import read_wr_data, chi_squared_error
 from util import physical_constants
 from soen_sim import input_signal, synapse
 p = physical_constants()
@@ -54,8 +51,7 @@ for ii in range(num_files): # range(1): #
         
     # initialize synapse
     synapse_1 = synapse('sy', num_jjs = 3, integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si, 
-                        integration_loop_self_inductance = L_si, integration_loop_output_inductance = 0e-12, 
-                        synaptic_bias_current = I_sy_vec[ii], integration_loop_bias_current = 35e-6,
+                        integration_loop_self_inductance = L_si, integration_loop_output_inductance = 0e-12, synaptic_bias_currents = [I_sy_vec[ii],36e-6,35e-6],
                         input_signal_name = 'in', synapse_model_params = sim_params)
     
     synapse_1.run_sim()    

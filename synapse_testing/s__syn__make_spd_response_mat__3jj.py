@@ -10,7 +10,8 @@ from _plotting import plot_spd_response
 plt.close('all')
 
 #%% load wr data
-I_sy_list = np.arange(22,40,1)
+dI_sy = 0.25
+I_sy_list = np.arange(22,40+dI_sy,dI_sy)
 directory = 'wrspice_data/fitting_data/3jj'
 # file_name = 'syn__single_spd_pulse__no_jj_biases.dat'
 
@@ -21,7 +22,7 @@ for ii in range(len(I_sy_list)):
     
     print('ii = {} of {}'.format(ii+1,len(I_sy_list)))
     
-    file_name = 'syn__single_spd_pulse__Isy{:05.2f}uA.dat'.format(I_sy_list[ii])
+    file_name = 'syn__3jj__single_spd_pulse__Isy{:05.2f}uA.dat'.format(I_sy_list[ii])
     data_dict = read_wr_data(directory+'/'+file_name)
 
     # construct spd response data structure    
@@ -40,7 +41,7 @@ for ii in range(len(I_sy_list)):
 #%% reduce temporal resolution
 
 print('\nreducing temporal resolution ...')
-dt = 0.1e-9 # desired temporal resolution
+dt = 0.02e-9 # desired temporal resolution
 
 time_vec_reduced = np.arange(time_vec[0],time_vec[-1]+dt*1e6,dt*1e6)
 nt_spd = len(time_vec_reduced)
@@ -73,7 +74,7 @@ I_spd_mat = np.zeros([len(I_sy_list),len(time_vec)])
 for ii in range(len(I_sy_list)):
     I_spd_mat[ii,:] = I_spd_array[ii][:]
     
-save_string = 'master__syn__spd_response__dt{:04.0f}ps'.format(dt*1e12)
+save_string = 'master__syn__spd_response__3jj__dt{:04.0f}ps'.format(dt*1e12)
 data_array = dict()
 data_array['spd_response_array'] = I_spd_array_reduced
 data_array['I_sy_list'] = I_sy_list
