@@ -818,7 +818,7 @@ def plot_wr_comparison(target_data,actual_data,main_title,sub_title,y_axis_label
     ax.legend()    
     
     plt.show()
-    fig.savefig('figures/'+save_str+'.png') 
+    # fig.savefig('figures/'+save_str+'.png') 
     
     return
 
@@ -847,7 +847,7 @@ def plot_wr_comparison__dend_drive_and_response(main_title,target_data__drive,ac
     axs[1].set_title('Output signal in the DI loop (error = {:1.5f}%)'.format(error__signal*100))
     
     plt.show()
-    fig.savefig('figures/'+save_str+'.png') 
+    # fig.savefig('figures/'+save_str+'.png') 
 
     return
 
@@ -882,7 +882,7 @@ def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive
     # axs[1].set_title('Output signal in the SI loop (error = {:7.5e})'.format(error__si))
     
     plt.show()
-    fig.savefig('figures/'+save_str+'.png') 
+    # fig.savefig('figures/'+save_str+'.png') 
 
     return
 

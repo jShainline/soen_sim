@@ -5,7 +5,7 @@ import time
 import pickle
 import copy
 
-from _functions import synapse_time_stepper, synapse_time_stepper__Isf_ode, synapse_time_stepper__Isf_ode__spd_jj_test, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR, dendrite_time_stepper
+from _functions import synapse_time_stepper__Isf_ode__spd_delta, synapse_time_stepper__2jj__ode, synapse_time_stepper, synapse_time_stepper__Isf_ode, synapse_time_stepper__Isf_ode__spd_jj_test, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR, dendrite_time_stepper
 from _plotting import plot_dendritic_drive, plot_dendritic_integration_loop_current
 from util import physical_constants
 
@@ -179,32 +179,52 @@ class synapse():
             # if type(kwargs['synaptic_bias_current']) == int or type(kwargs['synaptic_bias_current']) == float or type(kwargs['synaptic_bias_current']) == np.float64:
             self.synaptic_bias_currents = kwargs['synaptic_bias_currents']
             if self.num_jjs == 1:
-                self.I_sy = self.synaptic_bias_currents[0]
+                if len(self.synaptic_bias_currents) == 1:
+                    self.I_spd = 20e-6
+                    self.I_sy = self.synaptic_bias_currents[0]
+                if len(self.synaptic_bias_currents) == 2:
+                    self.I_spd = self.synaptic_bias_currents[0]
+                    self.I_sy = self.synaptic_bias_currents[1]
             if self.num_jjs == 2:
                 if len(self.synaptic_bias_currents) == 1:
+                    self.I_spd = 20e-6
                     self.I_sy = self.synaptic_bias_currents[0]
-                    self.I_jtl = 36e-6
+                    self.I_sc = 36e-6
                 if len(self.synaptic_bias_currents) == 2:
+                    self.I_spd = 20e-6
                     self.I_sy = self.synaptic_bias_currents[0]
-                    self.I_jtl = self.synaptic_bias_currents[1]
+                    self.I_sc = self.synaptic_bias_currents[1]
+                if len(self.synaptic_bias_currents) == 3:
+                    self.I_spd = self.synaptic_bias_currents[0]
+                    self.I_sy = self.synaptic_bias_currents[1]
+                    self.I_sc = self.synaptic_bias_currents[2]
             if self.num_jjs == 3:
                 if len(self.synaptic_bias_currents) == 1:
+                    self.I_spd = 20e-6
                     self.I_sy = self.synaptic_bias_currents[0]
                     self.I_jtl = 36e-6
-                    self.I_si = 35e-6
+                    self.I_sc = 35e-6
                 if len(self.synaptic_bias_currents) == 2:
+                    self.I_spd = 20e-6
                     self.I_sy = self.synaptic_bias_currents[0]
                     self.I_jtl = 36e-6
-                    self.I_si = self.synaptic_bias_currents[1]
+                    self.I_sc = self.synaptic_bias_currents[1]
                 if len(self.synaptic_bias_currents) == 3:
+                    self.I_spd = 20e-6
                     self.I_sy = self.synaptic_bias_currents[0]
                     self.I_jtl = self.synaptic_bias_currents[1]
-                    self.I_si = self.synaptic_bias_currents[2]
+                    self.I_sc = self.synaptic_bias_currents[2]
+                if len(self.synaptic_bias_currents) == 4:
+                    self.I_spd = self.synaptic_bias_currents[0]
+                    self.I_sy = self.synaptic_bias_currents[1]
+                    self.I_jtl = self.synaptic_bias_currents[2]
+                    self.I_sc = self.synaptic_bias_currents[3]                    
         else:
-            self.synaptic_bias_currents = [28e-6,36e-6,35e-6] #units of amps
-            self.I_sy = self.synaptic_bias_currents[0]
-            self.I_jtl = self.synaptic_bias_currents[1]
-            self.I_si = self.synaptic_bias_currents[2]
+            self.synaptic_bias_currents = [20e-6,28e-6,36e-6,35e-6] #units of amps
+            self.I_spd = self.synaptic_bias_currents[0]
+            self.I_sy = self.synaptic_bias_currents[1]
+            self.I_jtl = self.synaptic_bias_currents[2]
+            self.I_sc = self.synaptic_bias_currents[3]
             
         if 'jtl_inductance' in kwargs:            
             self.jtl_inductance = kwargs['jtl_inductance']
@@ -223,6 +243,8 @@ class synapse():
             if self.num_jjs == 3:
                 self.L_jtl1 = 77.5e-12 #units of henries
                 self.L_jtl2 = 77.5e-12 #units of henries
+                
+        self.L_spd = 247.5e-9
 
         if 'integration_loop_bias_current' in kwargs:
             # if type(kwargs['loop_bias_current']) == int or type(kwargs['loop_bias_current']) == float:
@@ -234,13 +256,14 @@ class synapse():
             self.integration_loop_bias_current = 30e-6 #units of amps
             
         if 'synapse_model_params' in kwargs:
-            self.synapse_model_params = kwargs['synapse_model_params']
-            sim_params = self.synapse_model_params            
+            self.sim_params = kwargs['synapse_model_params']
+            sim_params = self.sim_params            
         else:
             sim_params = dict()
-            sim_params['dt'] = 1e-9 # units of seconds
+            sim_params['dt'] = 0.1e-9 # units of seconds
             sim_params['tf'] = 1e-6 # units of seconds
-            self.synapse_model_params = sim_params
+            sim_params['synapse_model'] = 'lookup_table'
+            self.sim_params = sim_params
             
         if 'input_signal_name' in kwargs:
             if kwargs['input_signal_name'] != '':
@@ -263,9 +286,10 @@ class synapse():
         
     def run_sim(self):
 
-        sim_params = self.synapse_model_params
+        sim_params = self.sim_params
         tf = sim_params['tf']
         dt = sim_params['dt']
+        # print(dt)
         # time_vec = 1e6*np.arange(0,tf+dt,dt)
         time_vec = np.arange(0,tf+dt,dt)
         # p = physical_constants()
@@ -328,26 +352,81 @@ class synapse():
             I_bias_list = [copy.deepcopy(self.I_sy)*1e6]
             L_list = [copy.deepcopy(self.L_si)*1e12,]
         if self.num_jjs == 2:
-            I_bias_list = [copy.deepcopy(self.I_sy)*1e6,copy.deepcopy(self.I_si)*1e6]
-            L_list = [copy.deepcopy(self.L_jtl)*1e12,copy.deepcopy(self.L_si)*1e12]
+            I_bias_list = [copy.deepcopy(self.I_spd),copy.deepcopy(self.I_sy),copy.deepcopy(self.I_sc)]
+            L_list = [copy.deepcopy(self.L_spd),copy.deepcopy(self.L_jtl),copy.deepcopy(self.L_si)]
         if self.num_jjs == 3:
             I_bias_list = [copy.deepcopy(self.I_sy)*1e6,copy.deepcopy(self.I_jtl)*1e6,copy.deepcopy(self.I_si)*1e6]
             L_list = [copy.deepcopy(self.L_jtl1)*1e12,copy.deepcopy(self.L_jtl2)*1e12,copy.deepcopy(self.L_si)*1e12]
-                 
-        # I_spd_vec, I_si_vec, I_sf_vec, j_sf_state, I_c, I_reset = synapse_time_stepper(time_vec,self.input_spike_times,self.num_jjs,L_list,I_bias_list,tau_fall)
+
+        if self.num_jjs == 1:
+            
+            if self.sim_params['synapse_model'] == 'ode':
+            
+                L_list = [copy.deepcopy(self.L_spd),copy.deepcopy(self.L_si)]
+                r_list = [8.25,L_list[1]/tau_fall]
+                I_bias_list = [copy.deepcopy(self.I_spd),copy.deepcopy(self.I_sy)]
+                I_si_vec, I_sf_vec, j_sf_state = synapse_time_stepper__Isf_ode(time_vec,self.input_spike_times,L_list,r_list,I_bias_list)
+                
+                self.I_si = I_si_vec
+                self.I_sf = I_sf_vec
+                # self.I_spd = I_sf_vec+I_si_vec-copy.deepcopy(self.I_sy)
+                self.I_spd = I_sf_vec-copy.deepcopy(self.I_sy)
+                self.time_vec = time_vec
+                for ii in range(len(self.input_spike_times)):
+                    self.input_spike_times[ii] = self.input_spike_times[ii]
+             
+            if self.sim_params['synapse_model'] == 'ode__spd_delta':
+            
+                L_list = [copy.deepcopy(self.L_spd),copy.deepcopy(self.L_si)]
+                r_list = [8.25,L_list[1]/tau_fall]
+                I_bias_list = [copy.deepcopy(self.I_spd),copy.deepcopy(self.I_sy)]
+                I_si_vec, I_sf_vec = synapse_time_stepper__Isf_ode__spd_delta(time_vec,self.input_spike_times,L_list,r_list,I_bias_list)
+                
+                self.I_si = I_si_vec
+                self.I_sf = I_sf_vec
+                # self.I_spd = I_sf_vec+I_si_vec-copy.deepcopy(self.I_sy)
+                self.I_spd = I_sf_vec-copy.deepcopy(self.I_sy)
+                self.time_vec = time_vec
+                for ii in range(len(self.input_spike_times)):
+                    self.input_spike_times[ii] = self.input_spike_times[ii]                           
+                    
+            if self.sim_params['synapse_model'] == 'lookup_table':
+                
+                I_bias_list = [copy.deepcopy(self.I_sy)*1e6]
+                L_list = [copy.deepcopy(self.L_si)*1e12,]
+                I_spd_vec, I_si_vec, I_sf_vec, j_sf_state, I_c, I_reset = synapse_time_stepper(time_vec,self.input_spike_times,self.num_jjs,L_list,I_bias_list,tau_fall)
+                
+                self.I_si = I_si_vec*1e-6
+                self.I_spd = I_spd_vec*1e-6
+                self.I_sf = I_sf_vec*1e-6
+                # self.j_sf_state = j_sf_state
+                self.time_vec = time_vec*1e-6
+                # self.I_c = 1e-6*I_c
+                # self.I_reset = 1e-6*I_reset
+                for ii in range(len(self.input_spike_times)):
+                    self.input_spike_times[ii] = self.input_spike_times[ii]*1e-6
         
-        L_list = [247.5e-9,copy.deepcopy(self.L_si)]
-        r_list = [8.25,L_list[1]/tau_fall]
-        I_bias_list = [20e-6,copy.deepcopy(self.I_sy)]
-        I_si_vec, I_sf_vec, j_sf_state = synapse_time_stepper__Isf_ode(time_vec,self.input_spike_times,L_list,r_list,I_bias_list)
-        
-        self.I_si = I_si_vec
-        self.I_sf = I_sf_vec
-        # self.I_spd = I_sf_vec+I_si_vec-copy.deepcopy(self.I_sy)
-        self.I_spd = I_sf_vec-copy.deepcopy(self.I_sy)
-        self.time_vec = time_vec
-        for ii in range(len(self.input_spike_times)):
-            self.input_spike_times[ii] = self.input_spike_times[ii]
+        if self.num_jjs == 2:
+            
+                L_list = [copy.deepcopy(self.L_spd),copy.deepcopy(self.L_jtl),copy.deepcopy(self.L_si)]
+                r_list = [8.25,L_list[2]/tau_fall]
+                I_bias_list = [copy.deepcopy(self.I_spd),copy.deepcopy(self.I_sy),copy.deepcopy(self.I_sc)]
+                I_si1_vec, I_si2_vec, I_sf_vec = synapse_time_stepper__2jj__ode(time_vec,self.input_spike_times,L_list,r_list,I_bias_list)
+                
+                self.I_si = I_si2_vec
+                self.I_sf = I_sf_vec
+                # self.I_spd = I_sf_vec+I_si_vec-copy.deepcopy(self.I_sy)
+                I_spd_vec = np.zeros([len(I_sf_vec)])
+                I_sy = copy.deepcopy(self.I_sy)
+                I_sc = copy.deepcopy(self.I_sc)
+                for ii in range(len(I_sf_vec)):
+                    I_spd_vec[ii] = I_sf_vec[ii]+I_si1_vec[ii]-I_sy-I_sc
+                self.I_spd = I_spd_vec
+                self.time_vec = time_vec
+                for ii in range(len(self.input_spike_times)):
+                    self.input_spike_times[ii] = self.input_spike_times[ii]
+                    
+                
         
         # L_list = [247.5e-9]
         # r_list = [8.25]
@@ -362,15 +441,7 @@ class synapse():
         # for ii in range(len(self.input_spike_times)):
         #     self.input_spike_times[ii] = self.input_spike_times[ii]
 
-        # self.I_si = I_si_vec*1e-6
-        # self.I_spd = I_spd_vec*1e-6
-        # self.I_sf = I_sf_vec*1e-6
-        # # self.j_sf_state = j_sf_state
-        # self.time_vec = time_vec*1e-6
-        # # self.I_c = 1e-6*I_c
-        # # self.I_reset = 1e-6*I_reset
-        # for ii in range(len(self.input_spike_times)):
-        #     self.input_spike_times[ii] = self.input_spike_times[ii]*1e-6
+
         
         # self.I_si = I_si_vec
         # self.I_spd = I_spd_vec
