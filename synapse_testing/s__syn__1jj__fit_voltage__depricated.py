@@ -18,10 +18,8 @@ p = physical_constants()
 
 I_sy = 40#uA
 
-# I_drive_list = ( [0.01,0.1,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5,10.0,10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,14.5,15.0,15.5,16.0,16.5,17.0,17.5,18.0,18.5,19.0,19.5,20.0] ) # units of uA
 dI = 0.25
 I_drive_list = np.concatenate([np.array([0.01,0.1]),np.arange(0.5,20+dI,dI)])
-# t_sim_list = (   [ 2.0,2.0,2.0,2.0,2.0,3.0,3.0,3.0,3.0,4.0,4.0,4.0,4.0,4.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0] ) # units of ns
 
 #%%
     
@@ -126,33 +124,4 @@ plot_Vsf_vs_Isf(Vsf_array,Isf_array,V_sf_fit,mu1,mu2,V0)
 plot_rate_vs_Isf(j_si_rate_array,Isf_array,V_sf_fit)
 
 
-#%% save the data    
- 
-# save_string = 'master__syn__rate_array__I_si_pad{:04.0f}nA'.format(I_si_pad*1e9)
-# data_array = dict()
-# data_array['rate_array'] = master_rate_array
-# data_array['I_drive_list'] = I_drive_list#[x*1e-6 for x in I_drive_vec]
-# data_array['I_si_array'] = I_si_array__scaled
-# print('\n\nsaving session data ...')
-# save_session_data(data_array,save_string)
-
-
-#%% load test
-
-if 1 == 2:
-    
-    with open('../_circuit_data/master__syn__rate_array__Isipad0100nA.soen', 'rb') as data_file:         
-            data_array_imprt = pickle.load(data_file)
-    # data_array_imported = load_session_data('session_data__master_rate_matrix__syn__2020-04-24_10-24-23.dat')
-    I_si_array__imprt = data_array_imprt['I_si_array']
-    I_drive_list__imprt = data_array_imprt['I_drive_list']
-    rate_array__imprt = data_array_imprt['rate_array']
-    
-    I_drive_sought = 14.45
-    I_drive_sought_ind = (np.abs(np.asarray(I_drive_list__imprt)-I_drive_sought)).argmin()
-    I_si_sought = 4.552
-    I_si_sought_ind = (np.abs(np.asarray(I_si_array__imprt[I_drive_sought_ind])-I_si_sought)).argmin()
-    rate_obtained = rate_array__imprt[I_drive_sought_ind][I_si_sought_ind]
-    
-    print('I_drive_sought = {:7.4f}uA, I_drive_sought_ind = {:d}\nI_si_sought = {:7.4f}uA, I_si_sought_ind = {:d}\nrate_obtained = {:10.4f} fluxons per us'.format(I_drive_sought,I_drive_sought_ind,I_si_sought,I_si_sought_ind,rate_obtained))
 
