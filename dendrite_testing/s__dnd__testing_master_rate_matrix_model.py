@@ -205,7 +205,10 @@ error__signal = chi_squared_error(target_data,actual_data)
 plot_wr_comparison__dend_drive_and_response(file_name,target_data__drive,actual_data__drive,target_data,actual_data,file_name,error__drive,error__signal)
 
 #%%
-with open('../master_rate_matrix.soen', 'rb') as data_file:         
-        data_array_imported = pickle.load(data_file)
-        
-master_rate_matrix = data_array_imported['master_rate_matrix']
+
+if 1 == 2:
+    
+    with open('../master_rate_matrix.soen', 'rb') as data_file:         
+            data_array_imported = pickle.load(data_file)
+            
+    master_rate_matrix = data_array_imported['master_rate_matrix']

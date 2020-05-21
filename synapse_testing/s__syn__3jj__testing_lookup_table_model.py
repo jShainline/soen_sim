@@ -22,6 +22,7 @@ tf = 1e-6
 sim_params = dict()
 sim_params['dt'] = dt
 sim_params['tf'] = tf
+sim_params['synapse_model'] = 'lookup_table'
 
 target_data_array = []
 actual_data_array = []
