@@ -12,8 +12,8 @@ plt.close('all')
 #%% load wr data
 I_sc = 35
 
-dI = 1
-I_sy_list = np.concatenate([np.array([22.2,22.5]),np.arange(23,40+dI,dI)])
+dI = 0.25
+I_sy_list = np.concatenate([np.array([22.2]),np.arange(22.25,40+dI,dI)])
 directory = 'wrspice_data/fitting_data/2jj'
 # file_name = 'syn__single_spd_pulse__no_jj_biases.dat'
 
@@ -84,7 +84,8 @@ for ii in range(len(dt_vec)):
     data_array['I_sy_list'] = I_sy_list
     data_array['time_vec'] = time_vec_reduced
     print('\n\nsaving session data ...')
-    save_session_data(data_array,save_string)
+    save_session_data(data_array,save_string,True)
+    save_session_data(data_array,save_string+'.soen',False)
     print('\n\ndone saving session data.')
 
 #%% load test

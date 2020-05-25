@@ -10,7 +10,7 @@ from util import physical_constants
 from soen_sim import input_signal, synapse
 p = physical_constants()
 
-plt.close('all')
+# plt.close('all')
 
 #%%
 wr_dt = 10e-12;
@@ -19,7 +19,7 @@ I_spd = 20e-6
 I_sc = 35e-6
 spike_times = [5e-9,55e-9,105e-9,155e-9,205e-9,255e-9,305e-9,355e-9,505e-9,555e-9,605e-9,655e-9,705e-9,755e-9,805e-9,855e-9]
 
-dt = 0.01e-9
+dt = 0.1e-9
 tf = 1e-6
                     
 # create sim_params dictionary
@@ -66,12 +66,12 @@ for ii in range(num_files): # range(1): #
     sf_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_sf[:]))
     actual_data_array.append(actual_data)
     
-    error_drive = 1 # chi_squared_error(target_drive,actual_drive)
-    error_signal = 1 # chi_squared_error(target_data,actual_data)
+    error_drive = chi_squared_error(target_drive,actual_drive)
+    error_signal = chi_squared_error(target_data,actual_data)
     error_array.append(error_signal)
     
-    # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
-    plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
+    plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
+    # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
     # plot_wr_comparison__synapse__Isi_and_Isf('bias_lower all; J_sf criterion',spike_times,target_drive,actual_drive,target_data,actual_data,sf_data,synapse_1.I_c,synapse_1.I_reset,file_name,error_drive,error_signal)    
 
 elapsed = time.time() - t_tot
@@ -111,12 +111,12 @@ for ii in range(num_files):
     sf_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_sf[:]))
     actual_data_array.append(actual_data)
     
-    error_drive = 1 # chi_squared_error(target_drive,actual_drive)
-    error_signal = 1 # chi_squared_error(target_data,actual_data)
+    error_drive = chi_squared_error(target_drive,actual_drive)
+    error_signal = chi_squared_error(target_data,actual_data)
     error_array.append(error_signal)
     
-    # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
-    plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
+    plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
+    # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
     # plot_wr_comparison__synapse__Isi_and_Isf('bias_lower all; J_sf criterion',spike_times,target_drive,actual_drive,target_data,actual_data,sf_data,synapse_1.I_c,synapse_1.I_reset,file_name,error_drive,error_signal)        
     
 elapsed = time.time() - t_tot
@@ -157,12 +157,12 @@ for ii in range(num_files):
     sf_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_sf[:]))
     actual_data_array.append(actual_data)
     
-    error_drive = 1 # chi_squared_error(target_drive,actual_drive)
-    error_signal = 1 # chi_squared_error(target_data,actual_data)
+    error_drive = chi_squared_error(target_drive,actual_drive)
+    error_signal = chi_squared_error(target_data,actual_data)
     error_array.append(error_signal)
     
-    # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
-    plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
+    plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
+    # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
     # plot_wr_comparison__synapse__Isi_and_Isf('bias_lower all; J_sf criterion',spike_times,target_drive,actual_drive,target_data,actual_data,sf_data,synapse_1.I_c,synapse_1.I_reset,file_name,error_drive,error_signal)    
 
 elapsed = time.time() - t_tot
@@ -173,10 +173,10 @@ print('soen_sim duration = '+str(elapsed)+' s for vary tau_si')
 plot_wr_comparison__synapse__tiles(target_data_array,actual_data_array,spike_times,error_array)
 
 #%% vary Isy more
-if 1 == 2:
+if 1 == 1:
     
     dI = 1
-    I_sy_vec = np.arange(21,39+dI,dI)
+    I_sy_vec = np.arange(23,39+dI,dI)
     L_si = 77.5e-9
     tau_si = 250e-9
     
@@ -212,12 +212,12 @@ if 1 == 2:
         sf_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_sf[:]))
         actual_data_array.append(actual_data)
         
-        error_drive = 1 # chi_squared_error(target_drive,actual_drive)
-        error_signal = 1 # chi_squared_error(target_data,actual_data)
+        error_drive = chi_squared_error(target_drive,actual_drive)
+        error_signal = chi_squared_error(target_data,actual_data)
         error_array.append(error_signal)
         
-        # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
-        plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
+        plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
+        # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
         # plot_wr_comparison__synapse__Isi_and_Isf('bias_lower all; J_sf criterion',spike_times,target_drive,actual_drive,target_data,actual_data,sf_data,synapse_1.I_c,synapse_1.I_reset,file_name,error_drive,error_signal)    
     
     elapsed = time.time() - t_tot

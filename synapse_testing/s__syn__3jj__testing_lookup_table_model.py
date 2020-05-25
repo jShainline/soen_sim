@@ -87,14 +87,11 @@ for ii in range(num_files):
     target_data_array.append(target_data)
 
     # initialize input signal
-    name__i = 'in'
-    input_1 = input_signal(name__i, input_temporal_form = 'arbitrary_spike_train', spike_times = spike_times)
+    input_1 = input_signal('in', input_temporal_form = 'arbitrary_spike_train', spike_times = spike_times)
         
     # initialize synapse
-    name_s = 'sy'
-    synapse_1 = synapse(name_s, integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si, 
-                        integration_loop_self_inductance = L_si_vec[ii], integration_loop_output_inductance = 0e-12, 
-                        synaptic_bias_current = I_sy, integration_loop_bias_current = 35e-6,
+    synapse_1 = synapse('sy', num_jjs = 3, integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si, 
+                        integration_loop_self_inductance = L_si_vec[ii], integration_loop_output_inductance = 0e-12, synaptic_bias_currents = [I_sy,36e-6,35e-6],
                         input_signal_name = 'in', synapse_model_params = sim_params)
     
     synapse_1.run_sim()    
@@ -129,14 +126,11 @@ for ii in range(num_files):
     target_data_array.append(target_data)
 
     # initialize input signal
-    name__i = 'in'
-    input_1 = input_signal(name__i, input_temporal_form = 'arbitrary_spike_train', spike_times = spike_times)
+    input_1 = input_signal('in', input_temporal_form = 'arbitrary_spike_train', spike_times = spike_times)
         
     # initialize synapse
-    name_s = 'sy'
-    synapse_1 = synapse(name_s, integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si_vec[ii], 
-                        integration_loop_self_inductance = L_si, integration_loop_output_inductance = 0e-12, 
-                        synaptic_bias_current = I_sy, integration_loop_bias_current = 35e-6,
+    synapse_1 = synapse('sy', num_jjs = 3, integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si_vec[ii], 
+                        integration_loop_self_inductance = L_si, integration_loop_output_inductance = 0e-12, synaptic_bias_currents = [I_sy,36e-6,35e-6],
                         input_signal_name = 'in', synapse_model_params = sim_params)
     
     synapse_1.run_sim()    

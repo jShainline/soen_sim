@@ -46,7 +46,7 @@ def plot_params():
         
     if plot_type == 'large':
         
-        pp['title_font_size'] = 12
+        pp['title_font_size'] = 8
         pp['subtitle_font_size'] = 14
         pp['axes_labels_font_size'] = 14
         pp['axes_labels_pad'] = 0 # 4

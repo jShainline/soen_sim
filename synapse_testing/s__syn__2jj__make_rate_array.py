@@ -22,8 +22,8 @@ plt.close('all')
 I_sy = 40 # uA
 I_sc = 35 # uA
 
-dI = 0.5
-I_drive_list = np.concatenate([np.array([2.2]),np.arange(2.5,20.0+dI,dI)])
+dI = 0.25
+I_drive_list = np.concatenate([np.array([2.2]),np.arange(2.25,20.0+dI,dI)])
 
 #%%
     
@@ -76,7 +76,7 @@ for ii in range(num_drives):
     
     
 #%% assemble data and change units
-I_si_pad = 100e-9 # amount above the observed max of Isi that the simulation will allow before giving a zero rate
+I_si_pad = 10e-9 # amount above the observed max of Isi that the simulation will allow before giving a zero rate
 
 master_rate_array = []
 I_si_array__scaled = []
@@ -157,7 +157,8 @@ data_array['rate_array'] = master_rate_array
 data_array['I_drive_list'] = I_drive_list#[x*1e-6 for x in I_drive_vec]
 data_array['I_si_array'] = I_si_array__scaled
 print('\n\nsaving session data ...')
-save_session_data(data_array,save_string)
+save_session_data(data_array,save_string,True)
+save_session_data(data_array,save_string+'.soen',False)
 
 
 #%% load test
