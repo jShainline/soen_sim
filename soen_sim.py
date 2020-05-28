@@ -295,6 +295,8 @@ class synapse():
         
         if self.sim_params['synapse_model'] == 'ode':
             unit_factor = 1
+        if self.sim_params['synapse_model'] == 'ode__spd_delta':
+            unit_factor = 1            
         elif self.sim_params['synapse_model'] == 'lookup_table':
             unit_factor = 1e6
         time_vec = unit_factor*np.arange(0,tf+dt,dt)
