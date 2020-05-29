@@ -249,7 +249,106 @@ def Vj_of_Ij(Ij):
     return 1e-6*236.878860808991*( (Ij/38.80656547520097e-6)**3.3589340685815574 - 1 )**0.310721713450461 # unit of V
 
 
-def synapse_time_stepper__Isf_ode(time_vec,spike_times,L_list,r_list,I_bias_list):
+# def synapse_time_stepper__1jj_ode(time_vec,spike_times,L_list,r_list,I_bias_list):
+    
+#     L_spd = L_list[0]
+#     L_si = L_list[1]
+        
+#     r_spd2 = r_list[0]
+#     r_si = r_list[1]
+    
+#     I_spd = I_bias_list[0]
+#     I_sy = I_bias_list[1] 
+    
+#     Ic = 40e-6
+#     I_reset = 38.80656547520097e-6
+    
+#     # print('L_spd = {}'.format(L_spd))
+#     # print('L_si = {}'.format(L_si))
+#     # print('r_spd2 = {}'.format(r_spd2))
+#     # print('r_si = {}'.format(r_si))
+#     # print('I_spd = {}'.format(I_spd))  
+#     # print('I_sy = {}'.format(I_sy)) 
+#     # print('I_fq = {}'.format(I_fq))
+#     # pause(2)
+    
+#     nt = len(time_vec)
+#     dt = time_vec[1]-time_vec[0]
+        
+#     I_si_vec = np.zeros([nt])
+#     I_sf_vec = np.zeros([nt])
+#     I_sf_vec[0] = I_sy # initial condition
+#     V_sf_vec = np.zeros([nt])
+#     r_spd1_vec = np.zeros([nt])
+    
+#     j_sf_state = ['below_Ic']
+#     print('starting time stepping ...')
+#     for ii in range(nt-1):
+                   
+#         _pt = time_vec[ii] # present time
+                
+#         # find most recent spike time  
+#         st_ind = (np.abs(spike_times[:] - _pt)).argmin()
+#         # print('\nii = {}'.format(ii))
+#         # print('_pt = {}'.format(_pt))
+#         # print('st_ind = {}'.format(st_ind))
+#         # print('spike_times[st_ind] = {}'.format(spike_times[st_ind]))
+                
+#         if ii > 0:
+                        
+#             if st_ind == 0 and spike_times[st_ind] > _pt: # first spike has not arrived
+#                 j_sf_state.append('below_Ic')
+#                 # print('case a1')
+#             if st_ind > 0 and spike_times[st_ind] > _pt: # go back to previous spike
+#                 st_ind -= 1
+#                 # print('case a2')
+#             if spike_times[st_ind] <= _pt: # the case that counts                  
+#                 # print('case a3')
+                
+#                 I_sf_tot = I_sf_vec[ii] - I_si_vec[ii]
+#                 if I_sf_tot > Ic:
+#                     j_sf_state.append('above_Ic')    
+#                     # print('case b1')
+#                 if I_sf_tot <= Ic and I_sf_tot > I_reset:
+#                     # print('case b2')
+#                     if j_sf_state[ii-1] == 'above_Ic' or j_sf_state[ii-1] == 'latched':
+#                         j_sf_state.append('latched')
+#                         # print('case b3')
+#                     else:
+#                         j_sf_state.append('below_Ic')
+#                         # print('case b4')
+#                 if I_sf_tot <= I_reset:
+#                     j_sf_state.append('below_Ic')
+#                     # print('case b5')
+                
+#                 # calculate r_spd1, V_sf
+#                 r_spd1_vec[ii+1] = r_spd1_form(_pt - spike_times[st_ind])
+                
+#                 if j_sf_state[ii] == 'above_Ic' or j_sf_state[ii] == 'latched':
+#                     V_sf_vec[ii+1] = Vj_of_Ij(I_sf_tot)                    
+#                 elif j_sf_state[ii] == 'below_Ic':
+#                     V_sf_vec[ii+1] = 0                       
+           
+#                 # update I_sf and I_si
+#                 L_j = Ljj(Ic,I_sf_tot)
+#                 L_tilde_sq = L_j*L_spd+L_si*L_spd+L_j*L_si+L_si*L_spd
+#                 L_p = L_tilde_sq/(L_j+L_si)
+                
+#                 I_sf_vec[ii+1] = ( I_sf_vec[ii] 
+#                                   + dt*r_spd1_vec[ii+1]*(I_spd+I_sy-I_si_vec[ii]-I_sf_vec[ii])/L_p 
+#                                   - dt*r_spd2*(I_sf_vec[ii]+I_si_vec[ii]-I_sy)/L_p
+#                                   + dt*r_si*I_si_vec[ii]*(L_spd-L_j)/L_tilde_sq
+#                                   - dt*(L_spd+L_si)*V_sf_vec[ii+1]/L_tilde_sq )
+            
+#                 I_si_vec[ii+1] = ( I_si_vec[ii]
+#                                   + dt*V_sf_vec[ii+1]/(L_j+L_si)
+#                                   + (L_j/(L_j+L_si))*(I_sf_vec[ii+1]-I_sf_vec[ii])
+#                                   - (dt*r_si/(L_j+L_si))*I_si_vec[ii] )
+                
+#     print('done time stepping')
+#     return I_si_vec, I_sf_vec, j_sf_state
+
+def synapse_time_stepper__1jj_ode(time_vec,spike_times,L_list,r_list,I_bias_list):
     
     L_spd = L_list[0]
     L_si = L_list[1]

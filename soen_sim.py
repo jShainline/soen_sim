@@ -5,7 +5,7 @@ import time
 import pickle
 import copy
 
-from _functions import synapse_time_stepper__Isf_ode__spd_delta, synapse_time_stepper__2jj__ode, synapse_time_stepper, synapse_time_stepper__Isf_ode, synapse_time_stepper__Isf_ode__spd_jj_test, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR, dendrite_time_stepper
+from _functions import synapse_time_stepper__Isf_ode__spd_delta, synapse_time_stepper__2jj__ode, synapse_time_stepper, synapse_time_stepper__1jj_ode, synapse_time_stepper__Isf_ode__spd_jj_test, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR, dendrite_time_stepper
 from _plotting import plot_dendritic_drive, plot_dendritic_integration_loop_current
 from util import physical_constants
 
@@ -327,12 +327,17 @@ class synapse():
                 L_list = [copy.deepcopy(self.L_spd),copy.deepcopy(self.L_si)]
                 r_list = [8.25,L_list[1]/tau_fall]
                 I_bias_list = [copy.deepcopy(self.I_spd),copy.deepcopy(self.I_sy)]
-                I_si_vec, I_sf_vec, j_sf_state = synapse_time_stepper__Isf_ode(time_vec,self.input_spike_times,L_list,r_list,I_bias_list)
+                I_si_vec, I_sf_vec, j_sf_state = synapse_time_stepper__1jj_ode(time_vec,self.input_spike_times,L_list,r_list,I_bias_list)
                 
                 self.I_si = I_si_vec
                 self.I_sf = I_sf_vec
                 # self.I_spd = I_sf_vec+I_si_vec-copy.deepcopy(self.I_sy)
+                # print(I_sf_vec[0])
+                # print(copy.deepcopy(self.I_sy))
+                # print(copy.deepcopy(self.I_si[0]))
+                # self.I_spd = I_sf_vec-copy.deepcopy(self.I_sy)+copy.deepcopy(self.I_si)
                 self.I_spd = I_sf_vec-copy.deepcopy(self.I_sy)
+                # print(self.I_spd[0])
                 self.time_vec = time_vec
                 for ii in range(len(self.input_spike_times)):
                     self.input_spike_times[ii] = self.input_spike_times[ii]
@@ -356,7 +361,7 @@ class synapse():
                 
                 I_bias_list = [copy.deepcopy(self.I_sy)*1e6]
                 L_list = [copy.deepcopy(self.L_si)*1e12,]
-                I_spd_vec, I_si_vec, I_sf_vec, j_sf_state, I_c, I_reset = synapse_time_stepper(time_vec,self.input_spike_times,self.num_jjs,L_list,I_bias_list,tau_fall)
+                I_spd_vec, I_si_vec, I_sf_vec = synapse_time_stepper(time_vec,self.input_spike_times,self.num_jjs,L_list,I_bias_list,tau_fall*1e6)
                 
                 self.I_si = I_si_vec*1e-6
                 self.I_spd = I_spd_vec*1e-6

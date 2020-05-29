@@ -46,12 +46,12 @@ def plot_params():
         
     if plot_type == 'large':
         
-        pp['title_font_size'] = 8
-        pp['subtitle_font_size'] = 14
+        pp['title_font_size'] = 10
+        pp['subtitle_font_size'] = 10
         pp['axes_labels_font_size'] = 14
         pp['axes_labels_pad'] = 0 # 4
         pp['tick_labels_font_size'] = 14
-        pp['legend_font_size'] = 12
+        pp['legend_font_size'] = 10
         pp['nominal_linewidth'] = 2
         pp['fine_linewidth'] = 1.5
         pp['bold_linewidth'] = 3
@@ -1177,7 +1177,7 @@ def plot_wr_comparison__synapse__Isi_and_Isf(main_title,spike_times,target_drive
     return
 
 
-def plot_wr_comparison__synapse__tiles(target_data_array,actual_data_array,spike_times,error_array):
+def plot_wr_comparison__synapse__tiles(target_data_array,actual_data_array,spike_times,error_array_drive,error_array_signal,legend_strings):
     
     tt = time.time()    
    
@@ -1190,9 +1190,7 @@ def plot_wr_comparison__synapse__tiles(target_data_array,actual_data_array,spike
     # color_list_target = ['blue2','red2','green2','yellow2']
     title_strings = ['Vary $I_{sy}$','Vary $L_{si}$','Vary $tau_{si}$']
     save_strings = ['vary_Isy','vary_Lsi','vary_tausi']
-    legend_strings = [ ['$I_{sy} = 21\mu A$','$I_{sy} = 27\mu A$','$I_{sy} = 33\mu A$','$I_{sy} = 39\mu A$'],
-                       ['$L_{si} = 7.75nH$','$L_{si} = 77.5nH$','$L_{si} = 775nH$','$L_{si} = 7.75\mu H$'],
-                       ['$tau_{si} = 10ns$','$tau_{si} = 50ns$','$tau_{si} = 250ns$','$tau_{si} = 1.25\mu s$',] ]
+    
     i1 = [0,1,0,1]
     i2 = [0,0,1,1]
     for ii in range(3):
@@ -1218,12 +1216,64 @@ def plot_wr_comparison__synapse__tiles(target_data_array,actual_data_array,spike
                 axs[i1[jj],i2[jj]].legend() 
             axs[i1[jj],i2[jj]].set_xlabel(r'Time [$\mu$s]')
             axs[i1[jj],i2[jj]].set_ylabel(r'$I_{si}$ [$\mu$A]')
-            axs[i1[jj],i2[jj]].set_title(legend_strings[ii][jj]+'; error = {:7.5e}'.format(error_array[ii*4+jj]))
+            axs[i1[jj],i2[jj]].set_title(legend_strings[ii][jj]+'; error_drive = {:7.5e}, error_signal = {:7.5e}'.format(error_array_drive[ii*4+jj],error_array_signal[ii*4+jj]))
     
         plt.show()
         fig.savefig('figures/'+save_str+'.png') 
 
     return
+
+
+def plot_wr_comparison__synapse__tiles__with_drive(target_drive_array,actual_drive_array,target_data_array,actual_data_array,spike_times,error_array_drive,error_array_signal,legend_strings):
+    
+    tt = time.time()    
+   
+    # 
+        
+    # axs[0].plot(wr_drive[0,:]*1e6,wr_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'wr_drive') 
+    # tn1 = np.min(wr_drive[1,:])
+    # tn2 = np.max(wr_drive[1,:])
+    # color_list_actual = ['blue3','red3','green3','yellow3']
+    # color_list_target = ['blue2','red2','green2','yellow2']
+    title_strings = ['Vary $I_{sy}$','Vary $L_{si}$','Vary $tau_{si}$']
+    save_strings = ['vary_Isy','vary_Lsi','vary_tausi']
+    
+    i0 = [0,2,0,2]
+    i1 = [1,3,1,3]
+    i2 = [0,0,1,1]
+    
+    # color_list_wr_drive = ['yellow3','red']
+    for ii in range(3):
+        
+        save_str = 'soen_sim_wr_cmpr__sy__3tiles__'+save_strings[ii]+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))    
+        fig, axs = plt.subplots(nrows = 4, ncols = 2, sharex = True, sharey = False)
+        fig.suptitle(title_strings[ii])
+        # print(size(axs))     
+        
+        for jj in range(4):
+            
+            axs[i0[jj],i2[jj]].plot(target_drive_array[ii*4+jj][0,:]*1e6,target_drive_array[ii*4+jj][1,:]*1e6, '-', color = colors['yellow3'], linewidth = pp['nominal_linewidth'], label = 'WRSpice drive')
+            axs[i0[jj],i2[jj]].plot(actual_drive_array[ii*4+jj][0,:]*1e6,actual_drive_array[ii*4+jj][1,:]*1e6, '-', color = colors['green3'], linewidth = pp['nominal_linewidth'], label = 'soen_sim drive')   
+            
+            axs[i1[jj],i2[jj]].plot(target_data_array[ii*4+jj][0,:]*1e6,target_data_array[ii*4+jj][1,:]*1e6, '-', color = colors['red3'], linewidth = pp['nominal_linewidth'], label = 'WRSpice signal')
+            axs[i1[jj],i2[jj]].plot(actual_data_array[ii*4+jj][0,:]*1e6,actual_data_array[ii*4+jj][1,:]*1e6, '-', color = colors['blue3'], linewidth = pp['nominal_linewidth'], label = 'soen_sim signal')   
+  
+            if jj == 3:
+                axs[i0[jj],i2[jj]].legend() 
+                axs[i1[jj],i2[jj]].legend() 
+            
+            axs[i1[jj],i2[jj]].set_xlabel(r'Time [$\mu$s]')
+            axs[i0[jj],i2[jj]].set_ylabel(r'$I_{spd}$ [$\mu$A]')
+            axs[i1[jj],i2[jj]].set_ylabel(r'$I_{si}$ [$\mu$A]')
+            
+            axs[i0[jj],i2[jj]].set_title(legend_strings[ii][jj])
+            axs[i1[jj],i2[jj]].set_title('error_drive = {:7.5e}, error_signal = {:7.5e}'.format(error_array_drive[ii*4+jj],error_array_signal[ii*4+jj]))
+    
+        plt.show()
+        fig.savefig('figures/'+save_str+'.png') 
+
+    return
+
 
 def plot_error_mat(error_mat,vec1,vec2,x_label,y_label,title_string,plot_string):
     
@@ -1584,14 +1634,14 @@ def plot__syn__error_vs_dt(dt_vec,error_array,error_drive_array):
         ax[ii,0].set_title(title_list[ii])
         ax[ii,0].legend()        
         plt.sca(ax[ii,0])
-        plt.yticks([1e-4,1e-3,1e-2,1e-1,1e0])
+        plt.yticks([1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1e0])
         
         ax[ii,1].set_xlabel(r'dt [ns]')
         ax[ii,1].set_ylabel(r'Signal $Chi^2$ error')
         ax[ii,1].set_title(title_list[ii])
         ax[ii,1].legend()       
         plt.sca(ax[ii,1])
-        plt.yticks([1e-4,1e-3,1e-2,1e-1,1e0])
+        plt.yticks([1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1e0])
         
     # grid(True,which='both')
     plt.show()

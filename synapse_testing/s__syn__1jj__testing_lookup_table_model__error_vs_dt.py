@@ -34,12 +34,14 @@ for ii in range(len(I_sy_vec)):
 num_files = len(data_file_list)    
 error_mat = np.zeros([num_files,len(dt_vec)])
 error_drive_mat = np.zeros([num_files,len(dt_vec)])
+                      
+sim_params = dict()
+sim_params['tf'] = tf
+sim_params['synapse_model'] = 'lookup_table'
 
 for qq in range(len(dt_vec)): 
                       
-    sim_params = dict()
     sim_params['dt'] = dt_vec[qq]
-    sim_params['tf'] = tf
 
     for ii in range(num_files):
         
