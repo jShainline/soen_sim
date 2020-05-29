@@ -55,9 +55,8 @@ for qq in range(len(dt_vec)):
             
         # initialize synapse
         synapse_1 = synapse('sy', num_jjs = 3, integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si_vec[ii], 
-                            integration_loop_self_inductance = L_si_vec[ii], integration_loop_output_inductance = 0e-12, 
-                            synaptic_bias_current = I_sy_vec[ii], integration_loop_bias_current = 35e-6,
-                            input_signal_name = 'in', synapse_model_params = sim_params)
+                        integration_loop_self_inductance = L_si_vec[ii], integration_loop_output_inductance = 0e-12, synaptic_bias_currents = [I_sy_vec[ii],36e-6,35e-6],
+                        input_signal_name = 'in', synapse_model_params = sim_params)
         
         synapse_1.run_sim()   
         

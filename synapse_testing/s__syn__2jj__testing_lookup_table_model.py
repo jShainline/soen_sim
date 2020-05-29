@@ -10,28 +10,30 @@ from util import physical_constants
 from soen_sim import input_signal, synapse
 p = physical_constants()
 
-plt.close('all')
+# plt.close('all')
 
 #%%
+wr_dt = 10e-12;
+
 I_spd = 20e-6
 I_sc = 35e-6
 spike_times = [5e-9,55e-9,105e-9,155e-9,205e-9,255e-9,305e-9,355e-9,505e-9,555e-9,605e-9,655e-9,705e-9,755e-9,805e-9,855e-9]
 
-dt = 0.001e-9
+dt = 0.1e-9
 tf = 1e-6
                     
 # create sim_params dictionary
 sim_params = dict()
 sim_params['dt'] = dt
 sim_params['tf'] = tf
-sim_params['synapse_model'] = 'ode'
+sim_params['synapse_model'] = 'lookup_table'
 
 target_data_array = []
 actual_data_array = []
 error_array = []
 
 #%% vary Isy
-I_sy_vec = [22e-6,27e-6,33e-6,38e-6]
+I_sy_vec = [23e-6,27e-6,33e-6,38e-6]
 L_si = 77.5e-9
 tau_si = 250e-9
 
@@ -42,7 +44,7 @@ for ii in range(num_files): # range(1): #
     print('\nvary Isy, ii = {} of {}\n'.format(ii+1,num_files))
     
     #load WR data
-    file_name = 'syn_2jj_Ispd20.00uA_trep50ns_Isy{:04.2f}uA_Isc35.00uA_Lsi{:07.2f}nH_tausi{:04.0f}ns_dt01.0ps_tsim1000ns.dat'.format(I_sy_vec[ii]*1e6,L_si*1e9,tau_si*1e9)
+    file_name = 'syn_2jj_Ispd20.00uA_trep50ns_Isy{:04.2f}uA_Isc35.00uA_Lsi{:07.2f}nH_tausi{:04.0f}ns_dt{:4.1f}ps_tsim1000ns.dat'.format(I_sy_vec[ii]*1e6,L_si*1e9,tau_si*1e9,wr_dt*1e12)
     data_dict = read_wr_data('wrspice_data/test_data/2jj/'+file_name)
     target_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))
     target_data = np.vstack((data_dict['time'],data_dict['L2#branch']))
@@ -64,12 +66,12 @@ for ii in range(num_files): # range(1): #
     sf_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_sf[:]))
     actual_data_array.append(actual_data)
     
-    error_drive = 1 # chi_squared_error(target_drive,actual_drive)
-    error_signal = 1 # chi_squared_error(target_data,actual_data)
+    error_drive = chi_squared_error(target_drive,actual_drive)
+    error_signal = chi_squared_error(target_data,actual_data)
     error_array.append(error_signal)
     
-    # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
-    plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
+    plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
+    # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
     # plot_wr_comparison__synapse__Isi_and_Isf('bias_lower all; J_sf criterion',spike_times,target_drive,actual_drive,target_data,actual_data,sf_data,synapse_1.I_c,synapse_1.I_reset,file_name,error_drive,error_signal)    
 
 elapsed = time.time() - t_tot
@@ -87,7 +89,7 @@ for ii in range(num_files):
     print('\nvary Lsi, ii = {} of {}\n'.format(ii+1,num_files))
     
     #load WR data
-    file_name = 'syn_2jj_Ispd20.00uA_trep50ns_Isy{:05.2f}uA_Isc35.00uA_Lsi{:07.2f}nH_tausi{:04.0f}ns_dt01.0ps_tsim1000ns.dat'.format(I_sy*1e6,L_si_vec[ii]*1e9,tau_si*1e9)
+    file_name = 'syn_2jj_Ispd20.00uA_trep50ns_Isy{:05.2f}uA_Isc35.00uA_Lsi{:07.2f}nH_tausi{:04.0f}ns_dt{:4.1f}ps_tsim1000ns.dat'.format(I_sy*1e6,L_si_vec[ii]*1e9,tau_si*1e9,wr_dt*1e12)
     data_dict = read_wr_data('wrspice_data/test_data/2jj/'+file_name)
     target_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))
     target_data = np.vstack((data_dict['time'],data_dict['L2#branch']))
@@ -109,12 +111,12 @@ for ii in range(num_files):
     sf_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_sf[:]))
     actual_data_array.append(actual_data)
     
-    error_drive = 1 # chi_squared_error(target_drive,actual_drive)
-    error_signal = 1 # chi_squared_error(target_data,actual_data)
+    error_drive = chi_squared_error(target_drive,actual_drive)
+    error_signal = chi_squared_error(target_data,actual_data)
     error_array.append(error_signal)
     
-    # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
-    plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
+    plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
+    # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
     # plot_wr_comparison__synapse__Isi_and_Isf('bias_lower all; J_sf criterion',spike_times,target_drive,actual_drive,target_data,actual_data,sf_data,synapse_1.I_c,synapse_1.I_reset,file_name,error_drive,error_signal)        
     
 elapsed = time.time() - t_tot
@@ -133,7 +135,7 @@ for ii in range(num_files):
     print('\nvary tau_si, ii = {} of {}\n'.format(ii+1,num_files))
     
     #load WR data
-    file_name = 'syn_2jj_Ispd20.00uA_trep50ns_Isy{:05.2f}uA_Isc35.00uA_Lsi{:07.2f}nH_tausi{:04.0f}ns_dt01.0ps_tsim1000ns.dat'.format(I_sy*1e6,L_si*1e9,tau_si_vec[ii]*1e9)
+    file_name = 'syn_2jj_Ispd20.00uA_trep50ns_Isy{:05.2f}uA_Isc35.00uA_Lsi{:07.2f}nH_tausi{:04.0f}ns_dt{:4.1f}ps_tsim1000ns.dat'.format(I_sy*1e6,L_si*1e9,tau_si_vec[ii]*1e9,wr_dt*1e12)
     data_dict = read_wr_data('wrspice_data/test_data/2jj/'+file_name)
     target_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))
     target_data = np.vstack((data_dict['time'],data_dict['L2#branch']))
@@ -155,12 +157,12 @@ for ii in range(num_files):
     sf_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_sf[:]))
     actual_data_array.append(actual_data)
     
-    error_drive = 1 # chi_squared_error(target_drive,actual_drive)
-    error_signal = 1 # chi_squared_error(target_data,actual_data)
+    error_drive = chi_squared_error(target_drive,actual_drive)
+    error_signal = chi_squared_error(target_data,actual_data)
     error_array.append(error_signal)
     
-    # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
-    plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
+    plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
+    # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
     # plot_wr_comparison__synapse__Isi_and_Isf('bias_lower all; J_sf criterion',spike_times,target_drive,actual_drive,target_data,actual_data,sf_data,synapse_1.I_c,synapse_1.I_reset,file_name,error_drive,error_signal)    
 
 elapsed = time.time() - t_tot
@@ -171,10 +173,10 @@ print('soen_sim duration = '+str(elapsed)+' s for vary tau_si')
 plot_wr_comparison__synapse__tiles(target_data_array,actual_data_array,spike_times,error_array)
 
 #%% vary Isy more
-if 1 == 2:
+if 1 == 1:
     
     dI = 1
-    I_sy_vec = np.arange(21,39+dI,dI)
+    I_sy_vec = np.arange(23,39+dI,dI)
     L_si = 77.5e-9
     tau_si = 250e-9
     
@@ -188,7 +190,7 @@ if 1 == 2:
         print('\nvary Isy, ii = {} of {}\n'.format(ii+1,num_files))
         
         #load WR data
-        file_name = 'syn_2jj_Ispd20.00uA_trep50ns_Isy{:04.2f}uA_Isc35.00uA_Lsi{:07.2f}nH_tausi{:04.0f}ns_dt01.0ps_tsim1000ns.dat'.format(I_sy_vec[ii],L_si*1e9,tau_si*1e9)
+        file_name = 'syn_2jj_Ispd20.00uA_trep50ns_Isy{:04.2f}uA_Isc35.00uA_Lsi{:07.2f}nH_tausi{:04.0f}ns_dt{:4.1f}ps_tsim1000ns.dat'.format(I_sy_vec[ii],L_si*1e9,tau_si*1e9,wr_dt*1e12)
         data_dict = read_wr_data('wrspice_data/test_data/2jj/'+file_name)
         target_drive = np.vstack((data_dict['time'],data_dict['L0#branch']))
         target_data = np.vstack((data_dict['time'],data_dict['L2#branch']))
@@ -210,12 +212,12 @@ if 1 == 2:
         sf_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_sf[:]))
         actual_data_array.append(actual_data)
         
-        error_drive = 1 # chi_squared_error(target_drive,actual_drive)
-        error_signal = 1 # chi_squared_error(target_data,actual_data)
+        error_drive = chi_squared_error(target_drive,actual_drive)
+        error_signal = chi_squared_error(target_data,actual_data)
         error_array.append(error_signal)
         
-        # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
-        plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
+        plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,error_drive,error_signal)    
+        # plot_wr_comparison__synapse(file_name,spike_times,target_drive,actual_drive,target_data,actual_data,file_name,1,1)
         # plot_wr_comparison__synapse__Isi_and_Isf('bias_lower all; J_sf criterion',spike_times,target_drive,actual_drive,target_data,actual_data,sf_data,synapse_1.I_c,synapse_1.I_reset,file_name,error_drive,error_signal)    
     
     elapsed = time.time() - t_tot
