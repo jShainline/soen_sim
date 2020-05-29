@@ -25,11 +25,13 @@ tf = 1e-6
 data_file_list = []
 
 spike_times = [5e-9,55e-9,105e-9,155e-9,205e-9,255e-9,305e-9,355e-9,505e-9,555e-9,605e-9,655e-9,705e-9,755e-9,805e-9,855e-9]    
-I_sy_vec = [23e-6,28e-6,33e-6,38e-6,28e-6,28e-6,28e-6,28e-6,32e-6,32e-6,32e-6,32e-6]
+I_sy_vec = [23e-6,28e-6,33e-6,38e-6,29e-6,29e-6,29e-6,29e-6,32e-6,32e-6,32e-6,32e-6]
 L_si_vec = [77.5e-9,77.5e-9,77.5e-9,77.5e-9,7.75e-9,77.5e-9,775e-9,7.75e-6,775e-9,775e-9,775e-9,775e-9]
 tau_si_vec = [250e-9,250e-9,250e-9,250e-9,250e-9,250e-9,250e-9,250e-9,10e-9,50e-9,250e-9,1.25e-6]
+
 for ii in range(len(I_sy_vec)):
-    data_file_list.append('syn_Ispd20.00uA_Isy{:04.2f}uA_Lsi{:07.2f}nH_tausi{:04.0f}ns_dt10.0ps_tsim1000ns.dat'.format(I_sy_vec[ii]*1e6,L_si_vec[ii]*1e9,tau_si_vec[ii]*1e9)) 
+    
+    data_file_list.append('syn_3jj_Ispd20.00uA_Isy{:04.2f}uA_Ijtl36.00uA_Isc35.00uA_trep50ns_Lsi{:07.2f}nH_tausi{:04.0f}ns_dt10.0ps_tsim1000ns.dat'.format(I_sy_vec[ii]*1e6,L_si_vec[ii]*1e9,tau_si_vec[ii]*1e9)) 
 
 num_files = len(data_file_list)    
 error_mat = np.zeros([num_files,len(dt_vec)])
