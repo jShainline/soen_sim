@@ -13,14 +13,13 @@ p = physical_constants()
 plt.close('all')
 
 #%%
-# dt_vec = np.concatenate([np.arange(0.01e-9,0.11e-9,0.01e-9),np.arange(0.2e-9,1.1e-9,0.1e-9),np.arange(2e-9,11e-9,1e-9)])
-dt_vec = [0.01e-9,0.1e-9,1e-9]
+dt_vec = np.concatenate([np.arange(0.01e-9,0.11e-9,0.01e-9),np.arange(0.2e-9,1.1e-9,0.1e-9),np.arange(2e-9,11e-9,1e-9)])
+# dt_vec = [0.01e-9,0.1e-9,1e-9]
 
 wr_dt = 10e-12;
 
 I_spd = 20e-6
 I_sc = 35e-6
-spike_times = [5e-9,55e-9,105e-9,155e-9,205e-9,255e-9,305e-9,355e-9,505e-9,555e-9,605e-9,655e-9,705e-9,755e-9,805e-9,855e-9]
 
 tf = 1e-6
                     
@@ -34,6 +33,7 @@ spike_times = [5e-9,55e-9,105e-9,155e-9,205e-9,255e-9,305e-9,355e-9,505e-9,555e-
 I_sy_vec = [23e-6,27e-6,33e-6,38e-6,29e-6,29e-6,29e-6,29e-6,34e-6,34e-6,34e-6,34e-6]
 L_si_vec = [77.5e-9,77.5e-9,77.5e-9,77.5e-9,7.75e-9,77.5e-9,775e-9,7.75e-6,775e-9,775e-9,775e-9,775e-9]
 tau_si_vec = [250e-9,250e-9,250e-9,250e-9,250e-9,250e-9,250e-9,250e-9,10e-9,50e-9,250e-9,1.25e-6]
+
 for ii in range(len(I_sy_vec)):
     data_file_list.append('syn_2jj_Ispd20.00uA_trep50ns_Isy{:04.2f}uA_Isc35.00uA_Lsi{:07.2f}nH_tausi{:04.0f}ns_dt{:4.1f}ps_tsim1000ns.dat'.format(I_sy_vec[ii]*1e6,L_si_vec[ii]*1e9,tau_si_vec[ii]*1e9,wr_dt*1e12)) 
 
