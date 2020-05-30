@@ -51,7 +51,7 @@ for qq in range(len(dt_vec)):
 
     for ii in range(num_files):
                 
-        print('qq = {} of {}, ii = {} of {}'.format(qq+1,len(dt_vec),ii+1,num_files))
+        print('\nqq = {} of {}, ii = {} of {}'.format(qq+1,len(dt_vec),ii+1,num_files))
     
         #load WR data
         data_dict = read_wr_data('wrspice_data/test_data/2jj/'+data_file_list[ii])
