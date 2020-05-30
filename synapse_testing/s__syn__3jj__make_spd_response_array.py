@@ -41,47 +41,50 @@ for ii in range(len(I_sy_list)):
 #%% reduce temporal resolution
 
 print('\nreducing temporal resolution ...')
-dt = 0.02e-9 # desired temporal resolution
 
-time_vec_reduced = np.arange(time_vec[0],time_vec[-1]+dt*1e6,dt*1e6)
-nt_spd = len(time_vec_reduced)
-I_spd_array_reduced = np.zeros([len(I_sy_list),nt_spd])
-
-# I_spd_array_reduced = []
-for jj in range(nt_spd):
-
-    print('jj = {} of {}'.format(jj+1,nt_spd))
+dt_vec = 1e-9*np.concatenate((np.linspace(0.01,0.1,10),np.linspace(0.2,1,9),np.linspace(2,10,9))) # np.linspace(0.01,0.1,10) # np.concatenate((np.linspace(0.01,0.1,10),np.linspace(0.2,1,9)))
+for ii in range(len(dt_vec)):
     
-    ti = (np.abs(np.asarray(time_vec[:]) - time_vec_reduced[jj])).argmin()
+    dt = dt_vec[ii] # desired temporal resolution
+    
+    time_vec_reduced = np.arange(time_vec[0],time_vec[-1]+dt*1e6,dt*1e6)
+    nt_spd = len(time_vec_reduced)
+    I_spd_array_reduced = np.zeros([len(I_sy_list),nt_spd])
+    
+    # I_spd_array_reduced = []
+    for jj in range(nt_spd):
+    
+        print('jj = {} of {}'.format(jj+1,nt_spd))
         
-    for ii in range(len(I_sy_list)):     
+        ti = (np.abs(np.asarray(time_vec[:]) - time_vec_reduced[jj])).argmin()
+            
+        for ii in range(len(I_sy_list)):     
+            
+            I_spd_array_reduced[ii][jj] = I_spd_array[ii][ti] # spd current vector
         
-        I_spd_array_reduced[ii][jj] = I_spd_array[ii][ti] # spd current vector
+        # I_spd_array_reduced.append([])
+        # I_spd_array_reduced[ii] = spd_i
     
-    # I_spd_array_reduced.append([])
-    # I_spd_array_reduced[ii] = spd_i
-
-print('done reducing temporal resolution.')
-
+    print('done reducing temporal resolution.')
     
-#%% plot 
-
-plot_spd_response(time_vec,time_vec_reduced,I_sy_list,I_spd_array,I_spd_array_reduced)
-
-
-#%% save data
-I_spd_mat = np.zeros([len(I_sy_list),len(time_vec)])
-for ii in range(len(I_sy_list)):
-    I_spd_mat[ii,:] = I_spd_array[ii][:]
+        
+    # plot 
+    plot_spd_response(time_vec,time_vec_reduced,I_sy_list,I_spd_array,I_spd_array_reduced)
     
-save_string = 'master__syn__spd_response__3jj__dt{:04.0f}ps'.format(dt*1e12)
-data_array = dict()
-data_array['spd_response_array'] = I_spd_array_reduced
-data_array['I_sy_list'] = I_sy_list
-data_array['time_vec'] = time_vec_reduced
-print('\n\nsaving session data ...')
-save_session_data(data_array,save_string)
-print('\n\ndone saving session data.')
+    # save data
+    # I_spd_mat = np.zeros([len(I_sy_list),len(time_vec)])
+    # for ii in range(len(I_sy_list)):
+    #     I_spd_mat[ii,:] = I_spd_array[ii][:]
+        
+    save_string = 'master__syn__spd_response__3jj__dt{:04.0f}ps'.format(dt*1e12)
+    data_array = dict()
+    data_array['spd_response_array'] = I_spd_array_reduced
+    data_array['I_sy_list'] = I_sy_list
+    data_array['time_vec'] = time_vec_reduced
+    print('\n\nsaving session data ...')
+    save_session_data(data_array,save_string,True)
+    save_session_data(data_array,save_string+'.soen',False)
+    print('\n\ndone saving session data.')
 
 
 #%% load test
