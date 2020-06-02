@@ -1,1 +1,10 @@
 *.dat
+
+# for macs
+.DS_Store
+
+# C optimizations
+__pycache__
+
+# options for sublime to prevent whitespace issue
+*.sublime-*

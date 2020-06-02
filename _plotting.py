@@ -884,7 +884,7 @@ def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive
     plt.show()
     # fig.savefig('figures/'+save_str+'.png') 
 
-    return
+    return fig
 
 
 def plot_wr_comparison__synapse__spd_jj_test(main_title,spike_times,target_drive,actual_drive,target_data,actual_data,wr_data_file_name,V_fq,j_peaks,V_avg,time_avg,V_sf):
