@@ -2,7 +2,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from _plotting import plot_synaptic_integration_loop_current, plot_synaptic_integration_loop_current__multiple_synapses, plot_Isisat_vs_Isy
+from _plotting import plot_synaptic_integration_loop_current, plot_synaptic_integration_loop_current__multiple_synapses, plot_Isisat_vs_Isy, plot_Isi_vs_Isy
 from soen_sim import input_signal, synapse
 
 plt.close('all')
@@ -10,7 +10,7 @@ plt.close('all')
 #%%
 input_isi = 50e-9
 t0 = 5e-9
-tf = 10e-6
+tf = 2e-6
 dt = 0.1e-9
 
 spike_times = np.arange(t0,tf+input_isi,input_isi)
@@ -54,3 +54,4 @@ for ii in range(num_files): # range(1): #
 
 plot_synaptic_integration_loop_current__multiple_synapses(synapse_list)
 plot_Isisat_vs_Isy(synapse_list)
+plot_Isi_vs_Isy(synapse_list)
