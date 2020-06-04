@@ -433,7 +433,7 @@ def synapse_time_stepper__1jj_ode(time_vec,spike_times,L_list,r_list,I_bias_list
         I_sf_vec[ii+1] = ( I_sf_vec[ii] 
                           + dt*(r_spd1_vec[ii+1]/L_spd)*(I_spd+I_sy-I_sf_vec[ii]) 
                           - dt*(r_spd2/L_spd)*(I_sf_vec[ii]-I_sy)
-                          -dt*V_sf_vec[ii+1]/L_spd )
+                          - dt*V_sf_vec[ii+1]/L_spd )
         # I_sf_vec[ii+1] = ( I_sf_vec[ii] 
         #                   + dt*(r_spd1_vec[ii+1]/L_spd)*(I_spd+I_sy-I_sf_vec[ii]-I_si_vec[ii]) 
         #                   - dt*(r_spd2/L_spd)*(I_sf_vec[ii]+I_si_vec[ii]-I_sy)
