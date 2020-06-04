@@ -262,7 +262,7 @@ def plot_synaptic_integration_loop_current(synapse_instance):
         
         main_title = 'Synapse: {} ({})\nI_sy = {:7.4f} uA; tau_si = {:7.4f} ns; L_si = {:7.4f} nH'.format(synapse_instance.name,
                                                                                                    synapse_instance.unique_label,
-                                                                                                   synapse_instance.synaptic_bias_current*1e6,
+                                                                                                   synapse_instance.I_sy*1e6,
                                                                                                    synapse_instance.integration_loop_time_constant*1e9,
                                                                                                    synapse_instance.integration_loop_total_inductance*1e9)
     else:
@@ -270,7 +270,7 @@ def plot_synaptic_integration_loop_current(synapse_instance):
                 
         main_title = 'Synapse: {} ({})\nI_sy = {:7.4f} uA; tau_si = inf; L_si = {:7.4f} nH'.format(synapse_instance.name,
                                                                                                    synapse_instance.unique_label,
-                                                                                                   synapse_instance.synaptic_bias_current*1e6,
+                                                                                                   synapse_instance.I_sy*1e6,
                                                                                                    synapse_instance.integration_loop_total_inductance*1e9)
 
     fig = plt.figure()
@@ -307,7 +307,7 @@ def plot_synaptic_integration_loop_current__multiple_synapses(synapse_list):
         synapse_instance = synapse_list[jj]
         time_vec = synapse_instance.time_vec
         
-        legend_text = 'I_sy = {:7.4f} uA'.format(synapse_instance.synaptic_bias_current*1e6)                                                                                            
+        legend_text = 'I_sy = {:7.4f} uA'.format(synapse_instance.I_sy*1e6)                                                                                            
             
         ax.plot(time_vec*1e6,synapse_instance.I_si*1e6, '-', linewidth = pp['nominal_linewidth'], label = legend_text)
         
@@ -336,7 +336,7 @@ def plot_Isisat_vs_Isy(synapse_list):
     I_sy_vec = np.zeros([len(synapse_list)])
     I_si_sat_vec = np.zeros([len(synapse_list)])
     for ii in range(len(synapse_list)):
-        I_sy_vec[ii] = 1e6*synapse_list[ii].synaptic_bias_current
+        I_sy_vec[ii] = 1e6*synapse_list[ii].I_sy
         I_si_sat_vec[ii] = 1e6*synapse_list[ii].I_si[-1]
     
     fig = plt.figure()
@@ -357,7 +357,7 @@ def plot_Isi_vs_Isy(synapse_list):
     I_sy_vec = np.zeros([len(synapse_list)])
     I_si_sat_vec = np.zeros([len(synapse_list)])
     for ii in range(len(synapse_list)):
-        I_sy_vec[ii] = 1e6*synapse_list[ii].synaptic_bias_current
+        I_sy_vec[ii] = 1e6*synapse_list[ii].I_sy
         I_si_sat_vec[ii] = 1e6*synapse_list[ii].I_si[-1]
     
     fig = plt.figure()
@@ -884,7 +884,7 @@ def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive
     plt.show()
     # fig.savefig('figures/'+save_str+'.png') 
 
-    return
+    return fig
 
 
 def plot_wr_comparison__synapse__spd_jj_test(main_title,spike_times,target_drive,actual_drive,target_data,actual_data,wr_data_file_name,V_fq,j_peaks,V_avg,time_avg,V_sf):
