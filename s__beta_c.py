@@ -5,7 +5,7 @@ from util import physical_constants
 p = physical_constants()
 
 #%% set params
-beta_c = 2
+beta_c = 10
 I_c = 10e-6
 C = 5e-15*I_c/1e-6 #capacitace is known to be 5fF per uA Ic
 
