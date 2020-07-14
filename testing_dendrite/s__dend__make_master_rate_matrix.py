@@ -106,7 +106,15 @@ for ii in range(num_drives):
     j_di_rate_array.append(j_di_rate)
     
     I_di_array.append(I_di[j_di_peaks])
-    
+ 
+#%% convert current drive to flux
+influx_list = []
+inductance_conversion = 1e12
+M = inductance_conversion*np.sqrt(200e-12*10e-12)
+for ii in range(len(I_drive_list)):
+    influx_list.append(M*I_drive_list[ii])
+
+
 #%% assemble data
 # longest_rate_vec = 0
 # fastest_rate = 0
@@ -138,7 +146,7 @@ for ii in range(num_drives):
     master_rate_array.append([])
     master_rate_array[ii] = np.append(temp_rate_vec,0) # this zero is added so that a current that rounds to I_si + I_si_pad will give zero rate
     I_di_array__scaled.append([])
-    I_di_array__scaled[ii] = np.append(temp_I_di_vec,np.max(temp_I_di_vec)+I_di_pad) # this additional I_si + I_si_pad is included so that a current that rounds to I_si + I_si_pad will give zero rate
+    I_di_array__scaled[ii] = np.append(temp_I_di_vec,np.max(temp_I_di_vec)+I_di_pad) # this additional I_di + I_di_pad is included so that a current that rounds to I_di + I_di_pad will give zero rate
 
 
 #%% plot the rate vectors
@@ -167,13 +175,25 @@ plt.show()
 # fig.savefig('figures/'+save_str+'__log.png')
 
 #%% save data
-save_string = 'master_rate_matrix__dend'
+save_string = 'master__dnd__rate_array'
 data_array = dict()
-data_array['master_rate_matrix'] = master_rate_matrix
-data_array['I_drive_vec'] = I_drive_vec*1e-6
-data_array['I_di_list'] = I_di_list
+data_array['rate_array'] = master_rate_array
+data_array['I_drive_list'] = I_drive_list
+data_array['influx_list'] = influx_list
+data_array['I_di_array'] = I_di_array__scaled
 print('\n\nsaving session data ...')
 save_session_data(data_array,save_string)
+save_session_data(data_array,save_string+'.soen',False)
+
+#%% flux/current comparison
+I_drive = 21.2
+_ind1 = (np.abs(np.asarray(I_drive_list)-I_drive)).argmin()
+
+influx = I_drive*inductance_conversion*np.sqrt(200e-12*10e-12)
+ind1 = (np.abs(np.asarray(influx_list)-influx)).argmin()
+
+print('_ind1 = {}; ind1 = {}'.format(_ind1,ind1))           
+
 
 #%% load test
 data_array_imported = load_session_data('session_data__master_rate_matrix__2020-04-17_13-11-03.dat')

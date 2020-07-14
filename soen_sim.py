@@ -144,6 +144,7 @@ class synapse():
         else:
             if self.integration_loop_temporal_form == 'exponential':
                 self.integration_loop_time_constant = 200e-9 #default time constant units of seconds
+        self.tau_si = self.integration_loop_time_constant
         
         if 'power_law_exponent' in kwargs:
             # if type(kwargs['power_law_exponent']) == int or type(kwargs['power_law_exponent']) == float:
@@ -472,7 +473,10 @@ class dendrite():
 
         if 'input_synaptic_inductances' in kwargs:
             if type(kwargs['input_synaptic_inductances']) == list:
-                    self.input_synaptic_inductances = kwargs['input_synaptic_inductances']
+                self.input_synaptic_inductances = dict()
+                for ii in range(len(self.input_synaptic_connections)):
+                    self.input_synaptic_inductances[self.input_synaptic_connections[ii]] = kwargs['input_synaptic_inductances'][ii]
+                # self.input_synaptic_inductances = kwargs['input_synaptic_inductances']
             else:
                 raise ValueError('[soens_sim] Input synaptic inductances to dendrites are specified as a list of pairs of real numbers with one pair per synaptic connection. The first element of the pair is the inductance on the dendritic receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the synapse and the dendritic receiving loop.')
         else:
@@ -485,7 +489,10 @@ class dendrite():
 
         if 'input_dendritic_inductances' in kwargs:
             if type(kwargs['input_dendritic_inductances']) == list:
-                    self.input_dendritic_inductances = kwargs['input_dendritic_inductances']
+                self.input_dendritic_inductances = dict()
+                for ii in range(len(self.input_dendritic_connections)):
+                    self.input_dendritic_inductances[self.input_dendritic_connections[ii]] = kwargs['input_dendritic_inductances'][ii]
+                # self.input_dendritic_inductances = kwargs['input_dendritic_inductances']
             else:
                 raise ValueError('[soens_sim] Input dendritic inductances to dendrites are specified as a list of pairs of real numbers with one pair per dendritic connection. The first element of the pair is the inductance on the dendritic receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the input dendrite and the dendritic receiving loop.')
         else:
@@ -498,7 +505,10 @@ class dendrite():
 
         if 'input_direct_inductances' in kwargs:
             if type(kwargs['input_direct_inductances']) == list:
-                    self.input_direct_inductances = kwargs['input_direct_inductances']
+                self.input_direct_inductances = dict()
+                for ii in range(len(self.input_direct_connections)):
+                    self.input_direct_inductances[self.input_direct_connections[ii]] = kwargs['input_direct_inductances'][ii]
+                # self.input_direct_inductances = kwargs['input_direct_inductances']
             else:
                 raise ValueError('[soens_sim] Input direct inductances to dendrites are specified as a list of pairs of real numbers with one pair per direct connection. The first element of the pair is the inductance on the dendritic receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the input direct signal and the dendritic receiving loop.')
         else:
@@ -742,8 +752,8 @@ class neuron():
                 self.integration_loop_time_constant = kwargs['integration_loop_time_constant']
         else:
             if self.integration_loop_temporal_form == 'exponential':
-                self.integration_loop_time_constant = 5e-9 #default time constant units of seconds
-             
+                self.integration_loop_time_constant = 5e-9 #default time constant units of seconds        
+                
         if 'integration_loop_power_law_exponent' in kwargs:
             if kwargs['integration_loop_power_law_exponent'] > 0:
                 raise ValueError('[soens_sim] power_law_exponent associated with dendritic decay must be a real number between negative infinity and zero')
@@ -833,7 +843,10 @@ class neuron():
 
         if 'input_dendritic_inductances' in kwargs:
             if type(kwargs['input_dendritic_inductances']) == list:
-                    self.input_dendritic_inductances = kwargs['input_dendritic_inductances']
+                self.input_dendritic_inductances = dict()
+                for ii in range(len(self.input_dendritic_connections)):
+                    self.input_dendritic_inductances[self.input_dendritic_connections[ii]] = kwargs['input_dendritic_inductances'][ii]
+                # self.input_dendritic_inductances = kwargs['input_dendritic_inductances']
             else:
                 raise ValueError('[soens_sim] Input dendritic inductances to neurons are specified as a list of pairs of real numbers with one pair per dendritic connection. The first element of the pair is the inductance on the neuronal receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the dendrite and the neuronal receiving loop.')
         else:
@@ -900,6 +913,7 @@ class neuron():
                 else:
                     synapse.synapses[name_2].input_spike_times = []
                 dendrite.dendrites[name_1].synapses[synapse.synapses[name_2].name] = synapse.synapses[name_2]
+                self.synapses[name_2] = synapse.synapses[name_2]
                 
             #then add direct connections to dendrites
             dendrite.dendrites[name_1].direct_connections = dict()
@@ -920,6 +934,7 @@ class neuron():
             dendrite.dendrites[name_1].dendrites = dict()
             for name_2 in dendrite.dendrites[name_1].input_dendritic_connections:
                 dendrite.dendrites[name_1].dendrites[dendrite.dendrites[name_2].name] = dendrite.dendrites[name_2]
+                self.dendrites[name_2] = dendrite.dendrites[name_2]
             
             #then add dendrites to neuron
             self.dendrites[dendrite.dendrites[name_1].name] = dendrite.dendrites[name_1]
@@ -928,6 +943,9 @@ class neuron():
         self.synapses = dict()
         for name in self.input_synaptic_connections:             
             self.synapses[synapse.synapses[name].name] = synapse.synapses[name]
+            
+        #finally, add self to self as dendrite
+        self.dendrites['{}__d'.format(self.name)] = dendrite.dendrites['{}__d'.format(self.name)]
                         
         return self   
         
@@ -941,11 +959,12 @@ class neuron():
         # t_obs = dt*np.round((self.sim_params['pre_observation_duration']+num_dt_pre*dt)/dt,decimals = 0)
         # t_sim_total = dt*np.round((t_obs+self.sim_params['observation_duration'])/dt,decimals = 0)
         
-        time_vec = np.arange(0,tf+dt,dt)                
+        time_vec = np.arange(0,tf+dt,dt)    
+        self.time_vec = time_vec            
 
         # attach synapses, dendrites, and direct connections to neuron
         self.make_connections()        
-        print('simulating neuron with {:d} synapses and {:d} dendrites\n\n'.format(len(self.synapses),len(self.dendrites)))
+        print('\nsimulating neuron with {:d} synapse(s) and {:d} dendrite(s)\n'.format(len(self.synapses),len(self.dendrites)))
         
         self = neuron_time_stepper(time_vec,self)
         

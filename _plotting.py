@@ -7,7 +7,7 @@ from matplotlib.collections import PolyCollection
 import matplotlib.gridspec as gridspec
 import pandas as pd
 
-from util import color_dictionary
+from util import color_dictionary, physical_constants
 colors = color_dictionary()
 
 # from _functions import syn_1jj_rate_fit
@@ -186,13 +186,13 @@ plt.rcParams['figure.figsize'] = pp['fig_size']
 plt.rcParams['figure.titlesize'] = pp['title_font_size']
 plt.rcParams['figure.autolayout'] = True
 
-# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
+plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue3'],colors['red1'],colors['red3'],colors['green1'],colors['green3'],colors['yellow1'],colors['yellow3']])
 
-plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
-                                                    colors['red5'],colors['red4'],colors['red3'],colors['red2'],colors['red1'],
-                                                    colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green3'],
-                                                    colors['yellow5'],colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+#                                                     colors['red5'],colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+#                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green3'],
+#                                                     colors['yellow5'],colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
 
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
 #                                                     colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
@@ -652,6 +652,81 @@ def plot_rate_vs_num_active_synapses(neuron_instance,plot_save_string = ''):
     
     return
 
+
+def plot_neuronal_response(neuron_instance):
+    
+    # tt = time.time()   
+    # save_str = 'bursting__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    
+    p = physical_constants()
+    Phi_0 = 1 # 1e18*p['Phi0']    
+    
+    time_vec = neuron_instance.time_vec
+    fig, axs = plt.subplots(nrows = 6, ncols = 1, sharex = True, sharey = False)   
+    # fig.suptitle('Current in the neuronal receiving loop versus time')
+    
+    # neuron
+    axs[0].plot(time_vec*1e6,neuron_instance.I_ni_vec, '-', markersize = pp['nominal_markersize'], label = neuron_instance.name+' ($tau_{ni}$ = '+'{:3.0f}ns)'.format(neuron_instance.integration_loop_time_constant*1e9))
+    axs[1].plot(time_vec*1e6,Phi_0*neuron_instance.influx_vec, '-', markersize = pp['nominal_markersize'], label = neuron_instance.name)
+    
+    axs[0].set_ylabel(r'$I_{ni}$ [$\mu$A]')
+    axs[0].legend()
+    
+    axs[1].set_ylabel(r'$\Phi_{in}$ [pH $\mu$A]')
+    axs[1].legend()
+    
+    # axs[0].plot(time_vec*1e6,neuron_instance.cell_body_circulating_current*1e6, '-', color = colors['blue_3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = neuron_instance.name+' ('+neuron_instance.unique_label+')')        
+    # #spike times
+    # ylim = axs[0].get_ylim()
+    # for ii in range(len(neuron_instance.spike_times)):
+    #     if ii == len(neuron_instance.spike_times):
+    #         axs[0].plot([neuron_instance.spike_times[ii]*1e6, neuron_instance.spike_times[ii]*1e6], [ylim[0], ylim[1]], ':', color = colors['grey_12'], linewidth = pp['fine_linewidth'], label = 'spike times')
+    #     else:
+    #         axs[0].plot([neuron_instance.spike_times[ii]*1e6, neuron_instance.spike_times[ii]*1e6], [ylim[0], ylim[1]], ':', color = colors['grey_12'], linewidth = pp['fine_linewidth'])
+    # #threshold
+    # xlim = axs[0].get_xlim()
+    # axs[0].plot([xlim[0],xlim[1]], [neuron_instance.thresholding_junction_critical_current*1e6,neuron_instance.thresholding_junction_critical_current*1e6], '-.', color = colors['red_5'], linewidth = pp['fine_linewidth'], label = 'Threshold')
+    # axs[0].set_ylabel(r'$I_{nr}$ [$\mu$A]')
+    # axs[0].set_title('Total current in NR loop')
+    # axs[0].legend() 
+    
+    # dendrites
+    for name in neuron_instance.input_dendritic_connections:
+        axs[2].plot(time_vec*1e6,neuron_instance.dendrites[name].I_di_vec, '-', markersize = pp['nominal_markersize'], label = name+' ($tau_{di}$ = '+'{:3.0f}ns)'.format(neuron_instance.dendrites[name].integration_loop_time_constant*1e9))
+        axs[3].plot(time_vec*1e6,Phi_0*neuron_instance.dendrites[name].influx_vec, '-', markersize = pp['nominal_markersize'], label = name)        
+         
+    # axs[2].set_xlabel(r'Time [$\mu$s]')
+    axs[2].set_ylabel(r'$I_{di}$ [$\mu$A]')
+    axs[2].legend() 
+    
+    # axs[3].set_ylabel(r'$\Phi_{in}/\Phi_{0}$')
+    axs[3].set_ylabel(r'$\Phi_{in}$ [pH $\mu$A]')
+    axs[3].legend()
+    
+    # synapses     
+    for name in neuron_instance.input_synaptic_connections:
+        axs[4].plot(time_vec*1e6,neuron_instance.synapses[name].I_si_vec, '-', markersize = pp['nominal_markersize'], label = name+' ($tau_{si}$ = '+'{:3.0f}ns)'.format(neuron_instance.synapses[name].integration_loop_time_constant*1e9))
+        axs[5].plot(time_vec*1e6,neuron_instance.synapses[name].I_spd_vec, '-', markersize = pp['nominal_markersize'], label = name)        
+         
+    axs[4].set_xlabel(r'Time [$\mu$s]')
+    axs[4].set_ylabel(r'$I_{si}$ [$\mu$A]')
+    # axs[4].set_title('Contribution from each synapse')
+    axs[4].legend() 
+    
+    axs[5].set_ylabel(r'$I_{spd}$ [$\mu$A]')
+    # axs[5].set_title('Contribution from each synapse')
+    axs[5].legend()
+   
+    
+    # axs[1].grid(b = False)        
+    # axs[1].grid(b = True, which='major', axis='both')
+    
+    plt.show()       
+    # fig.savefig('figures/'+save_str+'.png')
+    
+    return
+
+
 def plot_neuronal_response__single_synaptic_pulse(neuron_instance,plot_save_string = ''):
     
     tt = time.time()   
@@ -697,6 +772,7 @@ def plot_neuronal_response__single_synaptic_pulse(neuron_instance,plot_save_stri
     fig.savefig('figures/'+save_str+'.png')
     
     return
+
 
 def plot_burst_size_vs_num_active_synapses(neuron_instance,plot_save_string = ''):
     

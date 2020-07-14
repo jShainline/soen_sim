@@ -194,6 +194,7 @@ data_array['I_drive_list'] = I_drive_list#[x*1e-6 for x in I_drive_vec]
 data_array['I_si_array'] = I_si_array__scaled
 print('\n\nsaving session data ...')
 save_session_data(data_array,save_string)
+save_session_data(data_array,save_string+'.soen',False)
 
 
 #%% load test
