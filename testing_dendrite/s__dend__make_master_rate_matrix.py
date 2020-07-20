@@ -7,7 +7,7 @@ from scipy.optimize import curve_fit
 
 # from soen_sim import input_signal, synapse, dendrite, neuron
 from _plotting import plot_fq_peaks, plot_fq_peaks__dt_vs_bias, plot_wr_data__currents_and_voltages
-from _functions import save_session_data, load_session_data, read_wr_data, V_fq__fit, inter_fluxon_interval__fit, inter_fluxon_interval, inter_fluxon_interval__fit_2, inter_fluxon_interval__fit_3
+from _functions import cv, save_session_data, load_session_data, read_wr_data, V_fq__fit, inter_fluxon_interval__fit, inter_fluxon_interval, inter_fluxon_interval__fit_2, inter_fluxon_interval__fit_3
 from util import physical_constants
 p = physical_constants()
 
@@ -27,15 +27,16 @@ I_de_list = np.arange(70,80+dI,dI) # uA
 num_I_de = len(I_de_list)
 
 # drive current
-dI = 1 # uA
-dI_2 = 0.1 # uA
-I_drive_array = [[np.concatenate((np.arange(18.6,18.9+dI,dI),np.arange(19,30+dI,dI))),np.arange(18,30+dI,dI),np.arange(16,30+dI,dI),np.arange(15,30+dI,dI),np.arange(14,30+dI,dI),np.arange(12,30+dI,dI)], # L_left = 7 pH
-                 [np.arange(17,30+dI,dI),np.arange(16,30+dI,dI),np.arange(15,30+dI,dI),np.arange(13,30+dI,dI),np.arange(12,30+dI,dI),np.arange(10,30+dI,dI)], # L_left = 8 pH
-                 [np.arange(16,30+dI,dI),np.arange(14,30+dI,dI),np.arange(13,30+dI,dI),np.arange(11,30+dI,dI),np.arange(10,30+dI,dI),np.arange(8,30+dI,dI)], # L_left = 9 pH
-                 [np.arange(14,30+dI,dI),np.arange(13,30+dI,dI),np.arange(11,30+dI,dI),np.arange(10,30+dI,dI),np.arange(8,30+dI,dI),np.arange(7,30+dI,dI)], # L_left = 10 pH
-                 [np.arange(12,30+dI,dI),np.arange(11,30+dI,dI),np.arange(10,30+dI,dI),np.arange(8,30+dI,dI),np.arange(6,30+dI,dI),np.arange(5,30+dI,dI)], # L_left = 11 pH
-                 [np.arange(11,30+dI,dI),np.arange(9,30+dI,dI),np.arange(8,30+dI,dI),np.arange(6,30+dI,dI),np.arange(5,30+dI,dI),np.arange(3,30+dI,dI)], # L_left = 12 pH 
-                 [np.arange(9,30+dI,dI),np.arange(8,30+dI,dI),np.arange(6,30+dI,dI),np.arange(5,30+dI,dI),np.arange(3,30+dI,dI),np.arange(1,30+dI,dI)]] # L_left = 13 pH # units of uA
+d1 = 0.1 # uA
+d2 = 1 # uA
+# cv(start1,stop1,d1,start2,stop2,d2)
+I_drive_array = [[cv(18.3,18.9,d1,19,30,d2),cv(17.1,17.9,d1,18,30,d2),cv(15.8,15.9,d1,16,30,d2),cv(14.5,14.9,d1,15,30,d2),cv(13.1,13.9,d1,14,30,d2),cv(11.6,11.9,d1,12,30,d2)], # L_left = 7 pH
+                 [cv(16.8,16.9,d1,17,30,d2),cv(15.5,15.9,d1,16,30,d2),cv(14.1,14.9,d1,15,30,d2),cv(12.7,12.9,d1,13,30,d2),cv(11.3,11.9,d1,12,30,d2),cv( 9.8, 9.9,d1,10,30,d2)], # L_left = 8 pH                 
+                 [cv(15.2,15.9,d1,16,30,d2),cv(13.8,13.9,d1,14,30,d2),cv(12.5,12.9,d1,13,30,d2),cv(11.0,10.9,d1,11,30,d2),cv( 9.5, 9.9,d1,10,30,d2),cv( 7.9, 7.9,d1, 8,30,d2)], # L_left = 9 pH                 
+                 [cv(13.6,13.9,d1,14,30,d2),cv(12.2,12.9,d1,13,30,d2),cv(10.8,10.9,d1,11,30,d2),cv( 9.3, 9.9,d1,10,30,d2),cv( 7.8, 7.9,d1, 8,30,d2),cv( 6.1, 6.9,d1, 7,30,d2)], # L_left = 10 pH                 
+                 [cv(12.0,11.9,d1,12,30,d2),cv(10.6,10.9,d1,11,30,d2),cv( 9.1, 9.9,d1,10,30,d2),cv( 7.6, 7.9,d1, 8,30,d2),cv( 6.0, 5.9,d1, 6,30,d2),cv( 4.3, 4.9,d1, 5,30,d2)], # L_left = 11 pH                 
+                 [cv(10.4,10.9,d1,11,30,d2),cv( 8.9, 8.9,d1, 9,30,d2),cv( 7.4, 7.9,d1, 8,30,d2),cv( 5.8, 5.9,d1, 6,30,d2),cv( 4.2, 4.9,d1, 5,30,d2),cv( 2.4, 2.9,d1, 3,30,d2)], # L_left = 12 pH                  
+                 [cv( 8.8, 8.9,d1, 9,30,d2),cv( 7.3, 7.9,d1, 8,30,d2),cv( 5.7, 5.9,d1, 6,30,d2),cv( 4.1, 4.9,d1, 5,30,d2),cv( 2.4, 2.9,d1, 3,30,d2),cv( 0.0, 0.9,d1, 1,30,d2)]] # L_left = 13 pH # units of uA
 
 t_sim = 100 # ns
 inductance_conversion = 1e12
