@@ -30,13 +30,14 @@ num_I_de = len(I_de_list)
 d1 = 0.1 # uA
 d2 = 1 # uA
 # cv(start1,stop1,d1,start2,stop2,d2)
+#                 I_de = 7                  I_de = 72
 I_drive_array = [[cv(18.3,18.9,d1,19,30,d2),cv(17.1,17.9,d1,18,30,d2),cv(15.8,15.9,d1,16,30,d2),cv(14.5,14.9,d1,15,30,d2),cv(13.1,13.9,d1,14,30,d2),cv(11.6,11.9,d1,12,30,d2)], # L_left = 7 pH
                  [cv(16.8,16.9,d1,17,30,d2),cv(15.5,15.9,d1,16,30,d2),cv(14.1,14.9,d1,15,30,d2),cv(12.7,12.9,d1,13,30,d2),cv(11.3,11.9,d1,12,30,d2),cv( 9.8, 9.9,d1,10,30,d2)], # L_left = 8 pH                 
                  [cv(15.2,15.9,d1,16,30,d2),cv(13.8,13.9,d1,14,30,d2),cv(12.5,12.9,d1,13,30,d2),cv(11.0,10.9,d1,11,30,d2),cv( 9.5, 9.9,d1,10,30,d2),cv( 7.9, 7.9,d1, 8,30,d2)], # L_left = 9 pH                 
                  [cv(13.6,13.9,d1,14,30,d2),cv(12.2,12.9,d1,13,30,d2),cv(10.8,10.9,d1,11,30,d2),cv( 9.3, 9.9,d1,10,30,d2),cv( 7.8, 7.9,d1, 8,30,d2),cv( 6.1, 6.9,d1, 7,30,d2)], # L_left = 10 pH                 
                  [cv(12.0,11.9,d1,12,30,d2),cv(10.6,10.9,d1,11,30,d2),cv( 9.1, 9.9,d1,10,30,d2),cv( 7.6, 7.9,d1, 8,30,d2),cv( 6.0, 5.9,d1, 6,30,d2),cv( 4.3, 4.9,d1, 5,30,d2)], # L_left = 11 pH                 
                  [cv(10.4,10.9,d1,11,30,d2),cv( 8.9, 8.9,d1, 9,30,d2),cv( 7.4, 7.9,d1, 8,30,d2),cv( 5.8, 5.9,d1, 6,30,d2),cv( 4.2, 4.9,d1, 5,30,d2),cv( 2.4, 2.9,d1, 3,30,d2)], # L_left = 12 pH                  
-                 [cv( 8.8, 8.9,d1, 9,30,d2),cv( 7.3, 7.9,d1, 8,30,d2),cv( 5.7, 5.9,d1, 6,30,d2),cv( 4.1, 4.9,d1, 5,30,d2),cv( 2.4, 2.9,d1, 3,30,d2),cv( 0.0, 0.9,d1, 1,30,d2)]] # L_left = 13 pH # units of uA
+                 [cv( 8.8, 8.9,d1, 9,30,d2),cv( 7.3, 7.9,d1, 8,30,d2),cv( 5.7, 5.9,d1, 6,30,d2),cv( 4.1, 4.9,d1, 5,30,d2),cv( 2.4, 2.9,d1, 3,30,d2),cv( 0.5, 0.9,d1, 1,30,d2)]] # L_left = 13 pH # units of uA
 
 t_sim = 100 # ns
 inductance_conversion = 1e12
@@ -44,22 +45,14 @@ inductance_conversion = 1e12
 #%%
 
 # loop to create rate files for all cases
-for pp in [6]: # in range(num_L):
-    print('pp = {:d} of {:d}'.format(pp+1,num_L))
+for pp in range(num_L): # [6]: # 
     
-    for qq in [5]: # in range(num_I_de):
-        print('qq = {:d} of {:d}'.format(qq+1,num_I_de))
+    for qq in range(num_I_de): # [5]: # 
                 
         # load wr data, find peaks, find rates
         I_drive_list = I_drive_array[pp][qq] # [18.6,19,20,21,22,23,24,25,26,27,28,29,30]#np.arange(19,30+dI,dI)
         # t_sim_list = [60,70,50,40,35,32,32,32,32,32,32,32,32]
 
-        # j_df1_ifi_array = []
-        # j_df1_rate_array = []
-        # j_df2_ifi_array = []
-        # j_df2_rate_array = []
-        # j_jtl_ifi_array = []
-        # j_jtl_rate_array = []
         j_di_ifi_array = []
         j_di_rate_array = []
         
@@ -68,9 +61,9 @@ for pp in [6]: # in range(num_L):
         num_drives = len(I_drive_list)
         for ii in range(num_drives):
             
-            print('ii = {:d} of {:d}'.format(ii+1,num_drives))
+            print('pp = {:d} of {:d}; qq = {:d} of {:d}; ii = {:d} of {:d}'.format(pp+1,num_L,qq+1,num_I_de,ii+1,num_drives))
             
-            directory = 'wrspice_data/constant_drive/from_saeed'            
+            directory = 'wrspice_data/constant_drive/from_saeed/3jj/'            
             # directory = 'wrspice_data/fitting_data'            
             # dend_cnst_drv_Llft08.00pH_Lrgt22.00pH_Ide78.00uA_Idrv30.00uA_Ldi0077.50nH_taudi0775ms_dt00.1ps.dat
             I_drive = I_drive_list[ii]
@@ -79,67 +72,34 @@ for pp in [6]: # in range(num_L):
             
             # find peaks for each jj
             time_vec = data_dict['time']
-            # j_df = data_dict['v(3)']
-            # j_jtl = data_dict['v(4)']
             j_di = data_dict['v(4)'] # j_di = data_dict['v(5)']
             
             initial_ind = (np.abs(time_vec-2.0e-9)).argmin()
             final_ind = (np.abs(time_vec-t_sim*1e-9)).argmin()
         
             time_vec = time_vec[initial_ind:final_ind]
-            # j_df = j_df[initial_ind:final_ind]
-            # j_jtl = j_jtl[initial_ind:final_ind]
             j_di = j_di[initial_ind:final_ind]
           
-            # j_df1_peaks, _ = find_peaks(j_df, height = [187.8e-6,300e-6])
-            # j_df2_peaks, _ = find_peaks(j_df, height = [140e-6,187.6e-6])
-            # j_jtl_peaks, _ = find_peaks(j_jtl, height = 200e-6)
             j_di_peaks, _ = find_peaks(j_di, height = 200e-6)
         
-            fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
-            fig.suptitle(file_name)   
-            # ax[0].plot(time_vec*1e9,j_df*1e3, '-', label = '$J_{df}$')             
-            # ax[0].plot(time_vec[j_df1_peaks]*1e9,j_df[j_df1_peaks]*1e3, 'x')
-            # ax[0].plot(time_vec[j_df2_peaks]*1e9,j_df[j_df2_peaks]*1e3, 'x')
-            # ax[0].set_xlabel(r'Time [ns]')
-            # ax[0].set_ylabel(r'Voltage [mV]')
-            # ax[0].legend()
-            # ax[1].plot(time_vec*1e9,j_jtl*1e3, '-', label = '$J_{jtl}$')             
-            # ax[1].plot(time_vec[j_jtl_peaks]*1e9,j_jtl[j_jtl_peaks]*1e3, 'x')
-            # ax[1].set_xlabel(r'Time [ns]')
-            # ax[1].set_ylabel(r'Voltage [mV]')
-            # ax[1].legend()
-            ax.plot(time_vec*1e9,j_di*1e3, '-', label = '$J_{di}$')             
-            ax.plot(time_vec[j_di_peaks]*1e9,j_di[j_di_peaks]*1e3, 'x')
-            ax.set_xlabel(r'Time [ns]')
-            ax.set_ylabel(r'Voltage [mV]')
-            ax.legend()
-            plt.show()
+            if 1 == 2:
+                fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
+                fig.suptitle(file_name)  
+                ax.plot(time_vec*1e9,j_di*1e3, '-', label = '$J_{di}$')             
+                ax.plot(time_vec[j_di_peaks]*1e9,j_di[j_di_peaks]*1e3, 'x')
+                ax.set_xlabel(r'Time [ns]')
+                ax.set_ylabel(r'Voltage [mV]')
+                ax.legend()
+                plt.show()
             
             # find inter-fluxon intervals and fluxon generation rates for each JJ
             I_di = data_dict['i(L4)']
-            I_di = I_di[initial_ind:final_ind]
-            # I_drive = I_drive_listdata_dict['L4#branch']
-            # I_drive = I_drive[initial_ind:final_ind]   
+            I_di = I_di[initial_ind:final_ind] 
             
-            # I_dr1 = Idr1_next, Idr2_next, Ij2_next, Ij3_next, I1, I2, I3 = dendrite_current_splitting(Ic,Iflux_vec[jj],I_b,M_direct,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
-            
-            # j_df1_ifi = np.diff(time_vec[j_df1_peaks])
-            # j_df2_ifi = np.diff(time_vec[j_df2_peaks])
-            # j_jtl_ifi = np.diff(time_vec[j_jtl_peaks])
+
             j_di_ifi = np.diff(time_vec[j_di_peaks])
-            
-            # j_df1_rate = 1/j_df1_ifi
-            # j_df2_rate = 1/j_df2_ifi
-            # j_jtl_rate = 1/j_jtl_ifi
             j_di_rate = 1/j_di_ifi
             
-            # j_df1_ifi_array.append(j_df1_ifi)
-            # j_df1_rate_array.append(j_df1_rate)
-            # j_df2_ifi_array.append(j_df2_ifi)
-            # j_df2_rate_array.append(j_df2_rate)
-            # j_jtl_ifi_array.append(j_jtl_ifi)
-            # j_jtl_rate_array.append(j_jtl_rate)
             j_di_ifi_array.append(j_di_ifi)
             j_di_rate_array.append(j_di_rate)
             
@@ -163,12 +123,14 @@ for pp in [6]: # in range(num_L):
             temp_I_di_vec = np.zeros([len(j_di_rate_array[ii])])
             for jj in range(len(j_di_rate_array[ii])):
                 temp_rate_vec[jj] = 1e-6*j_di_rate_array[ii][jj] # master_rate_array has units of fluxons per microsecond
-                temp_I_di_vec[jj] = 1e6*( I_di_array[ii][jj]+I_di_array[ii][jj+1] )/2 # this makes I_si_array__scaled have the same dimensions as j_si_rate_array and units of uA
+                temp_I_di_vec[jj] = 1e6*( I_di_array[ii][jj]+I_di_array[ii][jj+1] )/2 # this makes I_di_array__scaled have the same dimensions as j_di_rate_array and units of uA
         
             master_rate_array.append([])
-            master_rate_array[ii] = np.append(temp_rate_vec,0) # this zero is added so that a current that rounds to I_si + I_si_pad will give zero rate
+            master_rate_array[ii] = np.append(temp_rate_vec,0) # this zero is added so that a current that rounds to I_di + I_di_pad will give zero rate
+            master_rate_array[ii].insert(0,0) # this zero is added so that a current that rounds to I_di - I_di_pad will give zero rate
             I_di_array__scaled.append([])
             I_di_array__scaled[ii] = np.append(temp_I_di_vec,np.max(temp_I_di_vec)+I_di_pad) # this additional I_di + I_di_pad is included so that a current that rounds to I_di + I_di_pad will give zero rate
+            I_di_array__scaled[ii].insert(0,np.min(temp_I_di_vec)-I_di_pad) # this additional I_di - I_di_pad is included so that a current that rounds to I_di - I_di_pad will give zero rate
 
         # plot the rate vectors
         fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
@@ -191,33 +153,6 @@ for pp in [6]: # in range(num_L):
         print('\n\nsaving session data ...')
         save_session_data(data_array,save_string)
         save_session_data(data_array,save_string+'.soen',False)
-
-
-#%% assemble data
-# longest_rate_vec = 0
-# fastest_rate = 0
-# for ii in range(num_drives):
-#     if len(master_data__di__r_fq[ii]) > longest_rate_vec:
-#         longest_rate_vec = len(master_data__di__r_fq[ii])
-#     fastest_rate = np.max([np.max(master_data__di__r_fq[ii]),fastest_rate])        
-
-# master_rate_matrix = np.zeros([num_drives,longest_rate_vec])
-# for ii in range(num_drives):
-#     tn = len(master_data__di__r_fq[ii])
-#     for jj in range(tn):
-#         master_rate_matrix[ii,jj] = master_data__di__r_fq[ii][jj]
-
-#%% color plot
-# fig, ax = plt.subplots(1,1)
-# rates = ax.imshow(np.transpose(master_rate_matrix[:,:]), cmap = plt.cm.viridis, interpolation='none', extent=[I_drive_list[0],I_drive_list[-1],0,max_I_di*1e6], aspect = 'auto', origin = 'lower')
-# cbar = fig.colorbar(rates, extend='both')
-# cbar.minorticks_on()     
-# fig.suptitle('$r_{tot}$ versus $I_{drive}$ and $I_{di}$')
-# # plt.title(title_string)
-# ax.set_xlabel(r'$I_{drive}$ [$\mu$A]')
-# ax.set_ylabel(r'$I_{di}$ [$\mu$A]')   
-# plt.show()      
-# fig.savefig('figures/'+save_str+'__log.png')
 
 #%% flux/current comparison
 # I_drive = 21.2
