@@ -2171,6 +2171,14 @@ def syn_isolatedjj_voltage_fit(I_bias,V0,mu1,mu2,Ir):
     
     return V
 
+def cv(start1,stop1,d1,start2,stop2,d2):
+    
+    # vec = np.concatenate((np.arange(start1,stop1+d1,d1),np.arange(start2,stop2+d2,d2)))
+    # vec = np.arange(start1,stop1+d1,d1)
+    vec = np.arange(start2,stop2+d2,d2)
+    
+    return vec
+
 
 # def syn_isolatedjj_voltage_fit(I_bias,V0,mu,Ir):
     

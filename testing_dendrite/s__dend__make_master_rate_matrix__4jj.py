@@ -63,7 +63,7 @@ for pp in range(num_L): # [6]: #
             
             print('pp = {:d} of {:d}; qq = {:d} of {:d}; ii = {:d} of {:d}'.format(pp+1,num_L,qq+1,num_I_de,ii+1,num_drives))
             
-            directory = 'wrspice_data/constant_drive/from_saeed/3jj/'            
+            directory = 'wrspice_data/constant_drive/from_saeed/4jj/'            
             # directory = 'wrspice_data/fitting_data'            
             # dend_cnst_drv_Llft08.00pH_Lrgt22.00pH_Ide78.00uA_Idrv30.00uA_Ldi0077.50nH_taudi0775ms_dt00.1ps.dat
             I_drive = I_drive_list[ii]
