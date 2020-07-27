@@ -4,8 +4,10 @@ from pylab import *
 import time
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.collections import PolyCollection
+import matplotlib as mp
 import matplotlib.gridspec as gridspec
 import pandas as pd
+import pickle
 
 from util import color_dictionary, physical_constants
 colors = color_dictionary()
@@ -1741,4 +1743,96 @@ def plot_spd_response(time_vec,time_vec_reduced,I_sy_list,I_spd_array,I_spd_arra
     ax.legend()
     plt.show()
 
+    return
+
+
+def plot_dend_time_traces(time_vec,j_di,j_di_peaks,min_peak_height,I_di,file_name,):
+    
+    fig, ax = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)
+    fig.suptitle(file_name)  
+    ax[0].plot(time_vec*1e9,j_di*1e3, '-', label = '$J_{di}$')             
+    ax[0].plot(time_vec[j_di_peaks]*1e9,j_di[j_di_peaks]*1e3, 'x')
+    ax[0].plot([time_vec[0]*1e9,time_vec[-1]*1e9],[min_peak_height*1e3,min_peak_height*1e3], ':', color = colors['black'], label = 'peak cutoff')
+    ax[0].set_xlabel(r'Time [ns]')
+    ax[0].set_ylabel(r'Voltage [mV]')
+    ax[0].legend() 
+    ax[1].plot(time_vec*1e9,I_di*1e6, '-', label = '$I_{di}$')             
+    ax[1].plot(time_vec[j_di_peaks]*1e9,I_di[j_di_peaks]*1e6, 'x')
+    ax[1].set_xlabel(r'Time [ns]')
+    ax[1].set_ylabel(r'Current [$\mu$V]')
+    ax[1].legend()
+    plt.show()
+    
+    return
+
+
+def plot_dend_rate_array(**kwargs):
+        
+    # plt.close('all')
+    # Make data.
+    
+    if 'file_name' in kwargs:
+        with open('soen_sim_data/'+kwargs['file_name'], 'rb') as data_file:         
+            data_array = pickle.load(data_file)
+        # data_array = load_session_data(kwargs['file_name'])
+        master_rate_array = data_array['rate_array']
+        I_drive_list = data_array['I_drive_list']
+        I_di_array = data_array['I_di_array']
+        
+    elif 'I_di_array' in kwargs:
+        I_di_array = kwargs['I_di_array']
+        I_drive_list = kwargs['I_drive_list']
+        master_rate_array = kwargs['master_rate_array']
+        
+    num_drives=len(I_drive_list)
+    cmap = mp.cm.get_cmap('cividis') # 'summer'
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    I_di_min = 1000
+    I_di_max = -1000
+    I_drive_min = 1000
+    I_drive_max = -1000
+    rate_min = 1000
+    rate_max = -1000
+    for ii in range(num_drives):
+    #    ax.plot(I_di_array__scaled[ii][:],master_rate_array[ii][:]*1e-3, '-', label = 'I_drive = {}'.format(I_drive_list[ii]))  
+            X3 = I_di_array[ii][:]
+            Z3 = I_drive_list[ii]
+            Y3 = master_rate_array[ii][:]*1e-3
+            verts = [(X3[jj],Y3[jj]-0.5) for jj in range(len(X3))]
+            ax.add_collection3d(PolyCollection([verts],color=cmap(1-ii/num_drives),alpha=0.3),zs=Z3, zdir='y')
+            ax.plot(X3,Y3,Z3,linewidth=4, color=cmap(1-ii/num_drives), zdir='y',alpha=1)
+            
+            if np.min(I_di_array[ii][:]) < I_di_min:
+                I_di_min = np.min(I_di_array[ii][:])
+            if np.max(I_di_array[ii][:]) > I_di_max:
+                I_di_max = np.max(I_di_array[ii][:])
+                
+            if np.min(I_drive_list[ii]) < I_drive_min:
+                I_drive_min = np.min(I_drive_list[ii])
+            if np.max(I_drive_list[ii]) > I_drive_max:
+                I_drive_max = np.max(I_drive_list[ii])
+                
+            if np.min(master_rate_array[ii][:]*1e-3) < rate_min:
+                rate_min = np.min(master_rate_array[ii][:]*1e-3)
+            if np.max(master_rate_array[ii][:]*1e-3) > rate_max:
+                rate_max = np.max(master_rate_array[ii][:]*1e-3)
+           
+    ax.set_xticks([0, 10, 20])
+    for t in ax.xaxis.get_major_ticks(): t.label.set_fontsize(24)
+    for t in ax.yaxis.get_major_ticks(): t.label.set_fontsize(24)
+    for t in ax.zaxis.get_major_ticks(): t.label.set_fontsize(24)
+    
+    ax.set_xlabel(r'$I_{di}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_xlim3d(I_di_min-1,I_di_max+1)
+    
+    ax.set_ylabel('Idrive [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(I_drive_min-1,I_drive_max+1)
+    ax.zaxis.set_rotate_label(False)  # disable automatic rotation
+    ax.set_zlabel(r'$r_{j_{di}}$ [kilofluxons per $\mu$s]',fontsize=24, fontweight='bold', rotation=96,labelpad=10) ; ax.set_zlim3d(rate_min-1,rate_max+1)
+    ax.yaxis._axinfo['label']['space_factor'] = 30.0
+    
+    ax.view_init(45, 30)
+    
+    plt.show()
+    
     return

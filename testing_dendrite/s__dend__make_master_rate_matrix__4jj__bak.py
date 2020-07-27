@@ -1,11 +1,13 @@
 #%%
 import numpy as np
 from matplotlib import pyplot as plt
+import time
 from scipy.signal import find_peaks
+from scipy.optimize import curve_fit
 
 # from soen_sim import input_signal, synapse, dendrite, neuron
-from _plotting import plot_dend_rate_array, plot_dend_time_traces
-from _functions import cv, save_session_data, read_wr_data
+from _plotting import plot_fq_peaks, plot_fq_peaks__dt_vs_bias, plot_wr_data__currents_and_voltages
+from _functions import cv, save_session_data, load_session_data, read_wr_data, V_fq__fit, inter_fluxon_interval__fit, inter_fluxon_interval, inter_fluxon_interval__fit_2, inter_fluxon_interval__fit_3
 from util import physical_constants
 p = physical_constants()
 
@@ -28,8 +30,7 @@ num_I_de = len(I_de_list)
 d1 = 0.1 # uA
 d2 = 1 # uA
 # cv(start1,stop1,d1,start2,stop2,d2)
-
-#                 I_de = 70                 I_de = 72                 I_de = 74                 I_de = 76                 I_de = 78                 I_de = 80
+#                 I_de = 7                  I_de = 72
 I_drive_array = [[cv(18.3,18.9,d1,19,30,d2),cv(17.1,17.9,d1,18,30,d2),cv(15.8,15.9,d1,16,30,d2),cv(14.5,14.9,d1,15,30,d2),cv(13.1,13.9,d1,14,30,d2),cv(11.6,11.9,d1,12,30,d2)], # L_left = 7 pH
                  [cv(16.8,16.9,d1,17,30,d2),cv(15.5,15.9,d1,16,30,d2),cv(14.1,14.9,d1,15,30,d2),cv(12.7,12.9,d1,13,30,d2),cv(11.3,11.9,d1,12,30,d2),cv( 9.8, 9.9,d1,10,30,d2)], # L_left = 8 pH                 
                  [cv(15.2,15.9,d1,16,30,d2),cv(13.8,13.9,d1,14,30,d2),cv(12.5,12.9,d1,13,30,d2),cv(11.0,10.9,d1,11,30,d2),cv( 9.5, 9.9,d1,10,30,d2),cv( 7.9, 7.9,d1, 8,30,d2)], # L_left = 9 pH                 
@@ -44,19 +45,9 @@ inductance_conversion = 1e12
 #%%
 
 # loop to create rate files for all cases
-plot_time_traces = True
-plot_rate_arrays = True
-min_peak_height = 182e-6 # units of volts
-min_peak_distance = 175 # units of samples
-
-min_ht = 1000
-max_ht = -1000
-min_dist = 1000
-max_dist = -1000
-
-for pp in [3]: # range(num_L): #  
+for pp in range(num_L): # [6]: # 
     
-    for qq in [3]: # range(num_I_de): # 
+    for qq in range(num_I_de): # [5]: # 
                 
         # load wr data, find peaks, find rates
         I_drive_list = I_drive_array[pp][qq] # [18.6,19,20,21,22,23,24,25,26,27,28,29,30]#np.arange(19,30+dI,dI)
@@ -84,33 +75,27 @@ for pp in [3]: # range(num_L): #
             j_di = data_dict['v(4)'] # j_di = data_dict['v(5)']
             
             initial_ind = (np.abs(time_vec-2.0e-9)).argmin()
-            final_ind = (np.abs(time_vec-np.max(time_vec))).argmin()
+            final_ind = (np.abs(time_vec-t_sim*1e-9)).argmin()
         
             time_vec = time_vec[initial_ind:final_ind]
             j_di = j_di[initial_ind:final_ind]
           
-            # j_di_peaks, _ = find_peaks(j_di, height = jph[pp][qq][ii])
-            j_di_peaks, _ = find_peaks(j_di, height = min_peak_height, distance = min_peak_distance)
-            if len(j_di_peaks) > 1:
-                print('min(diff(j_di_peaks)) = {}'.format(np.min(np.diff(j_di_peaks))))
-                print('max(diff(j_di_peaks)) = {}'.format(np.max(np.diff(j_di_peaks))))
-                if np.min(np.diff(j_di_peaks)) < min_dist:
-                    min_dist = np.min(np.diff(j_di_peaks))
-                if np.max(np.diff(j_di_peaks)) > max_dist:
-                    max_dist = np.max(np.diff(j_di_peaks))
-                if np.min(j_di[j_di_peaks]) < min_ht:
-                    min_ht = np.min(j_di[j_di_peaks])
-                if np.max(j_di[j_di_peaks]) > max_ht:
-                    max_ht = np.max(j_di[j_di_peaks])
-            else:
-                print('no peaks')
+            j_di_peaks, _ = find_peaks(j_di, height = 200e-6)
+        
+            if 1 == 2:
+                fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
+                fig.suptitle(file_name)  
+                ax.plot(time_vec*1e9,j_di*1e3, '-', label = '$J_{di}$')             
+                ax.plot(time_vec[j_di_peaks]*1e9,j_di[j_di_peaks]*1e3, 'x')
+                ax.set_xlabel(r'Time [ns]')
+                ax.set_ylabel(r'Voltage [mV]')
+                ax.legend()
+                plt.show()
             
             # find inter-fluxon intervals and fluxon generation rates for each JJ
             I_di = data_dict['i(L4)']
-            I_di = I_di[initial_ind:final_ind]
-        
-            if plot_time_traces == True:
-                plot_dend_time_traces(time_vec,j_di,j_di_peaks,min_peak_height,I_di,file_name)
+            I_di = I_di[initial_ind:final_ind] 
+            
 
             j_di_ifi = np.diff(time_vec[j_di_peaks])
             j_di_rate = 1/j_di_ifi
@@ -134,36 +119,32 @@ for pp in [3]: # range(num_L): #
             
         for ii in range(num_drives):
                         
-            tn = np.max([len(j_di_rate_array[ii]),1])
-            temp_rate_vec = np.zeros([tn])
-            temp_I_di_vec = np.zeros([tn])
+            temp_rate_vec = np.zeros([len(j_di_rate_array[ii])])
+            temp_I_di_vec = np.zeros([len(j_di_rate_array[ii])])
             for jj in range(len(j_di_rate_array[ii])):
                 temp_rate_vec[jj] = 1e-6*j_di_rate_array[ii][jj] # master_rate_array has units of fluxons per microsecond
                 temp_I_di_vec[jj] = 1e6*( I_di_array[ii][jj]+I_di_array[ii][jj+1] )/2 # this makes I_di_array__scaled have the same dimensions as j_di_rate_array and units of uA
         
             master_rate_array.append([])
-            master_rate_array[ii] = np.insert(np.append(temp_rate_vec,0),0,0) # these zeros added so that a current that rounds to I_di + I_di_pad will give zero rate
-            # master_rate_array[ii].insert(0,0) # this zero is added so that a current that rounds to I_di - I_di_pad will give zero rate
+            master_rate_array[ii] = np.append(temp_rate_vec,0) # this zero is added so that a current that rounds to I_di + I_di_pad will give zero rate
+            master_rate_array[ii].insert(0,0) # this zero is added so that a current that rounds to I_di - I_di_pad will give zero rate
             I_di_array__scaled.append([])
-            I_di_array__scaled[ii] = np.insert(np.append(temp_I_di_vec,np.max(temp_I_di_vec)+I_di_pad),0,0) # this additional I_di + I_di_pad is included so that a current that rounds to I_di + I_di_pad will give zero rate
-            # I_di_array__scaled[ii].insert(0,np.min(temp_I_di_vec)-I_di_pad) # this additional I_di - I_di_pad is included so that a current that rounds to I_di - I_di_pad will give zero rate
+            I_di_array__scaled[ii] = np.append(temp_I_di_vec,np.max(temp_I_di_vec)+I_di_pad) # this additional I_di + I_di_pad is included so that a current that rounds to I_di + I_di_pad will give zero rate
+            I_di_array__scaled[ii].insert(0,np.min(temp_I_di_vec)-I_di_pad) # this additional I_di - I_di_pad is included so that a current that rounds to I_di - I_di_pad will give zero rate
 
-        # plot the rate array  
-        if plot_rate_arrays == True:
-            plot_dend_rate_array(I_di_array = I_di_array__scaled, I_drive_list = I_drive_list, master_rate_array = master_rate_array)
-        
-        # fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
-        # fig.suptitle('master _ de _ rates') 
-        # # plt.title('$I_de = $ {} $\mu$A'.format(I_sy))
-        # for ii in range(num_drives):
-        #     ax.plot(I_di_array__scaled[ii][:],master_rate_array[ii][:]*1e-3, '-', label = 'I_drive = {}'.format(I_drive_list[ii]))    
-        # ax.set_xlabel(r'$I_{di}$ [$\mu$A]')
-        # ax.set_ylabel(r'$r_{j_{di}}$ [kilofluxons per $\mu$s]')
-        # # ax.legend()
-        # plt.show()
+        # plot the rate vectors
+        fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
+        fig.suptitle('master _ de _ rates') 
+        # plt.title('$I_de = $ {} $\mu$A'.format(I_sy))
+        for ii in range(num_drives):
+            ax.plot(I_di_array__scaled[ii][:],master_rate_array[ii][:]*1e-3, '-', label = 'I_drive = {}'.format(I_drive_list[ii]))    
+        ax.set_xlabel(r'$I_{si}$ [$\mu$A]')
+        ax.set_ylabel(r'$r_{j_{si}}$ [kilofluxons per $\mu$s]')
+        # ax.legend()
+        plt.show()
         
         # save data
-        save_string = 'master__dnd_2jj__rate_array__Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}'.format(L_left_list[pp],L_right_list[pp],I_de_list[qq])
+        save_string = 'master__dnd_4jj__rate_array__Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}'.format(L_left_list[pp],L_right_list[pp],I_de_list[qq])
         data_array = dict()
         data_array['rate_array'] = master_rate_array
         data_array['I_drive_list'] = I_drive_list
@@ -172,11 +153,6 @@ for pp in [3]: # range(num_L): #
         print('\n\nsaving session data ...')
         save_session_data(data_array,save_string)
         save_session_data(data_array,save_string+'.soen',False)
-        
-print('\n\nmin_ht = {}'.format(min_ht))
-print('max_ht = {}'.format(max_ht))
-print('min_dist = {}'.format(min_dist))
-print('max_dist = {}'.format(max_dist))
 
 #%% flux/current comparison
 # I_drive = 21.2
