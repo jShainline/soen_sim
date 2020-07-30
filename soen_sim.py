@@ -320,8 +320,6 @@ class synapse():
         # if self.num_jjs == 1:
         #     I_bias_list = [copy.deepcopy(self.I_sy)*1e6]
         #     L_list = [copy.deepcopy(self.L_si)*1e12]
-            
-
 
         if self.num_jjs == 1:
             
@@ -457,6 +455,14 @@ class dendrite():
             _name = 'unnamed_dendrite'
         self.name = _name
         
+        if 'num_jjs' in kwargs:
+            if kwargs['num_jjs'] == 2 or kwargs['num_jjs'] == 4:
+                self.num_jjs = kwargs['num_jjs']
+            else:
+                raise ValueError('[soens_sim] num_jjs must be 2, or 4 for a dendrite')
+        else:
+            self.num_jjs = 4
+                    
         if 'inhibitory_or_excitatory' in kwargs:
             if kwargs['inhibitory_or_excitatory'] == 'inhibitory' or kwargs['inhibitory_or_excitatory'] == 'excitatory':
                 _i_or_e = kwargs['inhibitory_or_excitatory']

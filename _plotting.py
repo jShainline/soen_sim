@@ -1785,7 +1785,7 @@ def plot_dend_rate_array(**kwargs):
         master_rate_array = kwargs['master_rate_array']
         
     num_drives=len(I_drive_list)
-    cmap = mp.cm.get_cmap('cividis') # 'summer'
+    cmap = mp.cm.get_cmap('gist_earth') # 'cividis' 'summer'
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     

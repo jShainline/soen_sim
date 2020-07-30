@@ -37,34 +37,33 @@ def neuron_time_stepper(time_vec,neuron_object):
     #------------------
     # load synapse data
     #------------------
-    print('loading spd response data')
-    num_jjs = 3
-    if num_jjs == 1:
-        file_string__spd = 'master__syn__spd_response__1jj__dt{:04.0f}ps.soen'.format(dt*1e6)
-        file_string__rate_array = 'master__syn__rate_array__1jj__Isipad0010nA.soen'
-    elif num_jjs == 2:
-        file_string__spd = 'master__syn__spd_response__2jj__dt{:04.0f}ps.soen'.format(dt*1e6)
-        file_string__rate_array = 'master__syn__rate_array__2jj__Isipad0010nA.soen'
-    elif num_jjs == 3:
-        file_string__spd = 'master__syn__spd_response__3jj__dt{:04.0f}ps.soen'.format(dt*1e6)
-        file_string__rate_array = 'master__syn__rate_array__3jj__Isipad0010nA.soen'
+    print('loading synapse data')
+    file_string__spd__list = ['master__syn__spd_response__1jj__dt{:04.0f}ps.soen'.format(dt*1e6),'master__syn__spd_response__2jj__dt{:04.0f}ps.soen'.format(dt*1e6),'master__syn__spd_response__3jj__dt{:04.0f}ps.soen'.format(dt*1e6)]
+    file_string__rate_array__list = ['master__syn__rate_array__1jj__Isipad0010nA.soen','master__syn__rate_array__2jj__Isipad0010nA.soen','master__syn__rate_array__3jj__Isipad0010nA.soen']
     
-    with open('../_circuit_data/{}'.format(file_string__spd), 'rb') as data_file:         
-        data_array__spd = pickle.load(data_file)
+    spd_response_array__list = []
+    I_sy_list__spd__list = []
+    spd_t__list = []
+    spd_duration__list = []
+    I_si_array__list = []
+    I_drive_list__syn__list = []
+    rate_array__syn__list = []
+    for ii in range(3): # for 1, 2, and 3 jj synapses
         
-    spd_response_array = data_array__spd['spd_response_array'] # entries have units of uA
-    I_sy_list__spd = data_array__spd['I_sy_list'] # entries have units of uA
-    # print('I_sy_list__spd = {}'.format(I_sy_list__spd))
-    spd_t = data_array__spd['time_vec'] # entries have units of us
-    spd_duration = spd_t[-1]
+        with open('../_circuit_data/{}'.format(file_string__spd__list[ii]), 'rb') as data_file:         
+            data_array__spd = pickle.load(data_file)
+            
+        spd_response_array__list.append(data_array__spd['spd_response_array']) # entries have units of uA
+        I_sy_list__spd__list.append(data_array__spd['I_sy_list']) # entries have units of uA
+        spd_t__list.append(data_array__spd['time_vec']) # entries have units of us
+        spd_duration__list.append(spd_t__list[ii][-1])
     
-    print('loading synapse rate array')
-    with open('../_circuit_data/{}'.format(file_string__rate_array), 'rb') as data_file:         
-        data_array__rate = pickle.load(data_file)                        
+        with open('../_circuit_data/{}'.format(file_string__rate_array__list[ii]), 'rb') as data_file:         
+            data_array__rate = pickle.load(data_file)                        
         
-    I_si_array = data_array__rate['I_si_array'] # entries have units of uA
-    I_drive_list__syn = data_array__rate['I_drive_list'] # entries have units of uA
-    rate_array__syn = data_array__rate['rate_array'] # entries have units of fluxons per microsecond
+        I_si_array__list.append(data_array__rate['I_si_array']) # entries have units of uA
+        I_drive_list__syn__list.append(data_array__rate['I_drive_list']) # entries have units of uA
+        rate_array__syn__list.append(data_array__rate['rate_array']) # entries have units of fluxons per microsecond
     #----------------------
     # end load synapse data
     #----------------------    
@@ -73,23 +72,53 @@ def neuron_time_stepper(time_vec,neuron_object):
     # load dendrite data
     #-------------------
     print('loading dendrite rate array')
-    with open('../_circuit_data/master__dnd__rate_array.soen', 'rb') as data_file:         
-        data_array_imported = pickle.load(data_file)
+    # DR loop inductances (in all cases, left side has additional 10pH through which flux is coupled (M = k*sqrt(L1*L2); in this case k = 1, L1 = 200pH, L2 = 10pH))
+    dL = 1 # pH
+    L_left_list = np.arange(7,13+dL,dL) # pH
+    L_right_list = np.flip(np.arange(17,23+dL,dL)) # pH
+    num_L = len(L_right_list)
     
-    I_di_array = data_array_imported['I_di_array']
-    # I_drive_list__dend = data_array_imported['I_drive_list']
-    influx_list__dend = data_array_imported['influx_list']
-    rate_array__dend = data_array_imported['rate_array']   
+    # dendritic firing junction bias current
+    dI = 2 # uA
+    I_de_list = np.arange(70,80+dI,dI) # uA
+    num_I_de = len(I_de_list)
     
-    # print('min(influx_list__dend) = {}'.format(min(influx_list__dend)))
-    # print('max(influx_list__dend) = {}'.format(max(influx_list__dend)))
+    # 'master__dnd_2jj__rate_array__Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}'.format(L_left_list[pp],L_right_list[pp],I_de_list[qq])
+    # master__dnd_2jj__rate_array__Llft09.00_Lrgt21.00_Ide72.00.soen
+    I_di_array__dict = dict()
+    influx_list__dend__dict = dict()
+    rate_array__dend__dict = dict()
+    # for pp in range(num_L):    
+    #     for qq in range(num_I_de):
+    #         for rr in [1,2]:
+    #             _temp_str = 'numjj{:1d}_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}'.format(rr,L_left_list[pp],L_right_list[pp],I_de_list[qq])'
+            
+    #             with open('../_circuit_data/master__dnd__rate_array.soen', 'rb') as data_file:         
+    #                 data_array_imported = pickle.load(data_file)
+                
+    #             I_di_array = data_array_imported['I_di_array']
+    #             influx_list__dend = data_array_imported['influx_list']
+    #             rate_array__dend = data_array_imported['rate_array']   
+    
+    
     #-----------------------
     # end load dendrite data
     #-----------------------
     
     #initialize all direct synapses
+    print('configuring synapses ...')
     for sy_name in n.input_synaptic_connections:
         # print('sy_name = {}'.format(sy_name))
+        
+        #load all rate data to synapses 
+        list_ind = n.synapses[sy_name].num_jjs-1
+        n.synapses[sy_name].spd_response_array = spd_response_array__list[list_ind]
+        n.synapses[sy_name].I_sy_list__spd = I_sy_list__spd__list[list_ind]
+        n.synapses[sy_name].spd_t = spd_t__list[list_ind]
+        n.synapses[sy_name].spd_duration = spd_duration__list[list_ind]
+        n.synapses[sy_name].I_si_array = I_si_array__list[list_ind]
+        n.synapses[sy_name].I_drive_list__syn = I_drive_list__syn__list[list_ind]
+        n.synapses[sy_name].rate_array__syn = rate_array__syn__list[list_ind] 
         
         #change units to microamps and picohenries
         n.synapses[sy_name].I_sy = current_conversion*n.synapses[sy_name].I_sy
@@ -102,12 +131,14 @@ def neuron_time_stepper(time_vec,neuron_object):
         n.synapses[sy_name].I_spd_vec = np.zeros([nt])
         n.synapses[sy_name].I_sf_vec = np.zeros([nt])
         n.synapses[sy_name].j_sf_state = ['below_Ic']
-        n.synapses[sy_name].I_sy_ind_spd = (np.abs(I_sy_list__spd[:] - current_conversion*n.synapses[sy_name].I_sy)).argmin()
-        n.synapses[sy_name].spd_i = spd_response_array[n.synapses[sy_name].I_sy_ind_spd]
+        n.synapses[sy_name].I_sy_ind_spd = (np.abs(n.synapses[sy_name].I_sy_list__spd[:] - current_conversion*n.synapses[sy_name].I_sy)).argmin()
+        n.synapses[sy_name].spd_i = n.synapses[sy_name].spd_response_array[n.synapses[sy_name].I_sy_ind_spd]
         n.synapses[sy_name].st_ind_last = 0
         n.synapses[sy_name].spd_current_memory = 0
+                              
     
     #initialize all dendrites and their synapses
+    print('configuring dendrites ...')
     for de_name in n.input_dendritic_connections:
         # print('de_name = {}'.format(de_name))
         
@@ -138,8 +169,8 @@ def neuron_time_stepper(time_vec,neuron_object):
             n.synapses[de__sy_name].I_spd_vec = np.zeros([nt])
             n.synapses[de__sy_name].I_sf_vec = np.zeros([nt])
             n.synapses[de__sy_name].j_sf_state = ['below_Ic']
-            n.synapses[de__sy_name].I_sy_ind_spd = (np.abs(I_sy_list__spd[:] - current_conversion*n.synapses[sy_name].I_sy)).argmin()
-            n.synapses[de__sy_name].spd_i = spd_response_array[n.synapses[sy_name].I_sy_ind_spd]
+            n.synapses[de__sy_name].I_sy_ind_spd = (np.abs(n.synapses[de__sy_name].I_sy_list__spd[:] - current_conversion*n.synapses[sy_name].I_sy)).argmin()
+            n.synapses[de__sy_name].spd_i = n.synapses[de__sy_name].spd_response_array[n.synapses[sy_name].I_sy_ind_spd]
             n.synapses[de__sy_name].st_ind_last = 0
             n.synapses[de__sy_name].spd_current_memory = 0
             
@@ -154,6 +185,7 @@ def neuron_time_stepper(time_vec,neuron_object):
             n.dendrites[de__de_name].M = inductance_conversion*n.dendrites[de_name].input_dendritic_inductances[de__de_name][1]*np.sqrt(n.dendrites[de__de_name].integration_loop_output_inductance*n.dendrites[de_name].input_dendritic_inductances[de__de_name][0])
             
     #initialize neuron
+    print('configuring neuron ...')
     n.I_fq = current_conversion*Phi0/n.integration_loop_total_inductance
     n.I_ni_vec = np.zeros([nt])
     n.I_drive_vec = np.zeros([nt])
@@ -196,14 +228,14 @@ def neuron_time_stepper(time_vec,neuron_object):
                 if n.synapses[sy_name].st_ind > 0 and spike_times[n.synapses[sy_name].st_ind] > _pt:
                     n.synapses[sy_name].st_ind -= 1
                     # print('code 2: st_ind > 0 and spike_times[st_ind] > _pt')
-                if _pt - spike_times[n.synapses[sy_name].st_ind] > spd_duration:
+                if _pt - spike_times[n.synapses[sy_name].st_ind] > n.synapses[sy_name].spd_duration:
                     gf = 0 # growth factor
                     # print('code 3: _pt - spike_times[st_ind] > spd_duration')
-                if spike_times[n.synapses[sy_name].st_ind] <= _pt and time_conversion*(_pt - spike_times[n.synapses[sy_name].st_ind]) < spd_duration:
+                if spike_times[n.synapses[sy_name].st_ind] <= _pt and time_conversion*(_pt - spike_times[n.synapses[sy_name].st_ind]) < n.synapses[sy_name].spd_duration:
                     # print('code 4')
                 
                     n.synapses[sy_name].dt_spk = _pt - spike_times[n.synapses[sy_name].st_ind]
-                    n.synapses[sy_name].spd_t_ind  = (np.abs(spd_t[:] - time_conversion*n.synapses[sy_name].dt_spk)).argmin()
+                    n.synapses[sy_name].spd_t_ind  = (np.abs(n.synapses[sy_name].spd_t[:] - time_conversion*n.synapses[sy_name].dt_spk)).argmin()
                     
                     # this block to avoid spd drive going too low at the onset of each spike 
                     if n.synapses[sy_name].st_ind - n.synapses[sy_name].st_ind_last == 1:
@@ -219,14 +251,14 @@ def neuron_time_stepper(time_vec,neuron_object):
                     n.synapses[sy_name].st_ind_last = n.synapses[sy_name].st_ind
                     I_tot = n.synapses[sy_name].spd_current+n.synapses[sy_name].I_sy
                     I_drive = I_tot-Ic # all data so far is with 40uA JJs
-                    if I_drive < np.min(I_drive_list__syn):
+                    if I_drive < np.min(n.synapses[sy_name].I_drive_list__syn):
                         gf = 0
                     else:                    
-                        I_drive_ind = (np.abs(I_drive_list__syn[:] - I_drive)).argmin()
-                        I_si_ind = (np.abs(np.asarray(I_si_array[I_drive_ind][:]) - n.synapses[sy_name].I_si_vec[ii])).argmin()                        
+                        I_drive_ind = (np.abs(n.synapses[sy_name].I_drive_list__syn[:] - I_drive)).argmin()
+                        I_si_ind = (np.abs(np.asarray(n.synapses[sy_name].I_si_array[I_drive_ind][:]) - n.synapses[sy_name].I_si_vec[ii])).argmin()                        
                         
                         #no interpolation
-                        gf = dt*n.synapses[sy_name].I_fq*rate_array__syn[I_drive_ind][I_si_ind] # growth factor
+                        gf = dt*n.synapses[sy_name].I_fq*n.synapses[sy_name].rate_array__syn[I_drive_ind][I_si_ind] # growth factor
                     
                         # linear interpolation
                         # gf = dt*I_fq*np.interp(spd_current,I_drive_list,rate_array[:][I_si_ind])

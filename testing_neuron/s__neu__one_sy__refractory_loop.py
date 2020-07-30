@@ -56,7 +56,7 @@ synapse_1 = synapse('sy', num_jjs = 3, integration_loop_temporal_form = 'exponen
 time_params = dict()
 time_params['dt'] = dt
 time_params['tf'] = tf
-neuron_1 = neuron('ne', circuit_inductances = [10e-12,26e-12,200e-12,77.5e-12], 
+neuron_1 = neuron('ne', circuit_inductances = [10e-12,26e-12,200e-12,77.5e-12],
                   input_synaptic_connections = ['sy'], 
                   input_synaptic_inductances = [[10e-12,1]],                     
                   thresholding_junction_critical_current = 40e-6,
