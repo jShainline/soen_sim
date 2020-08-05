@@ -9,6 +9,8 @@ from _plotting import plot_dend_rate_array, plot_dend_time_traces
 from _functions import cv, save_session_data, read_wr_data
 from util import physical_constants
 
+import pickle
+
 p = physical_constants()
 
 plt.close('all')
@@ -133,16 +135,18 @@ for pp in range(num_L): # [6]: #
                 temp_I_di_vec[jj] = 1e6*( I_di_array[ii][jj]+I_di_array[ii][jj+1] )/2 # this makes I_di_array__scaled have the same dimensions as j_di_rate_array and units of uA
         
             master_rate_array.append([])
-            master_rate_array[ii] = np.insert(np.append(temp_rate_vec,0),0,0) # these zeros added so that a current that rounds to I_di + I_di_pad will give zero rate
+            # master_rate_array[ii] = np.insert(np.append(temp_rate_vec,0),0,0) # this zero added so that a current that rounds to I_di + I_di_pad will give zero rate
+            master_rate_array[ii] = np.append(temp_rate_vec,0) # this zero added so that a current that rounds to I_di + I_di_pad will give zero rate
             I_di_array__scaled.append([])
-            I_di_array__scaled[ii] = np.insert(np.append(temp_I_di_vec,np.max(temp_I_di_vec)+I_di_pad),0,0) # this additional I_di + I_di_pad is included so that a current that rounds to I_di + I_di_pad will give zero rate
+            # I_di_array__scaled[ii] = np.insert(np.append(temp_I_di_vec,np.max(temp_I_di_vec)+I_di_pad),0,0) # this additional I_di + I_di_pad is included so that a current that rounds to I_di + I_di_pad will give zero rate
+            I_di_array__scaled[ii] = np.append(temp_I_di_vec,np.max(temp_I_di_vec)+I_di_pad) # this additional I_di + I_di_pad is included so that a current that rounds to I_di + I_di_pad will give zero rate
             
         # plot the rate array  
         if plot_rate_arrays == True:
-            plot_dend_rate_array(I_di_array = I_di_array__scaled, I_drive_list = I_drive_list, master_rate_array = master_rate_array)    
+            plot_dend_rate_array(I_di_array = I_di_array__scaled, I_drive_list = I_drive_list, influx_list = influx_list, master_rate_array = master_rate_array)    
         
         # save data
-        save_string = 'master__dnd_2jj__rate_array__Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}'.format(L_left_list[pp],L_right_list[pp],I_de_list[qq])
+        save_string = 'master_dnd_rate_array_2jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}'.format(L_left_list[pp]+10,L_right_list[pp],I_de_list[qq])
         data_array = dict()
         data_array['rate_array'] = master_rate_array
         data_array['I_drive_list'] = I_drive_list
@@ -151,4 +155,44 @@ for pp in range(num_L): # [6]: #
         print('\n\nsaving session data ...\n\n')
         save_session_data(data_array,save_string)
         save_session_data(data_array,save_string+'.soen',False)
+
+
+#%% just plot
+if 1 == 2:
+    
+    numjj = 2
+    L_left = 10
+    L_right = 20
+    I_de = 72
+    
+    file_name = 'master_dnd_rate_array_{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}.soen'.format(numjj,L_left+10,L_right,I_de)
+    plot_dend_rate_array(file_name = file_name)
+            
+    # for pp in range(num_L):
+    #     for qq in range(num_I_de):
+            
+    #         file_name = 'master_dnd_rate_array_{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}.soen'.format(numjj,L_left_list[pp]+10,L_right_list[pp],I_de_list[qq])
+    #         plot_dend_rate_array(file_name = file_name)
+
+        
+#%% debugging
+if 1 == 2:
+
+    numjj = 2
+    L_left = 10
+    L_right = 20
+    I_de = 72
+    file_name = 'master_dnd_rate_array_{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}.soen'.format(numjj,L_left+10,L_right,I_de)
+    with open('../_circuit_data/'+file_name, 'rb') as data_file:         
+        data_array = pickle.load(data_file)
+        # data_array = load_session_data(kwargs['file_name'])
+        rate_array = data_array['rate_array']
+        influx_list = data_array['influx_list']
+        I_di_array = data_array['I_di_array']
+            
+    I_di = 0
+    ind1 = (np.abs(np.asarray(influx_list)-1000)).argmin()
+    ind2 = (np.abs(I_di_array[ind1]-I_di)).argmin()        
+    rate = rate_array[ind1][ind2]                  
+    print('ind1 = {}; ind2 = {}; rate = {}'.format(ind1,ind2,rate))
         

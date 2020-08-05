@@ -1772,34 +1772,42 @@ def plot_dend_rate_array(**kwargs):
     # Make data.
     
     if 'file_name' in kwargs:
-        with open('soen_sim_data/'+kwargs['file_name'], 'rb') as data_file:         
+        with open('../_circuit_data/'+kwargs['file_name'], 'rb') as data_file:         
             data_array = pickle.load(data_file)
         # data_array = load_session_data(kwargs['file_name'])
         master_rate_array = data_array['rate_array']
         I_drive_list = data_array['I_drive_list']
+        influx_list = data_array['influx_list']        
         I_di_array = data_array['I_di_array']
-        
+                
     elif 'I_di_array' in kwargs:
         I_di_array = kwargs['I_di_array']
         I_drive_list = kwargs['I_drive_list']
+        influx_list = kwargs['influx_list']
         master_rate_array = kwargs['master_rate_array']
         
-    num_drives=len(I_drive_list)
+    # num_drives = len(I_drive_list)
+    num_drives = len(influx_list)
     cmap = mp.cm.get_cmap('gist_earth') # 'cividis' 'summer'
     fig = plt.figure()
+    if 'file_name' in kwargs:
+        fig.suptitle(kwargs['file_name'])
     ax = fig.add_subplot(111, projection='3d')
     
     I_di_min = 1000
     I_di_max = -1000
-    I_drive_min = 1000
-    I_drive_max = -1000
+    # I_drive_min = 1000
+    # I_drive_max = -1000
+    influx_min = 1e9
+    influx_max = -1e9
     rate_min = 1000
     rate_max = -1000
     for ii in range(num_drives):
     #    ax.plot(I_di_array__scaled[ii][:],master_rate_array[ii][:]*1e-3, '-', label = 'I_drive = {}'.format(I_drive_list[ii]))  
-            X3 = I_di_array[ii][:]
-            Z3 = I_drive_list[ii]
-            Y3 = master_rate_array[ii][:]*1e-3
+            X3 = np.insert(I_di_array[ii][:],0,0)
+            # Z3 = I_drive_list[ii]
+            Z3 = influx_list[ii]
+            Y3 = np.insert(master_rate_array[ii][:]*1e-3,0,0)
             verts = [(X3[jj],Y3[jj]-0.5) for jj in range(len(X3))]
             ax.add_collection3d(PolyCollection([verts],color=cmap(1-ii/num_drives),alpha=0.3),zs=Z3, zdir='y')
             ax.plot(X3,Y3,Z3,linewidth=4, color=cmap(1-ii/num_drives), zdir='y',alpha=1)
@@ -1809,10 +1817,15 @@ def plot_dend_rate_array(**kwargs):
             if np.max(I_di_array[ii][:]) > I_di_max:
                 I_di_max = np.max(I_di_array[ii][:])
                 
-            if np.min(I_drive_list[ii]) < I_drive_min:
-                I_drive_min = np.min(I_drive_list[ii])
-            if np.max(I_drive_list[ii]) > I_drive_max:
-                I_drive_max = np.max(I_drive_list[ii])
+            # if np.min(I_drive_list[ii]) < I_drive_min:
+            #     I_drive_min = np.min(I_drive_list[ii])
+            # if np.max(I_drive_list[ii]) > I_drive_max:
+            #     I_drive_max = np.max(I_drive_list[ii])
+                            
+            if np.min(influx_list[ii]) < influx_min:
+                influx_min = np.min(influx_list[ii])
+            if np.max(influx_list[ii]) > influx_max:
+                influx_max = np.max(influx_list[ii])
                 
             if np.min(master_rate_array[ii][:]*1e-3) < rate_min:
                 rate_min = np.min(master_rate_array[ii][:]*1e-3)
@@ -1826,12 +1839,13 @@ def plot_dend_rate_array(**kwargs):
     
     ax.set_xlabel(r'$I_{di}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_xlim3d(I_di_min-1,I_di_max+1)
     
-    ax.set_ylabel('Idrive [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(I_drive_min-1,I_drive_max+1)
+    # ax.set_ylabel('Idrive [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(I_drive_min-1,I_drive_max+1)
+    ax.set_ylabel('$\Phi_{in}$ [$\mu$A pH]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(influx_min-1,influx_max+1)
     ax.zaxis.set_rotate_label(False)  # disable automatic rotation
     ax.set_zlabel(r'$r_{j_{di}}$ [kilofluxons per $\mu$s]',fontsize=24, fontweight='bold', rotation=96,labelpad=10) ; ax.set_zlim3d(rate_min-1,rate_max+1)
     ax.yaxis._axinfo['label']['space_factor'] = 30.0
     
-    ax.view_init(45, 30)
+    ax.view_init(45,-30)
     
     plt.show()
     

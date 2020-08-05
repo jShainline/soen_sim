@@ -687,6 +687,14 @@ class neuron():
             _name = 'unnamed_neuron'
         self.name = _name
         
+        if 'num_jjs' in kwargs:
+            if kwargs['num_jjs'] == 2 or kwargs['num_jjs'] == 4:
+                self.num_jjs = kwargs['num_jjs']
+            else:
+                raise ValueError('[soens_sim] num_jjs must be 2, or 4 for a dendrite')
+        else:
+            self.num_jjs = 4
+        
         if 'circuit_inductances' in kwargs:
             if type(kwargs['circuit_inductances']) == list and len(kwargs['circuit_inductances']) == 4:
                 self.circuit_inductances = kwargs['circuit_inductances']
@@ -695,6 +703,19 @@ class neuron():
         else:
             self.circuit_inductances = [20e-12, 20e-12, 200e-12, 77.5e-12]
         
+        if 'input_direct_connections' in kwargs:
+            self.input_direct_connections = kwargs['input_direct_connections']            
+        else:
+            self.input_direct_connections = []        
+
+        if 'input_direct_inductances' in kwargs:
+            if type(kwargs['input_direct_inductances']) == list:
+                    self.input_direct_inductances = kwargs['input_direct_inductances']
+            else:
+                raise ValueError('[soens_sim] Input direct inductances to neurons are specified as a list of pairs of real numbers with one pair per direct connection. The first element of the pair is the inductance on the neuronal receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the direct connection and the neuronal receiving loop.')
+        else:
+            self.input_direct_inductances =  [[]]
+            
         if 'input_synaptic_connections' in kwargs:
             self.input_synaptic_connections = kwargs['input_synaptic_connections']            
         else:
@@ -707,6 +728,19 @@ class neuron():
                 raise ValueError('[soens_sim] Input synaptic inductances to neurons are specified as a list of pairs of real numbers with one pair per synaptic connection. The first element of the pair is the inductance on the neuronal receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the synapse and the neuronal receiving loop.')
         else:
             self.input_synaptic_inductances =  [[]]
+            
+        if 'input_dendritic_connections' in kwargs:
+            self.input_dendritic_connections = kwargs['input_dendritic_connections']            
+        else:
+            self.input_dendritic_connections = []        
+
+        if 'input_dendritic_inductances' in kwargs:
+            if type(kwargs['input_dendritic_inductances']) == list:
+                    self.input_dendritic_inductances = kwargs['input_dendritic_inductances']
+            else:
+                raise ValueError('[soens_sim] Input dendritic inductances to neurons are specified as a list of pairs of real numbers with one pair per dendritic connection. The first element of the pair is the inductance on the neuronal receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the dendritic and the neuronal receiving loop.')
+        else:
+            self.input_dendritic_inductances =  [[]]
             
         if 'thresholding_junction_critical_current' in kwargs:
             # if type(kwargs['thresholding_junction_critical_current']) == float:
@@ -838,9 +872,72 @@ class neuron():
             if type(kwargs['neuronal_receiving_input_refractory_inductance']) == list:
                     self.neuronal_receiving_input_refractory_inductance = kwargs['neuronal_receiving_input_refractory_inductance']
             else:
-                raise ValueError('[soens_sim] neuronal_receiving_input_refractory_inductance tis specified as a pair of real numbers. The first element of the pair is the inductance on the neuronal receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the refractory dendrite and the neuronal receiving loop.')
+                raise ValueError('[soens_sim] neuronal_receiving_input_refractory_inductance is specified as a pair of real numbers. The first element of the pair is the inductance on the neuronal receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the refractory dendrite and the neuronal receiving loop.')
         else:
             self.neuronal_receiving_input_refractory_inductance =  [20e-12,1]
+                         
+        if 'homeostatic_temporal_form' in kwargs:
+            if kwargs['homeostatic_temporal_form'] == 'exponential' or kwargs['homeostatic_temporal_form'] == 'power_law':
+                _temporal_form = kwargs['homeostatic_temporal_form']
+            else:
+                raise ValueError('[soens_sim] Tried to assign an invalid loop temporal form to neuron %s (unique_label = %s)\nThe allowed values of loop_temporal_form are ''exponential'' and ''power_law''' % (self.name, self.unique_label))
+        else:
+            _temporal_form = 'exponential'
+        self.homeostatic_temporal_form =  _temporal_form #'exponential' or 'power_law'; 'exponential' by default
+                
+        if 'homeostatic_time_constant' in kwargs:
+            # if type(kwargs['refractory_time_constant']) == int or type(kwargs['refractory_time_constant']) == float:
+            if kwargs['homeostatic_time_constant'] < 0:
+                raise ValueError('[soens_sim] time_constant associated with neuronal homeostasis must be a real number between zero and infinity')
+            else:
+                self.homeostatic_time_constant = kwargs['homeostatic_time_constant']
+        else:
+            if self.homeostatic_temporal_form == 'exponential':
+                self.homeostatic_time_constant = 50e-9 #default time constant, units of seconds
+            
+        if 'homeostatic_thresholding_junction_critical_current' in kwargs:
+            _Ic = kwargs['homeostatic_thresholding_junction_critical_current']
+        else:
+            _Ic = 40e-6 #default J_th Ic = 40 uA
+        self.homeostatic_thresholding_junction_critical_current = _Ic
+        
+        if 'homeostatic_loop_circuit_inductances' in kwargs:
+            if type(kwargs['homeostatic_loop_circuit_inductances']) == list and len(kwargs['homeostatic_loop_circuit_inductances']) == 4:
+                self.homeostatic_loop_circuit_inductances = kwargs['homeostatic_loop_circuit_inductances']
+            else:
+                raise ValueError('[soens_sim] homeostatic_loop_circuit_inductances is a list of four real numbers greater than zero with units of henries. The first element is the self inductance of the left branch of the DR loop, excluding the JJ and any mutual inductor inputs. The second element is the right branch of the DR loop, excluding the JJ and any mutual inductor inputs. The third element is the inductor to the right of the DR loop that goes to the JTL. The fourth element is the inductor in the JTL. All other contributions to DR loop inductance (JJs and MIs) will be handled separately, as will the inductance of the DI loop.')
+        else:
+            self.homeostatic_loop_circuit_inductances = [20e-12, 20e-12, 200e-12, 77.5e-12]
+            
+        if 'homeostatic_loop_self_inductance' in kwargs:
+            if kwargs['homeostatic_loop_self_inductance'] < 0:
+                raise ValueError('[soens_sim] Homeostatic loop self inductance associated with homeostasis must be a real number between zero and infinity (units of henries)')
+            else:
+                 self.homeostatic_loop_self_inductance = kwargs['homeostatic_loop_self_inductance']
+        else: 
+            self.homeostatic_loop_self_inductance = 1e-9 #default value, units of henries
+                        
+        if 'homeostatic_loop_output_inductance' in kwargs:
+            if kwargs['refractory_loop_output_inductance'] < 0:
+                raise ValueError('[soens_sim] Homeostatic loop output inductance associated with coupling between homeostatic loop and neuron must be a real number between zero and infinity (units of henries)')
+            else:
+                 self.homeostatic_loop_output_inductance = kwargs['homeostatic_loop_output_inductance']
+        else: 
+            self.homeostatic_loop_output_inductance = 200e-12 #default value, units of henries 
+            
+        if 'homeostatic_bias_currents' in kwargs:
+            _Ib = kwargs['homeostatic_bias_currents']
+        else:
+            _Ib = [74e-6, 36e-6, 35e-6] #[bias to NR loop (J_th), bias to JTL, bias to NI loop]
+        self.homeostatic_bias_currents =  _Ib
+        
+        if 'neuronal_receiving_input_homeostatic_inductance' in kwargs:
+            if type(kwargs['neuronal_receiving_input_homeostatic_inductance']) == list:
+                    self.neuronal_receiving_input_homeostatic_inductance = kwargs['neuronal_receiving_input_homeostatic_inductance']
+            else:
+                raise ValueError('[soens_sim] neuronal_receiving_input_homeostatic_inductance is specified as a pair of real numbers. The first element of the pair is the inductance on the neuronal receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the homeostatic dendrite and the neuronal receiving loop.')
+        else:
+            self.neuronal_receiving_input_homeostatic_inductance =  [20e-12,1]
                 
         if 'input_dendritic_connections' in kwargs:
             self.input_dendritic_connections = kwargs['input_dendritic_connections']           
@@ -865,7 +962,9 @@ class neuron():
         temp_list_2.append(self.neuronal_receiving_input_refractory_inductance)
         neuron_dendrite = dendrite('{}__d'.format(self.name), 
                                    inhibitory_or_excitatory = 'excitatory', 
-                                   circuit_inductances = [10e-12,26e-12,200e-12,77.5e-12],
+                                   circuit_inductances = self.circuit_inductances,
+                                   input_direct_connections = self.input_direct_connections,
+                                   input_direct_inductances = self.input_direct_inductances,
                                    input_synaptic_connections = self.input_synaptic_connections, 
                                    input_synaptic_inductances = self.input_synaptic_inductances,
                                    input_dendritic_connections = temp_list_1, 
@@ -884,7 +983,7 @@ class neuron():
                                   circuit_inductances = self.refractory_loop_circuit_inductances,
                                   thresholding_junction_critical_current = self.refractory_thresholding_junction_critical_current,
                                   input_dendritic_connections = ['{}__d'.format(self.name)],
-                                  input_dendritic_inductances = [self.integration_loop_output_inductances[1]],
+                                  input_dendritic_inductances = [self.neuronal_receiving_input_refractory_inductance], # [self.integration_loop_output_inductances[1]],
                                   bias_currents = self.refractory_bias_currents,
                                   integration_loop_temporal_form = self.refractory_temporal_form,
                                   integration_loop_time_constant = self.refractory_time_constant,
@@ -950,10 +1049,59 @@ class neuron():
         for name in self.input_synaptic_connections:             
             self.synapses[synapse.synapses[name].name] = synapse.synapses[name]
             
+        #also add direct connections to neuron
+        self.direct_connections = dict()
+        for name in self.input_direct_connections:
+            self.direct_connections[input_signal.input_signals[name].name] = input_signal.input_signals[name]                      
+            
         #finally, add self to self as dendrite
         self.dendrites['{}__d'.format(self.name)] = dendrite.dendrites['{}__d'.format(self.name)]
                         
         return self   
+    
+    
+    def sum_inductances(self):
+    
+        # go through all dendrites in the neuron. remember the neuron itself is a dendrite, so it is included here
+        # currently set up so all excitatory connections are on the left, all inhibitory on the right branch of the DR loop. is that good?
+        for name_dendrite in self.dendrites:
+            
+            # print('name_dendrite = {}'.format(name_dendrite))
+            
+            self.dendrites[name_dendrite].L_left = self.dendrites[name_dendrite].circuit_inductances[0]
+            self.dendrites[name_dendrite].L_right = self.dendrites[name_dendrite].circuit_inductances[1]
+            
+            # print('self.dendrites[name_dendrite].L_left = {}'.format(self.dendrites[name_dendrite].L_left))
+            # print('self.dendrites[name_dendrite].L_right = {}'.format(self.dendrites[name_dendrite].L_right))
+            
+            for name_direct in self.dendrites[name_dendrite].input_direct_connections:
+                
+                if self.dendrites[name_dendrite].inhibitory_or_excitatory == 'inhibitory':
+                    self.dendrites[name_dendrite].L_right += self.dendrites[name_dendrite].input_direct_inductances[name_direct][0]
+                    
+                elif self.dendrites[name_dendrite].inhibitory_or_excitatory == 'excitatory':
+                    self.dendrites[name_dendrite].L_left += self.dendrites[name_dendrite].input_direct_inductances[name_direct][0]
+                    
+            for name_dendrite_in in self.dendrites[name_dendrite].input_dendritic_connections:
+                
+                if self.dendrites[name_dendrite_in].inhibitory_or_excitatory == 'inhibitory':
+                    self.dendrites[name_dendrite].L_right += self.dendrites[name_dendrite].input_dendritic_inductances[name_dendrite_in][0]
+                    
+                if self.dendrites[name_dendrite_in].inhibitory_or_excitatory == 'excitatory':
+                    self.dendrites[name_dendrite].L_left += self.dendrites[name_dendrite].input_dendritic_inductances[name_dendrite_in][0]
+                    
+            for name_synapse in self.dendrites[name_dendrite].input_synaptic_connections:
+                
+                # print('name_synapse = {}'.format(name_synapse))
+                
+                if self.dendrites[name_dendrite].inhibitory_or_excitatory == 'inhibitory':
+                    self.dendrites[name_dendrite].L_right += self.dendrites[name_dendrite].input_synaptic_inductances[name_synapse][0]
+                
+                if self.dendrites[name_dendrite].inhibitory_or_excitatory == 'excitatory':
+                    self.dendrites[name_dendrite].L_left += self.dendrites[name_dendrite].input_synaptic_inductances[name_synapse][0]
+    
+        return self
+    
         
     def run_sim(self):
         
@@ -971,6 +1119,8 @@ class neuron():
         # attach synapses, dendrites, and direct connections to neuron
         self.make_connections()        
         print('\nsimulating neuron with {:d} synapse(s) and {:d} dendrite(s)\n'.format(len(self.synapses),len(self.dendrites)))
+        
+        self.sum_inductances()
         
         self = neuron_time_stepper(time_vec,self)
         
