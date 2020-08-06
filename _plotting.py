@@ -668,13 +668,13 @@ def plot_neuronal_response(neuron_instance):
     # fig.suptitle('Current in the neuronal receiving loop versus time')
     
     # neuron
-    axs[0].plot(time_vec*1e6,neuron_instance.I_ni_vec, '-', markersize = pp['nominal_markersize'], label = neuron_instance.name+' ($tau_{ni}$ = '+'{:3.0f}ns)'.format(neuron_instance.integration_loop_time_constant*1e9))
-    axs[1].plot(time_vec*1e6,Phi_0*neuron_instance.influx_vec, '-', markersize = pp['nominal_markersize'], label = neuron_instance.name)
+    axs[0].plot(time_vec*1e6,neuron_instance.I_ni_vec, '-', color = colors['blue3'], markersize = pp['nominal_markersize'], label = neuron_instance.name+' ($tau_{ni}$ = '+'{:3.0f}ns)'.format(neuron_instance.integration_loop_time_constant*1e9))
+    axs[1].plot(time_vec*1e6,Phi_0*neuron_instance.influx_vec, '-', color = colors['blue3'], markersize = pp['nominal_markersize'], label = neuron_instance.name)
     
-    axs[0].set_ylabel(r'$I_{ni}$ [$\mu$A]')
+    axs[0].set_ylabel(r'$I^{ni}$ [$\mu$A]')
     axs[0].legend()
     
-    axs[1].set_ylabel(r'$\Phi_{in}$ [pH $\mu$A]')
+    axs[1].set_ylabel(r'$\Phi^{nr}_{a}$ [pH $\mu$A]')
     axs[1].legend()
     
     # axs[0].plot(time_vec*1e6,neuron_instance.cell_body_circulating_current*1e6, '-', color = colors['blue_3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = neuron_instance.name+' ('+neuron_instance.unique_label+')')        
@@ -694,28 +694,28 @@ def plot_neuronal_response(neuron_instance):
     
     # dendrites
     for name in neuron_instance.input_dendritic_connections:
-        axs[2].plot(time_vec*1e6,neuron_instance.dendrites[name].I_di_vec, '-', markersize = pp['nominal_markersize'], label = name+' ($tau_{di}$ = '+'{:3.0f}ns)'.format(neuron_instance.dendrites[name].integration_loop_time_constant*1e9))
-        axs[3].plot(time_vec*1e6,Phi_0*neuron_instance.dendrites[name].influx_vec, '-', markersize = pp['nominal_markersize'], label = name)        
+        axs[2].plot(time_vec*1e6,neuron_instance.dendrites[name].I_di_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name+' ($tau_{di}$ = '+'{:3.0f}ns)'.format(neuron_instance.dendrites[name].integration_loop_time_constant*1e9))
+        axs[3].plot(time_vec*1e6,Phi_0*neuron_instance.dendrites[name].influx_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name)        
          
     # axs[2].set_xlabel(r'Time [$\mu$s]')
-    axs[2].set_ylabel(r'$I_{di}$ [$\mu$A]')
+    axs[2].set_ylabel(r'$I^{di}_{ref}$ [$\mu$A]')
     axs[2].legend() 
     
     # axs[3].set_ylabel(r'$\Phi_{in}/\Phi_{0}$')
-    axs[3].set_ylabel(r'$\Phi_{in}$ [pH $\mu$A]')
+    axs[3].set_ylabel(r'$\Phi^{dr}_{ref}$ [pH $\mu$A]')
     axs[3].legend()
     
     # synapses     
     for name in neuron_instance.input_synaptic_connections:
-        axs[4].plot(time_vec*1e6,neuron_instance.synapses[name].I_si_vec, '-', markersize = pp['nominal_markersize'], label = name+' ($tau_{si}$ = '+'{:3.0f}ns)'.format(neuron_instance.synapses[name].integration_loop_time_constant*1e9))
-        axs[5].plot(time_vec*1e6,neuron_instance.synapses[name].I_spd_vec, '-', markersize = pp['nominal_markersize'], label = name)        
+        axs[4].plot(time_vec*1e6,neuron_instance.synapses[name].I_si_vec, '-', color = colors['green3'], markersize = pp['nominal_markersize'], label = name+' ($tau_{si}$ = '+'{:3.0f}ns)'.format(neuron_instance.synapses[name].integration_loop_time_constant*1e9))
+        axs[5].plot(time_vec*1e6,neuron_instance.synapses[name].I_spd_vec, '-', color = colors['green3'], markersize = pp['nominal_markersize'], label = name)        
          
     axs[4].set_xlabel(r'Time [$\mu$s]')
-    axs[4].set_ylabel(r'$I_{si}$ [$\mu$A]')
+    axs[4].set_ylabel(r'$I^{si}$ [$\mu$A]')
     # axs[4].set_title('Contribution from each synapse')
     axs[4].legend() 
     
-    axs[5].set_ylabel(r'$I_{spd}$ [$\mu$A]')
+    axs[5].set_ylabel(r'$I^{sy}_{spd}$ [$\mu$A]')
     # axs[5].set_title('Contribution from each synapse')
     axs[5].legend()
    
