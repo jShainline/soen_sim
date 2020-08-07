@@ -57,9 +57,9 @@ window_size = 51 # samples/time steps for savitzky-golay filter (applied after d
 #%%
 
 # loop to create rate files for all cases
-for pp in range(num_L): # [6]: # 
+for pp in range(num_L): # [3]: # 
     
-    for qq in range(num_I_de): # [0]: # 
+    for qq in range(num_I_de): # [3]: #
                 
         # load wr data, find peaks, find rates
         I_drive_list = I_drive_array[pp][qq]
@@ -116,14 +116,16 @@ for pp in range(num_L): # [6]: #
         # convert current drive to flux
         influx_list = []
         M = inductance_conversion*np.sqrt(200e-12*10e-12)
-        for ii in range(len(I_drive_list)):
-            influx_list.append(M*I_drive_list[ii])
+        I_drive__pad = 10e-9
+        I_drive_list__pad = np.insert(I_drive_list,0,I_drive_list[0]-I_drive__pad) # adding extra zero so flux that rounds below minimum value gives zero rate
+        for ii in range(len(I_drive_list__pad)):
+            influx_list.append(M*I_drive_list__pad[ii])
             
         # assemble data and change units
         I_di_pad = 10e-9 # amount above the observed max of Isi that the simulation will allow before giving a zero rate
         
-        master_rate_array = []
-        I_di_array__scaled = []
+        master_rate_array = [np.array([0,0])] # initializing with these zeros so influx that rounds below minimum value gives zero rate
+        I_di_array__scaled = [np.array([0,I_di_pad])] # initializing with these zeros so influx that rounds below minimum value gives zero rate     
             
         for ii in range(num_drives):
                         
@@ -136,10 +138,10 @@ for pp in range(num_L): # [6]: #
         
             master_rate_array.append([])
             # master_rate_array[ii] = np.insert(np.append(temp_rate_vec,0),0,0) # this zero added so that a current that rounds to I_di + I_di_pad will give zero rate
-            master_rate_array[ii] = np.append(temp_rate_vec,0) # this zero added so that a current that rounds to I_di + I_di_pad will give zero rate
+            master_rate_array[ii+1] = np.append(temp_rate_vec,0) # this zero added so that a current that rounds to I_di + I_di_pad will give zero rate
             I_di_array__scaled.append([])
             # I_di_array__scaled[ii] = np.insert(np.append(temp_I_di_vec,np.max(temp_I_di_vec)+I_di_pad),0,0) # this additional I_di + I_di_pad is included so that a current that rounds to I_di + I_di_pad will give zero rate
-            I_di_array__scaled[ii] = np.append(temp_I_di_vec,np.max(temp_I_di_vec)+I_di_pad) # this additional I_di + I_di_pad is included so that a current that rounds to I_di + I_di_pad will give zero rate
+            I_di_array__scaled[ii+1] = np.append(temp_I_di_vec,np.max(temp_I_di_vec)+I_di_pad) # this additional I_di + I_di_pad is included so that a current that rounds to I_di + I_di_pad will give zero rate
             
         # plot the rate array  
         if plot_rate_arrays == True:

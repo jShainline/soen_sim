@@ -296,6 +296,8 @@ def neuron_time_stepper(time_vec,neuron_object):
                 
         # step through dendrites
         for de_name in n.input_dendritic_connections:
+            # print('here1: de_name = {}'.format(de_name))
+            
             # if ii == 0:
             #     print('de_name = {}'.format(de_name))
             
@@ -346,6 +348,7 @@ def neuron_time_stepper(time_vec,neuron_object):
                 if n.dendrites[de__de_name].inhibitory_or_excitatory == 'inhibitory':
                     _prefactor = -1
                 elif n.dendrites[de__de_name].inhibitory_or_excitatory == 'excitatory':
+                    # print('here2: de__de_name = {}'.format(de__de_name))
                     _prefactor = 1  
                 # print('_prefactor = {}'.format(_prefactor))
                 # print('n.dendrites[de__de_name].M = {}'.format(n.dendrites[de__de_name].M))
@@ -354,16 +357,19 @@ def neuron_time_stepper(time_vec,neuron_object):
             
             # total drive to this dendrite
             n.dendrites[de_name].influx_vec[ii] = syn_flux+dend_flux
+            ind1 = (np.abs(n.dendrites[de_name].influx_list__dend-n.dendrites[de_name].influx_vec[ii])).argmin()
+            ind2 = (np.abs(n.dendrites[de_name].I_di_array[ind1]-n.dendrites[de_name].I_di_vec[ii])).argmin()
+            rate = n.dendrites[de_name].rate_array__dend[ind1][ind2]
                               
-            # if n.dendrites[de_name].I_drive_vec[ii] > 18.6:
-            if n.dendrites[de_name].influx_vec[ii] > 18.6*current_to_flux:
-                ind1 = (np.abs(n.dendrites[de_name].influx_list__dend-n.dendrites[de_name].influx_vec[ii])).argmin()
-                ind2 = (np.abs(n.dendrites[de_name].I_di_array[ind1]-n.dendrites[de_name].I_di_vec[ii])).argmin()
-                rate = n.dendrites[de_name].rate_array__dend[ind1][ind2]
-                # linear interpolation
-                # rate = np.interp(I_drive[ii],I_drive_vec__imported,master_rate_matrix__imported[:,ind2])            
-            else:
-                rate = 0
+            # # if n.dendrites[de_name].I_drive_vec[ii] > 18.6:
+            # if n.dendrites[de_name].influx_vec[ii] > 18.6*current_to_flux:
+            #     ind1 = (np.abs(n.dendrites[de_name].influx_list__dend-n.dendrites[de_name].influx_vec[ii])).argmin()
+            #     ind2 = (np.abs(n.dendrites[de_name].I_di_array[ind1]-n.dendrites[de_name].I_di_vec[ii])).argmin()
+            #     rate = n.dendrites[de_name].rate_array__dend[ind1][ind2]
+            #     # linear interpolation
+            #     # rate = np.interp(I_drive[ii],I_drive_vec__imported,master_rate_matrix__imported[:,ind2])            
+            # else:
+            #     rate = 0
     
             n.dendrites[de_name].I_di_vec[ii+1] = rate*n.dendrites[de_name].I_fq*dt + (1-dt/n.dendrites[de_name].tau_di)*n.dendrites[de_name].I_di_vec[ii]  
         
@@ -427,10 +433,14 @@ def neuron_time_stepper(time_vec,neuron_object):
                 
         ind1 = (np.abs(n.dendrites['{}__d'.format(n.name)].influx_list__dend-n.influx_vec[ii])).argmin()
         ind2 = (np.abs(n.dendrites['{}__d'.format(n.name)].I_di_array[ind1]-n.I_ni_vec[ii])).argmin()        
-        rate = n.dendrites['{}__d'.format(n.name)].rate_array__dend[ind1][ind2]            
-        if n.state == 'quiescent':
-            n.spike_times.append(_pt)
-        n.state = 'excited'
+        rate = n.dendrites['{}__d'.format(n.name)].rate_array__dend[ind1][ind2]        
+        
+        # if rate > 0:
+        #     if n.state == 'quiescent':
+        #         n.spike_times.append(_pt)
+        #     n.state = 'excited'
+        # elif rate == 0:
+        #     n.state = 'quiescent'
 
         n.I_ni_vec[ii+1] = rate*n.I_fq*dt + (1-dt/n.tau_ni)*n.I_ni_vec[ii]
         n.dendrites['{}__d'.format(n.name)].I_di_vec[ii+1] = n.I_ni_vec[ii+1]

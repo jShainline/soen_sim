@@ -13,7 +13,7 @@ import pickle
 
 p = physical_constants()
 
-plt.close('all')
+# plt.close('all')
 
 #%% inputs
 
@@ -57,9 +57,9 @@ window_size = 51 # samples/time steps for savitzky-golay filter (applied after d
 #%%
 
 # loop to create rate files for all cases
-for pp in range(num_L): # [6]: # 
+for pp in [3]: # range(num_L): # 
     
-    for qq in range(num_I_de): # [0]: # 
+    for qq in [3]: # range(num_I_de): # 
                 
         # load wr data, find peaks, find rates
         I_drive_list = I_drive_array[pp][qq]
@@ -86,7 +86,11 @@ for pp in range(num_L): # [6]: #
             j_di_peaks, _ = find_peaks(j_di, height = min_peak_height, distance = min_peak_distance)
             
             initial_ind = (np.abs(time_vec-2.0e-9)).argmin()
-            final_ind = j_di_peaks[-1]*2*downsample_factor     
+            final_ind = j_di_peaks[-1]*2*downsample_factor
+            # if len(j_di_peaks) > 1:
+            #     final_ind = j_di_peaks[-1]*2*downsample_factor 
+            # else:
+            #     final_ind = initial_ind+downsample_factor*window_size
             time_vec = time_vec[initial_ind:final_ind]
             j_di = j_di[initial_ind:final_ind]
 
@@ -116,14 +120,16 @@ for pp in range(num_L): # [6]: #
         # convert current drive to flux
         influx_list = []
         M = inductance_conversion*np.sqrt(200e-12*10e-12)
-        for ii in range(len(I_drive_list)):
-            influx_list.append(M*I_drive_list[ii])
+        I_drive__pad = 10e-9
+        I_drive_list__pad = np.insert(I_drive_list,0,I_drive_list[0]-I_drive__pad) # adding extra zero so influx that rounds below minimum value gives zero rate
+        for ii in range(len(I_drive_list__pad)):
+            influx_list.append(M*I_drive_list__pad[ii])
             
         # assemble data and change units
         I_di_pad = 10e-9 # amount above the observed max of Isi that the simulation will allow before giving a zero rate
         
-        master_rate_array = []
-        I_di_array__scaled = []
+        master_rate_array = [np.array([0,0])] # initializing with these zeros so influx that rounds below minimum value gives zero rate
+        I_di_array__scaled = [np.array([0,I_di_pad])] # initializing with these zeros so influx that rounds below minimum value gives zero rate
             
         for ii in range(num_drives):
                         
@@ -136,10 +142,10 @@ for pp in range(num_L): # [6]: #
         
             master_rate_array.append([])
             # master_rate_array[ii] = np.insert(np.append(temp_rate_vec,0),0,0) # these zeros added so that a current that rounds to I_di + I_di_pad will give zero rate
-            master_rate_array[ii] = np.append(temp_rate_vec,0) # these zeros added so that a current that rounds to I_di + I_di_pad will give zero rate
+            master_rate_array[ii+1] = np.append(temp_rate_vec,0) # these zeros added so that a current that rounds to I_di + I_di_pad will give zero rate
             I_di_array__scaled.append([])
             # I_di_array__scaled[ii] = np.insert(np.append(temp_I_di_vec,np.max(temp_I_di_vec)+I_di_pad),0,0) # this additional I_di + I_di_pad is included so that a current that rounds to I_di + I_di_pad will give zero rate
-            I_di_array__scaled[ii] = np.append(temp_I_di_vec,np.max(temp_I_di_vec)+I_di_pad) # this additional I_di + I_di_pad is included so that a current that rounds to I_di + I_di_pad will give zero rate
+            I_di_array__scaled[ii+1] = np.append(temp_I_di_vec,np.max(temp_I_di_vec)+I_di_pad) # this additional I_di + I_di_pad is included so that a current that rounds to I_di + I_di_pad will give zero rate
             
         # plot the rate array  
         if plot_rate_arrays == True:
@@ -158,37 +164,40 @@ for pp in range(num_L): # [6]: #
 
         
 #%% just plot
-numjj = 4
-L_left = 10
-L_right = 20
-I_de = 72
+if 1 == 1:
+    
+    numjj = 4
+    L_left = 10
+    L_right = 20
+    I_de = 72
+    
+    file_name = 'master_dnd_rate_array_{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}.soen'.format(numjj,L_left+10,L_right,I_de)
+    plot_dend_rate_array(file_name = file_name)
+            
+    # for pp in range(num_L):
+    #     for qq in range(num_I_de):
+            
+    #         file_name = 'master_dnd_rate_array_{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}.soen'.format(numjj,L_left_list[pp]+10,L_right_list[pp],I_de_list[qq])
+    #         plot_dend_rate_array(file_name = file_name)
 
-file_name = 'master_dnd_rate_array_{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}.soen'.format(numjj,L_left+10,L_right,I_de)
-plot_dend_rate_array(file_name = file_name)
         
-# for pp in range(num_L):
-#     for qq in range(num_I_de):
-        
-#         file_name = 'master_dnd_rate_array_{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}.soen'.format(numjj,L_left_list[pp]+10,L_right_list[pp],I_de_list[qq])
-#         plot_dend_rate_array(file_name = file_name)
-        
-
 #%% debugging
+if 1 == 2:
 
-numjj = 4
-L_left = 10
-L_right = 20
-I_de = 72
-file_name = 'master_dnd_rate_array_{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}.soen'.format(numjj,L_left+10,L_right,I_de)
-with open('../_circuit_data/'+file_name, 'rb') as data_file:         
-    data_array = pickle.load(data_file)
-    # data_array = load_session_data(kwargs['file_name'])
-    rate_array = data_array['rate_array']
-    influx_list = data_array['influx_list']
-    I_di_array = data_array['I_di_array']
-        
-I_di = 0
-ind1 = (np.abs(np.asarray(influx_list)-1000)).argmin()
-ind2 = (np.abs(I_di_array[ind1]-I_di)).argmin()        
-rate = rate_array[ind1][ind2]                  
-print('ind1 = {}; ind2 = {}; rate = {}'.format(ind1,ind2,rate))
+    numjj = 4
+    L_left = 10
+    L_right = 20
+    I_de = 72
+    file_name = 'master_dnd_rate_array_{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}.soen'.format(numjj,L_left+10,L_right,I_de)
+    with open('../_circuit_data/'+file_name, 'rb') as data_file:         
+        data_array = pickle.load(data_file)
+        # data_array = load_session_data(kwargs['file_name'])
+        rate_array = data_array['rate_array']
+        influx_list = data_array['influx_list']
+        I_di_array = data_array['I_di_array']
+            
+    I_di = 0
+    ind1 = (np.abs(np.asarray(influx_list)-1000)).argmin()
+    ind2 = (np.abs(I_di_array[ind1]-I_di)).argmin()        
+    rate = rate_array[ind1][ind2]                  
+    print('ind1 = {}; ind2 = {}; rate = {}'.format(ind1,ind2,rate))

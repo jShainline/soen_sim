@@ -4,6 +4,7 @@ from pylab import *
 import time
 import pickle
 import copy
+from scipy.signal import find_peaks
 
 from _functions import neuron_time_stepper, synapse_time_stepper__Isf_ode__spd_delta, synapse_time_stepper__2jj__ode, synapse_time_stepper, synapse_time_stepper__1jj_ode, synapse_time_stepper__Isf_ode__spd_jj_test, dendritic_drive__piecewise_linear, dendritic_time_stepper, Ljj, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR, dendrite_time_stepper
 from _plotting import plot_dendritic_drive, plot_dendritic_integration_loop_current
@@ -867,6 +868,14 @@ class neuron():
         else:
             _Ib = [74e-6, 36e-6, 35e-6] #[bias to NR loop (J_th), bias to JTL, bias to NI loop]
         self.refractory_bias_currents =  _Ib
+        
+        if 'refractory_receiving_input_inductance' in kwargs:
+            if type(kwargs['refractory_receiving_input_inductance']) == list:
+                    self.refractory_receiving_input_inductance = kwargs['refractory_receiving_input_inductance']
+            else:
+                raise ValueError('[soens_sim] refractory_receiving_input_inductance is specified as a pair of real numbers. The first element of the pair is the inductance on the refractory receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the refractory dendrite and the neuronal integration loop.')
+        else:
+            self.refractory_receiving_input_inductance =  [20e-12,1]
             
         if 'neuronal_receiving_input_refractory_inductance' in kwargs:
             if type(kwargs['neuronal_receiving_input_refractory_inductance']) == list:
@@ -931,6 +940,14 @@ class neuron():
             _Ib = [74e-6, 36e-6, 35e-6] #[bias to NR loop (J_th), bias to JTL, bias to NI loop]
         self.homeostatic_bias_currents =  _Ib
         
+        if 'homeostatic_receiving_input_inductance' in kwargs:
+            if type(kwargs['homeostatic_receiving_input_inductance']) == list:
+                    self.homeostatic_receiving_input_inductance = kwargs['homeostatic_receiving_input_inductance']
+            else:
+                raise ValueError('[soens_sim] homeostatic_receiving_input_inductance is specified as a pair of real numbers. The first element of the pair is the inductance on the homeostatic receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the homeostatic dendrite and the neuronal integration loop.')
+        else:
+            self.homeostatic_receiving_input_inductance =  [20e-12,1]
+            
         if 'neuronal_receiving_input_homeostatic_inductance' in kwargs:
             if type(kwargs['neuronal_receiving_input_homeostatic_inductance']) == list:
                     self.neuronal_receiving_input_homeostatic_inductance = kwargs['neuronal_receiving_input_homeostatic_inductance']
@@ -960,7 +977,9 @@ class neuron():
         temp_list_1.append('{}__r'.format(self.name))
         temp_list_2 = self.input_dendritic_inductances
         temp_list_2.append(self.neuronal_receiving_input_refractory_inductance)
-        neuron_dendrite = dendrite('{}__d'.format(self.name), 
+        # print('self.circuit_inductances = {}'.format(self.circuit_inductances))
+        neuron_dendrite = dendrite('{}__d'.format(self.name),
+                                   num_jjs = self.num_jjs,
                                    inhibitory_or_excitatory = 'excitatory', 
                                    circuit_inductances = self.circuit_inductances,
                                    input_direct_connections = self.input_direct_connections,
@@ -978,12 +997,13 @@ class neuron():
                                    dendrite_model_params = self.time_params)                
                  
         # make refractory dendrite
-        refractory_loop = dendrite('{}__r'.format(self.name), 
+        refractory_loop = dendrite('{}__r'.format(self.name),
+                                  num_jjs = self.num_jjs,
                                   inhibitory_or_excitatory = 'inhibitory',
                                   circuit_inductances = self.refractory_loop_circuit_inductances,
                                   thresholding_junction_critical_current = self.refractory_thresholding_junction_critical_current,
                                   input_dendritic_connections = ['{}__d'.format(self.name)],
-                                  input_dendritic_inductances = [self.neuronal_receiving_input_refractory_inductance], # [self.integration_loop_output_inductances[1]],
+                                  input_dendritic_inductances = [self.refractory_receiving_input_inductance], # [self.integration_loop_output_inductances[1]],
                                   bias_currents = self.refractory_bias_currents,
                                   integration_loop_temporal_form = self.refractory_temporal_form,
                                   integration_loop_time_constant = self.refractory_time_constant,
@@ -1022,17 +1042,7 @@ class neuron():
                 
             #then add direct connections to dendrites
             dendrite.dendrites[name_1].direct_connections = dict()
-            for name_3 in dendrite.dendrites[name_1].input_direct_connections:
-                # if hasattr(self.direct_connections[0],'piecewise_linear'):
-                #     dendritic_drive = dendritic_drive__piecewise_linear(time_vec,self.direct_connections[0].piecewise_linear)
-                # if hasattr(self.direct_connections[0],'square_pulse_train'):
-                #     dendritic_drive = dendritic_drive__square_pulse_train(time_vec,self.direct_connections[0].square_pulse_train)
-                # if hasattr(self.direct_connections[0],'exponential_pulse_train'):
-                #     dendritic_drive = dendritic_drive__exp_pls_train__LR(time_vec,self.direct_connections[0].exponential_pulse_train)
-        
-                # # plot_dendritic_drive(time_vec, dendritic_drive)
-                # self.dendritic_drive = dendritic_drive
-                
+            for name_3 in dendrite.dendrites[name_1].input_direct_connections:                
                 dendrite.dendrites[name_1].direct_connections[input_signal.input_signals[name_3].name] = input_signal.input_signals[name_3]
                 
             #then add dendrites to dendrites
@@ -1060,46 +1070,67 @@ class neuron():
         return self   
     
     
-    def sum_inductances(self):
+    def sum_inductances(self):  
+        
+        print_progress = False
     
         # go through all dendrites in the neuron. remember the neuron itself is a dendrite, so it is included here
         # currently set up so all excitatory connections are on the left, all inhibitory on the right branch of the DR loop. is that good?
         for name_dendrite in self.dendrites:
             
-            # print('name_dendrite = {}'.format(name_dendrite))
+            if print_progress == True:
+                print('name_dendrite = {}'.format(name_dendrite))
             
             self.dendrites[name_dendrite].L_left = self.dendrites[name_dendrite].circuit_inductances[0]
             self.dendrites[name_dendrite].L_right = self.dendrites[name_dendrite].circuit_inductances[1]
             
-            # print('self.dendrites[name_dendrite].L_left = {}'.format(self.dendrites[name_dendrite].L_left))
-            # print('self.dendrites[name_dendrite].L_right = {}'.format(self.dendrites[name_dendrite].L_right))
+            if print_progress == True:
+                print('1: self.dendrites[name_dendrite].L_left = {}'.format(self.dendrites[name_dendrite].L_left))
+                print('1: self.dendrites[name_dendrite].L_right = {}'.format(self.dendrites[name_dendrite].L_right))
             
             for name_direct in self.dendrites[name_dendrite].input_direct_connections:
                 
-                if self.dendrites[name_dendrite].inhibitory_or_excitatory == 'inhibitory':
-                    self.dendrites[name_dendrite].L_right += self.dendrites[name_dendrite].input_direct_inductances[name_direct][0]
-                    
-                elif self.dendrites[name_dendrite].inhibitory_or_excitatory == 'excitatory':
+                if self.dendrites[name_dendrite].inhibitory_or_excitatory == 'excitatory':
                     self.dendrites[name_dendrite].L_left += self.dendrites[name_dendrite].input_direct_inductances[name_direct][0]
                     
+                elif self.dendrites[name_dendrite].inhibitory_or_excitatory == 'inhibitory':
+                    self.dendrites[name_dendrite].L_right += self.dendrites[name_dendrite].input_direct_inductances[name_direct][0]
+                    
+                if print_progress == True:
+                    print('2: self.dendrites[name_dendrite].L_left = {}'.format(self.dendrites[name_dendrite].L_left))
+                    print('2: self.dendrites[name_dendrite].L_right = {}'.format(self.dendrites[name_dendrite].L_right))
+            
             for name_dendrite_in in self.dendrites[name_dendrite].input_dendritic_connections:
                 
-                if self.dendrites[name_dendrite_in].inhibitory_or_excitatory == 'inhibitory':
-                    self.dendrites[name_dendrite].L_right += self.dendrites[name_dendrite].input_dendritic_inductances[name_dendrite_in][0]
-                    
                 if self.dendrites[name_dendrite_in].inhibitory_or_excitatory == 'excitatory':
                     self.dendrites[name_dendrite].L_left += self.dendrites[name_dendrite].input_dendritic_inductances[name_dendrite_in][0]
                     
+                elif self.dendrites[name_dendrite_in].inhibitory_or_excitatory == 'inhibitory':
+                    self.dendrites[name_dendrite].L_right += self.dendrites[name_dendrite].input_dendritic_inductances[name_dendrite_in][0]
+                    
+                if print_progress == True:
+                    print('3: self.dendrites[name_dendrite].L_left = {}'.format(self.dendrites[name_dendrite].L_left))
+                    print('3: self.dendrites[name_dendrite].L_right = {}'.format(self.dendrites[name_dendrite].L_right))
+                
             for name_synapse in self.dendrites[name_dendrite].input_synaptic_connections:
                 
-                # print('name_synapse = {}'.format(name_synapse))
-                
-                if self.dendrites[name_dendrite].inhibitory_or_excitatory == 'inhibitory':
-                    self.dendrites[name_dendrite].L_right += self.dendrites[name_dendrite].input_synaptic_inductances[name_synapse][0]
+                if print_progress == True:
+                    print('name_synapse = {}'.format(name_synapse))                
                 
                 if self.dendrites[name_dendrite].inhibitory_or_excitatory == 'excitatory':
                     self.dendrites[name_dendrite].L_left += self.dendrites[name_dendrite].input_synaptic_inductances[name_synapse][0]
+                    
+                elif self.dendrites[name_dendrite].inhibitory_or_excitatory == 'inhibitory':
+                    self.dendrites[name_dendrite].L_right += self.dendrites[name_dendrite].input_synaptic_inductances[name_synapse][0]
     
+                if print_progress == True:
+                    print('4: self.dendrites[name_dendrite].L_left = {}'.format(self.dendrites[name_dendrite].L_left))
+                    print('4: self.dendrites[name_dendrite].L_right = {}'.format(self.dendrites[name_dendrite].L_right))
+                             
+            if print_progress == True:
+                print('5: self.dendrites[name_dendrite].L_left = {}'.format(self.dendrites[name_dendrite].L_left))
+                print('5: self.dendrites[name_dendrite].L_right = {}'.format(self.dendrites[name_dendrite].L_right))
+                
         return self
     
         
@@ -1123,6 +1154,12 @@ class neuron():
         self.sum_inductances()
         
         self = neuron_time_stepper(time_vec,self)
+        
+        # calculate spike times
+        self.output_voltage = self.integration_loop_output_inductances[0][0]*np.diff(self.I_ni_vec)
+        
+        self.voltage_peaks, _ = find_peaks(self.output_voltage, distance = 5e-9/dt) # , height = min_peak_height, )
+        self.spike_times = self.time_vec[self.voltage_peaks]
         
         # calculate receiving loop inductance
         # self.receiving_loop_total_inductance = self.receiving_loop_self_inductance
