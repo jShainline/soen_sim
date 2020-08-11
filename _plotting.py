@@ -660,17 +660,29 @@ def plot_neuronal_response(neuron_instance):
     # tt = time.time()   
     # save_str = 'bursting__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
     
-    p = physical_constants()
+    # p = physical_constants()
     Phi_0 = 1 # 1e18*p['Phi0']    
     
     time_vec = neuron_instance.time_vec
-    fig, axs = plt.subplots(nrows = 7, ncols = 1, sharex = True, sharey = False)   
+    fig, axs = plt.subplots(nrows = 6, ncols = 1, sharex = True, sharey = False)   
     # fig.suptitle('Current in the neuronal receiving loop versus time')
     
     # input synapses     
-    for name in neuron_instance.input_synaptic_connections:
-        axs[1].plot(time_vec*1e6,neuron_instance.synapses[name].I_si_vec, '-', color = colors['green3'], markersize = pp['nominal_markersize'], label = name+' ($tau_{si}$ = '+'{:3.0f}ns)'.format(neuron_instance.synapses[name].integration_loop_time_constant*1e9))
-        axs[0].plot(time_vec*1e6,neuron_instance.synapses[name].I_spd_vec, '-', color = colors['green3'], markersize = pp['nominal_markersize'], label = name)        
+    for name_1 in neuron_instance.input_synaptic_connections:
+        
+        axs[0].plot(time_vec*1e6,neuron_instance.synapses[name_1].I_spd_vec, 
+                    '-', color = colors['green3'], markersize = pp['nominal_markersize'], label = name_1+' ($I_{sy}$ = '+'{:5.2f}$\mu$A)'.format(neuron_instance.synapses[name_1].I_sy))         
+        
+        axs[1].plot(time_vec*1e6,neuron_instance.synapses[name_1].I_si_vec, '-', color = colors['green3'], markersize = pp['nominal_markersize'], 
+                    label = name_1+' ($L_{si}$ = '+'{:4.0f}nH'.format(neuron_instance.synapses[name_1].integration_loop_total_inductance*1e9)+
+                            '; $tau_{si}$ = '+'{:3.0f}ns)'.format(neuron_instance.synapses[name_1].integration_loop_time_constant*1e9))
+        
+        for _time in neuron_instance.synapses[name_1].input_spike_times:
+            _time_ind = (np.abs(neuron_instance.time_vec-_time)).argmin()
+            axs[0].plot(time_vec[_time_ind]*1e6,neuron_instance.synapses[name_1].I_spd_vec[_time_ind], 'o', color = colors['green5'], markersize = pp['nominal_markersize'])  
+            axs[1].plot(time_vec[_time_ind]*1e6,neuron_instance.synapses[name_1].I_si_vec[_time_ind], 'o', color = colors['green5'], markersize = pp['nominal_markersize'])  
+            axs[2].plot(time_vec[_time_ind]*1e6,Phi_0*neuron_instance.influx_vec[_time_ind], 'o', color = colors['blue5'], markersize = pp['nominal_markersize'])
+               
          
     axs[1].set_ylabel(r'$I^{si}$ [$\mu$A]')
     # axs[4].set_title('Contribution from each synapse')
@@ -681,34 +693,41 @@ def plot_neuronal_response(neuron_instance):
     axs[0].legend()
     
     # neuron
-    axs[2].plot(time_vec*1e6,Phi_0*neuron_instance.influx_vec, '-', color = colors['blue3'], markersize = pp['nominal_markersize'], label = neuron_instance.name)
-    axs[3].plot(time_vec*1e6,neuron_instance.I_ni_vec, '-', color = colors['blue3'], markersize = pp['nominal_markersize'], label = neuron_instance.name+' ($tau_{ni}$ = '+'{:3.0f}ns)'.format(neuron_instance.integration_loop_time_constant*1e9))
-    for _st in range(len(neuron_instance.spike_times)):
-        axs[2].plot([neuron_instance.spike_times[_st]*1e6,neuron_instance.spike_times[_st]*1e6], [np.min(Phi_0*neuron_instance.influx_vec),np.max(Phi_0*neuron_instance.influx_vec)],':', color = colors['greengrey1'])
-        axs[3].plot([neuron_instance.spike_times[_st]*1e6,neuron_instance.spike_times[_st]*1e6], [np.min(neuron_instance.I_ni_vec),np.max(neuron_instance.I_ni_vec)],':', color = colors['greengrey1'])
+    axs[2].plot(time_vec*1e6,Phi_0*neuron_instance.influx_vec, '-', color = colors['blue3'], label = neuron_instance.name)
+    axs[3].plot(time_vec*1e6,neuron_instance.I_ni_vec, '-', color = colors['blue3'], label = neuron_instance.name+' ($tau_{ni}$ = '+'{:3.0f}ns)'.format(neuron_instance.integration_loop_time_constant*1e9))
+    # for _st in range(len(neuron_instance.spike_times)):
+        # axs[2].plot([neuron_instance.spike_times[_st]*1e6,neuron_instance.spike_times[_st]*1e6], [np.min(Phi_0*neuron_instance.influx_vec),np.max(Phi_0*neuron_instance.influx_vec)],':', color = colors['greengrey1'])
+        # axs[3].plot([neuron_instance.spike_times[_st]*1e6,neuron_instance.spike_times[_st]*1e6], [np.min(neuron_instance.I_ni_vec),np.max(neuron_instance.I_ni_vec)],':', color = colors['greengrey1'])
+    axs[3].plot(neuron_instance.spike_times*1e6,neuron_instance.output_voltage[neuron_instance.voltage_peaks], 'x', color = colors['blue5'])
     
-    axs[2].set_ylabel(r'$\Phi^{nr}_{a}$ [pH $\mu$A]')
+    axs[2].set_ylabel(r'$\Phi^{nr}_{a}$ [$\mu$A pH]')
     axs[2].legend()
     
     axs[3].set_ylabel(r'$I^{ni}$ [$\mu$A]')
     axs[3].legend()
     
-    axs[4].plot(time_vec[0:-1]*1e6,neuron_instance.output_voltage*1e9, '-', color = colors['yellow3'], label = '$V^{out}$')
-    axs[4].plot(neuron_instance.spike_times*1e6,neuron_instance.output_voltage[neuron_instance.voltage_peaks]*1e9, 'x', color = colors['yellow5'])
-    axs[4].set_ylabel(r'$V^{out}$ [$nV$]')
-    axs[4].legend()
+    # axs[4].plot(time_vec[0:-1]*1e6,neuron_instance.output_voltage*1e9, '-', color = colors['yellow3'], label = '$V^{out}$')
+    # axs[4].plot(neuron_instance.spike_times*1e6,neuron_instance.output_voltage[neuron_instance.voltage_peaks]*1e9, 'x', color = colors['yellow5'])
+    # axs[4].set_ylabel(r'$V^{out}$ [$nV$]')
+    # axs[4].legend()
     
     # refractory dendrite
-    for name in neuron_instance.input_dendritic_connections:
-        axs[5].plot(time_vec*1e6,Phi_0*neuron_instance.dendrites[name].influx_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name)
-        axs[6].plot(time_vec*1e6,neuron_instance.dendrites[name].I_di_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name+' ($tau_{di}$ = '+'{:3.0f}ns)'.format(neuron_instance.dendrites[name].integration_loop_time_constant*1e9))        
+    name = '{}__r'.format(neuron_instance.name)
+    axs[4].plot(time_vec*1e6,Phi_0*neuron_instance.dendrites[name].influx_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name)
+    axs[4].plot(time_vec[neuron_instance.voltage_peaks]*1e6,Phi_0*neuron_instance.dendrites[name].influx_vec[neuron_instance.voltage_peaks], 'x', color = colors['red5'])
+    axs[5].plot(time_vec*1e6,neuron_instance.dendrites[name].I_di_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name+' ($tau_{ri}$ = '+'{:3.0f}ns)'.format(neuron_instance.dendrites[name].integration_loop_time_constant*1e9))        
+    axs[5].plot(time_vec[neuron_instance.voltage_peaks]*1e6,neuron_instance.dendrites[name].I_di_vec[neuron_instance.voltage_peaks], 'x', color = colors['red5'])
     
-    axs[5].set_ylabel(r'$\Phi^{dr}_{ref}$ [pH $\mu$A]')
-    axs[5].legend()
+    # for name in neuron_instance.input_dendritic_connections:
+        # axs[4].plot(time_vec*1e6,Phi_0*neuron_instance.dendrites[name].influx_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name)
+        # axs[5].plot(time_vec*1e6,neuron_instance.dendrites[name].I_di_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name+' ($tau_{ri}$ = '+'{:3.0f}ns)'.format(neuron_instance.dendrites[name].integration_loop_time_constant*1e9))        
+    
+    axs[4].set_ylabel(r'$\Phi^{dr}_{ref}$ [$\mu$A pH]')
+    axs[4].legend()
          
-    axs[6].set_ylabel(r'$I^{di}_{ref}$ [$\mu$A]')
-    axs[6].set_xlabel(r'Time [$\mu$s]')
-    axs[6].legend()     
+    axs[5].set_ylabel(r'$I^{di}_{ref}$ [$\mu$A]')
+    axs[5].set_xlabel(r'Time [$\mu$s]')
+    axs[5].legend()     
     
     plt.show()       
     # fig.savefig('figures/'+save_str+'.png')
@@ -1552,129 +1571,80 @@ def plot_syn_rate_array__fit_cmpr(I_si_array,rate_array,I_drive_list,mu1,mu2,V0)
     return
 
 
-def plot_syn_rate_array__waterfall(I_si_array__scaled,master_rate_array,I_drive_list):
+def plot_syn_rate_array(**kwargs):
 
-    color_list = [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
-                  colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
-                  colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
-                  colors['red4'],colors['red3'],colors['red2'],colors['red1'],
-                  colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
-                  colors['green4'],colors['green3'],colors['green2'],colors['green1'],
-                  colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
-                  colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
-                  colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
-                  colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
-                  colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
-                  colors['red4'],colors['red3'],colors['red2'],colors['red1'],
-                  colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
-                  colors['green4'],colors['green3'],colors['green2'],colors['green1'],
-                  colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
-                  colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
-                  colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
-                  colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
-                  colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
-                  colors['red4'],colors['red3'],colors['red2'],colors['red1'],
-                  colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
-                  colors['green4'],colors['green3'],colors['green2'],colors['green1'],
-                  colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
-                  colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
-                  colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
-                  colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
-                  colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
-                  colors['red4'],colors['red3'],colors['red2'],colors['red1'],
-                  colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
-                  colors['green4'],colors['green3'],colors['green2'],colors['green1'],
-                  colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
-                  colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
-                  colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
-                  colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
-                  colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
-                  colors['red4'],colors['red3'],colors['red2'],colors['red1'],
-                  colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
-                  colors['green4'],colors['green3'],colors['green2'],colors['green1'],
-                  colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
-                  colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
-                  colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
-                  colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
-                  colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
-                  colors['red4'],colors['red3'],colors['red2'],colors['red1'],
-                  colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
-                  colors['green4'],colors['green3'],colors['green2'],colors['green1'],
-                  colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
-                  colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
-                  ]
-    color_ind = np.arange(0,len(color_list),1)
-    
+    if 'file_name' in kwargs:
+        with open('../_circuit_data/'+kwargs['file_name'], 'rb') as data_file:         
+            data_array = pickle.load(data_file)
+        # data_array = load_session_data(kwargs['file_name'])
+        master_rate_array = data_array['rate_array']
+        I_drive_list = data_array['I_drive_list']      
+        I_si_array = data_array['I_si_array']
+                
+    elif 'I_si_array' in kwargs:
+        I_si_array = kwargs['I_si_array']
+        I_drive_list = kwargs['I_drive_list']
+        master_rate_array = kwargs['master_rate_array']
+        
+    cmap = mp.cm.get_cmap('gist_earth') # 'cividis' 'summer'
     fig = plt.figure()
-    ax = fig.gca(projection='3d')
+    if 'file_name' in kwargs:
+        fig.suptitle(kwargs['file_name'])
+    ax = fig.add_subplot(111, projection='3d')
     
-    verts = []
-    ys = np.asarray(I_drive_list)
-    for ii in range(len(ys)):
-        xs = I_si_array__scaled[ii][:]
-        zs = [xx*1e-3 for xx in master_rate_array[ii][:]]
-        verts.append(list(zip(xs,zs)))
-
-    poly = PolyCollection(verts, edgecolors = color_list, facecolors = [color_list[aa] for aa in color_ind])#, facecolors = [color_list[aa] for aa in range(len(color_list))]
-    poly.set_alpha(0.7)
-    ax.add_collection3d(poly, zs = ys, zdir = 'z')
+    I_si_min = 1000
+    I_si_max = -1000
+    I_drive_min = 1e9
+    I_drive_max = -1e9
+    rate_min = 1000
+    rate_max = -1000
+    if 'I_drive_reduction_factor' in kwargs:
+        I_drive_reduction_factor = kwargs['I_drive_reduction_factor']
+    else:
+        I_drive_reduction_factor = 1
+        
+    I_drive_list__reduced = I_drive_list[0::I_drive_reduction_factor]
+    num_drives = len(I_drive_list__reduced)
+    for ii in range(num_drives):
+        
+            _ind = (np.abs(np.asarray(I_drive_list[:])-np.asarray(I_drive_list__reduced[ii]))).argmin()
+            X3 = np.insert(I_si_array[_ind][:],0,0)            
+            Z3 = I_drive_list[_ind]
+            Y3 = np.insert(master_rate_array[_ind][:]*1e-3,0,0)
+            verts = [(X3[jj],Y3[jj]-0.5) for jj in range(len(X3))]
+            ax.add_collection3d(PolyCollection([verts], color = cmap(1-ii/num_drives),alpha=0.3), zs = Z3, zdir='y')
+            ax.plot(X3,Y3,Z3,linewidth=4, color = cmap(1-ii/num_drives), zdir='y',alpha=1)
+            
+            if np.min(I_si_array[_ind][:]) < I_si_min:
+                I_si_min = np.min(I_si_array[_ind][:])
+            if np.max(I_si_array[_ind][:]) > I_si_max:
+                I_si_max = np.max(I_si_array[_ind][:])
+                            
+            if np.min(I_drive_list[_ind]) < I_drive_min:
+                I_drive_min = np.min(I_drive_list[_ind])
+            if np.max(I_drive_list[_ind]) > I_drive_max:
+                I_drive_max = np.max(I_drive_list[_ind])
+                
+            if np.min(master_rate_array[_ind][:]*1e-3) < rate_min:
+                rate_min = np.min(master_rate_array[_ind][:]*1e-3)
+            if np.max(master_rate_array[_ind][:]*1e-3) > rate_max:
+                rate_max = np.max(master_rate_array[_ind][:]*1e-3)
+           
+    ax.set_xticks([0, 10, 20])
+    for t in ax.xaxis.get_major_ticks(): t.label.set_fontsize(24)
+    for t in ax.yaxis.get_major_ticks(): t.label.set_fontsize(24)
+    for t in ax.zaxis.get_major_ticks(): t.label.set_fontsize(24)
     
-    ax.set_zlabel('Idrive')
-    ax.set_zlim3d(0, 20)
-    ax.set_xlabel('Isi')
-    ax.set_xlim3d(0,20)
-    ax.set_ylabel('rate')
-    ax.set_ylim3d(0, 50)
+    ax.set_xlabel(r'$I_{si}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_xlim3d(I_si_min-1,I_si_max+1)    
+    ax.set_ylabel('$I_{drive}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(I_drive_min-1,I_drive_max+1)
+    ax.zaxis.set_rotate_label(False)  # disable automatic rotation
+    ax.set_zlabel(r'$r_{j_{di}}$ [kilofluxons per $\mu$s]',fontsize=24, fontweight='bold', rotation=96,labelpad=10) ; ax.set_zlim3d(rate_min-1,rate_max+1)
+    ax.yaxis._axinfo['label']['space_factor'] = 30.0
+    
+    ax.view_init(45,-30)
     
     plt.show()
     
-    
-    # cmap = pl.cm.get_cmap('viridis')
-    # verts = []
-    # zs = alpha_list
-    # for i, z in enumerate(zs):
-    #     ys = B_l2[:, i]
-    #     verts.append(list(zip(x, ys)))
-    
-    # ax = pl.gcf().gca(projection='3d')
-    
-    # poly = PolyCollection(verts, facecolors=[cmap(a) for a in alpha_list])
-    # poly.set_alpha(0.7)
-    # ax.add_collection3d(poly, zs=zs, zdir='y')
-    
-
-    # import matplotlib.pyplot as plt
-    # from matplotlib import colors as mcolors
-    
-    # fig = plt.figure()
-    # ax = fig.gca(projection='3d')
-    
-    
-    # def cc(arg):
-    #     return mcolors.to_rgba(arg, alpha=0.6)
-    
-    # xs = np.arange(0, 10, 0.4)
-    # verts = []
-    # zs = [0.0, 1.0, 2.0, 3.0]
-    # for z in zs:
-    #     ys = np.random.rand(len(xs))
-    #     ys[0], ys[-1] = 0, 0
-    #     verts.append(list(zip(xs, ys)))
-    
-    # poly = PolyCollection(verts, facecolors=[cc('r'), cc('g'), cc('b'),
-    #                                          cc('y')])
-    # poly.set_alpha(0.7)
-    # ax.add_collection3d(poly, zs=zs, zdir='y')
-    
-    # ax.set_xlabel('X')
-    # ax.set_xlim3d(0, 10)
-    # ax.set_ylabel('Y')
-    # ax.set_ylim3d(-1, 4)
-    # ax.set_zlabel('Z')
-    # ax.set_zlim3d(0, 1)
-    
-    # plt.show()
-
     return
 
 
@@ -1714,24 +1684,136 @@ def plot__syn__error_vs_dt(dt_vec,error_array,error_drive_array):
     return
 
 
-def plot_spd_response(time_vec,time_vec_reduced,I_sy_list,I_spd_array,I_spd_array_reduced):
+def plot_spd_response(**kwargs): # (time_vec,time_vec_reduced,I_sy_list,I_spd_array,I_spd_array_reduced):
+
+    if 'file_name' in kwargs:
+        with open('../_circuit_data/'+kwargs['file_name'], 'rb') as data_file:         
+            data_array = pickle.load(data_file)
+        spd_response_array = data_array['spd_response_array']
+        I_sy_list = data_array['I_sy_list']      
+        time_vec = 1e3*data_array['time_vec']
+                
+    elif 'I_sy_list' in kwargs:
+        time_vec = 1e3*kwargs['time_vec']
+        I_sy_list = kwargs['I_sy_list']
+        spd_response_array = kwargs['spd_response_array']
     
     fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
     # fig.suptitle('spd response') 
-    plot_list = I_sy_list # [23,28,33,38]
-    num_plot = len(plot_list)
-    for ii in range(num_plot):  
-        ind = (np.abs(I_sy_list[:]-plot_list[ii])).argmin()
-        # ax.plot([xx*1e3 for xx in time_vec],I_spd_array[ind])    
-        ax.plot([xx*1e3 for xx in time_vec_reduced],I_spd_array_reduced[ind], linewidth = pp['fine_linewidth'], label = 'I_sy = {}uA'.format(I_sy_list[ind]))    
+    if 'I_sy_reduction_factor' in kwargs:
+        I_sy_reduction_factor = kwargs['I_sy_reduction_factor']
+    else:
+        I_sy_reduction_factor = 1
+        
+    I_sy_list__reduced = I_sy_list[0::I_sy_reduction_factor]
+    # print('len(I_sy_list__reduced) = {}; size(spd_response_array) = {}'.format(len(I_sy_list__reduced),np.shape(spd_response_array)))
+    for ii in range(len(I_sy_list__reduced)):  
+        _ind = (np.abs(I_sy_list[:]-I_sy_list__reduced[ii])).argmin()
+        # ax.plot([xx*1e3 for xx in time_vec],I_spd_array[ind])  
+        if spd_response_array[_ind,0] < 0:
+            spd_response_array[_ind,0]  = 0
+        ax.plot(np.insert(time_vec,0,-5),np.insert(spd_response_array[_ind,:],0,0), linewidth = pp['fine_linewidth'], label = 'I_sy = {}uA'.format(I_sy_list__reduced[ii]))    
+        # ax.plot(time_vec+5,spd_response_array[_ind], linewidth = pp['fine_linewidth'], label = 'I_sy = {}uA'.format(I_sy_list[_ind]))    
     ax.set_xlabel(r'Time [ns]')
     ax.set_ylabel(r'$I_{spd}$ [$\mu$A]')
-    ax.set_xlim([0,150])
-    ax.legend()
+    ax.set_xlim([-1,25])
+    # ax.set_xlim([-5,200])
+    # ax.legend()
     plt.show()
 
     return
 
+
+def plot_spd_response__waterfall(**kwargs): # (time_vec,time_vec_reduced,I_sy_list,I_spd_array,I_spd_array_reduced):
+
+    if 'file_name' in kwargs:
+        with open('../_circuit_data/'+kwargs['file_name'], 'rb') as data_file:         
+            data_array = pickle.load(data_file)
+        spd_response_array = data_array['spd_response_array']
+        I_sy_list = data_array['I_sy_list']      
+        time_vec = 1e3*data_array['time_vec']
+                
+    elif 'I_sy_list' in kwargs:
+        time_vec = 1e3*kwargs['time_vec']
+        I_sy_list = kwargs['I_sy_list']
+        spd_response_array = kwargs['spd_response_array']
+        
+    cmap = mp.cm.get_cmap('gist_earth') # 'cividis' 'summer'
+    fig = plt.figure()
+    if 'file_name' in kwargs:
+        fig.suptitle(kwargs['file_name'])
+    ax = fig.add_subplot(111, projection='3d')
+    
+    time_min = 1e9
+    time_max = -1e9
+    I_sy_min = 1e9
+    I_sy_max = -1e9
+    spd_min = 1e9
+    spd_max = -1e9
+    if 'I_sy_reduction_factor' in kwargs:
+        I_sy_reduction_factor = kwargs['I_drive_reduction_factor']
+    else:
+        I_sy_reduction_factor = 1
+        
+    I_sy_list__reduced = I_sy_list[0::I_sy_reduction_factor]
+    num_drives = len(I_sy_list__reduced)
+    for ii in range(num_drives):
+        
+        _ind = (np.abs(np.asarray(I_sy_list[:])-np.asarray(I_sy_list__reduced[ii]))).argmin()
+        X3 = np.insert(time_vec[:],0,0)            
+        Z3 = I_sy_list[_ind]
+        Y3 = np.insert(spd_response_array[_ind,:],0,0)
+        verts = [(X3[jj],Y3[jj]-0.5) for jj in range(len(X3))]
+        ax.add_collection3d(PolyCollection([verts], color = cmap(1-ii/num_drives),alpha=0.3), zs = Z3, zdir='y')
+        ax.plot(X3,Y3,Z3,linewidth=4, color = cmap(1-ii/num_drives), zdir='y',alpha=1)
+        
+        if np.min(time_vec[:]) < time_min:
+            time_min = np.min(time_vec[:])
+        if np.max(time_vec[:]) > time_max:
+            time_max = np.max(time_vec[:])
+                        
+        if np.min(I_sy_list[_ind]) < I_sy_min:
+            I_sy_min = np.min(I_sy_list[_ind])
+        if np.max(I_sy_list[_ind]) > I_sy_max:
+            I_sy_max = np.max(I_sy_list[_ind])
+            
+        if np.min(spd_response_array[_ind,:]) < spd_min:
+            spd_min = np.min(spd_response_array[_ind,:])
+        if np.max(spd_response_array[_ind,:]) > spd_max:
+            spd_max = np.max(spd_response_array[_ind,:])
+           
+    # ax.set_xticks([0, 10, 20])
+    # print('time_min = {}; time_max = {}'.format(time_min,time_max))
+    for t in ax.xaxis.get_major_ticks(): t.label.set_fontsize(24)
+    for t in ax.yaxis.get_major_ticks(): t.label.set_fontsize(24)
+    for t in ax.zaxis.get_major_ticks(): t.label.set_fontsize(24)
+    
+    Dt = time_max-time_min
+    ax.set_xlabel(r'Time [ns]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_xlim3d(time_min-0.1*Dt,time_max+0.1*Dt)    
+    ax.set_ylabel('$I_{sy}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(I_sy_min-1,I_sy_max+1)
+    ax.zaxis.set_rotate_label(False)  # disable automatic rotation
+    ax.set_zlabel(r'$I_{spd}$ [$\mu$A]',fontsize=24, fontweight='bold', rotation=96,labelpad=10) ; ax.set_zlim3d(spd_min-1,spd_max+1)
+    ax.yaxis._axinfo['label']['space_factor'] = 30.0
+    
+    ax.view_init(45,-30)
+    
+    plt.show()
+    
+    # fig, ax = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)
+    # # fig.suptitle('spd response') 
+    # plot_list = I_sy_list # [23,28,33,38]
+    # num_plot = len(plot_list)
+    # for ii in range(num_plot):  
+    #     ind = (np.abs(I_sy_list[:]-plot_list[ii])).argmin()
+    #     # ax.plot([xx*1e3 for xx in time_vec],I_spd_array[ind])    
+    #     ax.plot([xx*1e3 for xx in time_vec_reduced],I_spd_array_reduced[ind], linewidth = pp['fine_linewidth'], label = 'I_sy = {}uA'.format(I_sy_list[ind]))    
+    # ax.set_xlabel(r'Time [ns]')
+    # ax.set_ylabel(r'$I_{spd}$ [$\mu$A]')
+    # ax.set_xlim([0,150])
+    # ax.legend()
+    # plt.show()
+
+    return
 
 def plot_dend_time_traces(time_vec,j_di,j_di_peaks,min_peak_height,I_di,file_name,):
     
@@ -1854,6 +1936,37 @@ def plot_num_in_burst(I_sy_vec,L_si_vec,tau_si_vec,num_in_burst):
     ax.set_xlabel(r'$\tau_{si}$ [$\mu$s]')
     ax.set_ylabel(r'Num spikes')
     ax.legend()
+    
+    plt.show()
+    
+    return
+
+def plot_phase_portrait(neuron_instance):
+    
+    drive_vec = neuron_instance.influx_vec__no_refraction
+    ref_dend_name = '{}__r'.format(neuron_instance.name)
+    refraction_vec = neuron_instance.dendrites[ref_dend_name].M*neuron_instance.dendrites[ref_dend_name].I_di_vec
+    
+    fig = plt.figure()
+    # fig.suptitle('tau_si = {:5.2f} ns; tau_ri = {:5.2f}'.format(synapse_list[0].integration_loop_total_inductance*1e9)) 
+    ax = fig.gca()
+    
+    ax.plot(drive_vec,refraction_vec, color = colors['blue3']) # , '-o', linewidth = pp['nominal_linewidth'], label = 'I_sy = {:5.2f}uA, L_si = {:7.2f}nH'.format(I_sy_vec[jj]*1e6,L_si_vec[ii]*1e9)
+    ax.plot(drive_vec[neuron_instance.voltage_peaks],refraction_vec[neuron_instance.voltage_peaks], 'x', color = colors['red3'])
+    for syn_name in neuron_instance.input_synaptic_connections:
+        for _time in neuron_instance.synapses[syn_name].input_spike_times:
+            _time_ind = (np.abs(neuron_instance.time_vec-_time)).argmin()
+            ax.plot(drive_vec[_time_ind],refraction_vec[_time_ind], 'o', color = colors['green3'])
+        
+    
+    ax.set_xlabel(r'$\Phi_{+}^{nr}$ [$\mu$A pH]')
+    ax.set_ylabel(r'$\Phi_{ref}^{nr}$ [$\mu$A pH]')
+    # ax.legend()
+    
+    x_min = np.min(drive_vec)
+    x_max = np.max(drive_vec)
+    x_range = x_max-x_min
+    ax.set_xlim([x_min-0.05*x_range,x_max+0.05*x_range])
     
     plt.show()
     

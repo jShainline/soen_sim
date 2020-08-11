@@ -38,8 +38,8 @@ def neuron_time_stepper(time_vec,neuron_object):
     # load synapse data
     #------------------
     print('loading synapse data ...')
-    file_string__spd__list = ['master__syn__spd_response__1jj__dt{:04.0f}ps.soen'.format(dt*1e6),'master__syn__spd_response__2jj__dt{:04.0f}ps.soen'.format(dt*1e6),'master__syn__spd_response__3jj__dt{:04.0f}ps.soen'.format(dt*1e6)]
-    file_string__rate_array__list = ['master__syn__rate_array__1jj__Isipad0010nA.soen','master__syn__rate_array__2jj__Isipad0010nA.soen','master__syn__rate_array__3jj__Isipad0010nA.soen']
+    file_string__spd__list = ['master_syn_spd_response_1jj_dt{:04.0f}ps.soen'.format(dt*1e6),'master_syn_spd_response_2jj_dt{:04.0f}ps.soen'.format(dt*1e6),'master_syn_spd_response_3jj_dt{:04.0f}ps.soen'.format(dt*1e6)]
+    file_string__rate_array__list = ['master_syn_rate_array_1jj_Isipad0010nA.soen','master_syn_rate_array_2jj_Isipad0010nA.soen','master_syn_rate_array_3jj_Isipad0010nA.soen']
     
     spd_response_array__list = []
     I_sy_list__spd__list = []
@@ -219,13 +219,14 @@ def neuron_time_stepper(time_vec,neuron_object):
     n.I_ni_vec = np.zeros([nt])
     n.I_drive_vec = np.zeros([nt])
     n.influx_vec = np.zeros([nt])
+    n.influx_vec__no_refraction = np.zeros([nt])
     n.tau_ni = current_conversion*n.integration_loop_time_constant
     n.state = 'quiescent'
     n.spike_times = []
     
     # step through time
     print('starting time stepping ...')
-    current_to_flux = inductance_conversion*np.sqrt(200e-12*10e-12)
+    # current_to_flux = inductance_conversion*np.sqrt(200e-12*10e-12)
     for ii in range(nt-1):
         
         _pt = time_vec[ii] # present time 
@@ -409,9 +410,12 @@ def neuron_time_stepper(time_vec,neuron_object):
             elif n.dendrites[de_name].inhibitory_or_excitatory == 'excitatory':
                 _prefactor = 1                    
             dend_flux += _prefactor*n.dendrites[de_name].M*n.dendrites[de_name].I_di_vec[ii+1]
+            if de_name == '{}__r'.format(n.name):
+                dend_flux__ref = _prefactor*n.dendrites[de_name].M*n.dendrites[de_name].I_di_vec[ii+1]
         
         # total flux drive to neuron        
         n.influx_vec[ii] = syn_flux+dend_flux
+        n.influx_vec__no_refraction[ii] = n.influx_vec[ii] - dend_flux__ref
         
         # if n.I_drive_vec[ii] > 18.6:
         # if n.influx_vec[ii] > 18.6*current_to_flux:
@@ -1031,15 +1035,8 @@ def synapse_time_stepper(time_vec,spike_times,num_jjs,L_list,I_bias_list,tau_si)
         dt = time_vec[1]-time_vec[0]
         
         # print('loading spd response data')
-        if num_jjs == 1:
-            file_string__spd = 'master__syn__spd_response__1jj__dt{:04.0f}ps.soen'.format(dt*1e6)
-            file_string__rate_array = 'master__syn__rate_array__1jj__Isipad0010nA.soen'
-        elif num_jjs == 2:
-            file_string__spd = 'master__syn__spd_response__2jj__dt{:04.0f}ps.soen'.format(dt*1e6)
-            file_string__rate_array = 'master__syn__rate_array__2jj__Isipad0010nA.soen'
-        elif num_jjs == 3:
-            file_string__spd = 'master__syn__spd_response__3jj__dt{:04.0f}ps.soen'.format(dt*1e6)
-            file_string__rate_array = 'master__syn__rate_array__3jj__Isipad0010nA.soen'
+        file_string__spd = 'master_syn_spd_response_{:1d}jj_dt{:04.0f}ps.soen'.format(num_jjs,dt*1e6)
+        file_string__rate_array = 'master_syn_rate_array_{:1d}jj_Isipad0010nA.soen'.format(num_jjs)
 
         with open('../_circuit_data/{}'.format(file_string__spd), 'rb') as data_file:         
             data_array__spd = pickle.load(data_file)

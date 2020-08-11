@@ -30,7 +30,7 @@ I_spd = 20e-6
 # tau_si = 250e-9
 
 spike_times = [5e-9]    
-I_sy = 33e-6
+I_sy = 36e-6
 L_si = 77.5e-9
 tau_si = 200e-9 # 1e-6 # 
 
@@ -65,7 +65,7 @@ neuron_1 = neuron('ne', num_jjs = 4,
                   integration_loop_self_inductance = 1e-15, 
                   integration_loop_output_inductances = [[400e-12,1],[200e-12,1]], # first is to drive latching JJ, second is to drive refractory dendrite; both are of the form [L_self,k]
                   integration_loop_temporal_form = 'exponential',
-                  integration_loop_time_constant = 5e-9,
+                  integration_loop_time_constant = 25e-9,
                   refractory_temporal_form = 'exponential',
                   refractory_loop_circuit_inductances = [0e-12,20e-12,200e-12,77.5e-12],
                   refractory_time_constant = 50e-9,
@@ -91,29 +91,6 @@ neuron_1.run_sim()
 #%% plot
 plot_neuronal_response(neuron_1)
 
-#%% dendrite
-# setup soen sim for exp pulse seq
 
-
-# L_di = 775e-9
-# tau_di = 10e-9
-
-# dendrite_1 = dendrite('dendrite_under_test', inhibitory_or_excitatory = 'excitatory', circuit_inductances = [10e-12,26e-12,200e-12,77.5e-12], 
-#                                       input_synaptic_connections = ['sy'], input_synaptic_inductances = [[]], 
-#                                       input_dendritic_connections = [], input_dendritic_inductances = [[]],                      
-#                                       input_direct_connections = ['input_dendritic_drive'], input_direct_inductances = [[10e-12,1]],
-#                                       thresholding_junction_critical_current = 40e-6, bias_currents = [71.5e-6,36e-6,35e-6],
-#                                       integration_loop_self_inductance = L_di, integration_loop_output_inductance = 0e-12,
-#                                       integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_di,
-#                                       dendrite_model_params = sim_params)
-
-# dendrite_1.run_sim()
-                                
-# actual_data = np.vstack((input_1.time_vec[:],dendrite_1.I_di[:,0]))    
-# error__signal = chi_squared_error(target_data,actual_data)
-
-# plot_wr_comparison__dend_drive_and_response(file_name,target_data__drive,actual_data__drive,target_data,actual_data,file_name,error__drive,error__signal)
-
-#%% 
 
 

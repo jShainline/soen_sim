@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 # from soen_sim import input_signal, synapse, dendrite, neuron
-from _plotting import plot_neuronal_response, plot_num_in_burst
+from _plotting import plot_neuronal_response, plot_num_in_burst, plot_phase_portrait
 from soen_sim import input_signal, synapse, neuron
 
 plt.close('all')
@@ -19,11 +19,18 @@ I_spd = 20e-6
 spike_times = [2e-9]
 
 num_L_si = 1
-num_I_sy = 5
-num_tau_si = 5
+num_I_sy = 1
+num_tau_si = 1
 L_si_vec = np.linspace(100e-9,1e-6,num_L_si) # [7.75e-9,77.5e-9,775e-9,7.75e-6]
-I_sy_vec = np.linspace(28e-6,38e-6,num_I_sy) # [28e-6,30e-6,32e-6,34e-6,36e-6]
-tau_si_vec = np.linspace(100e-9,3e-6,num_tau_si)
+I_sy_vec = np.linspace(35e-6,38e-6,num_I_sy) # [28e-6,30e-6,32e-6,34e-6,36e-6]
+tau_si_vec = np.linspace(500e-9,500e-9,num_tau_si)
+
+# num_L_si = 1
+# num_I_sy = 1
+# num_tau_si = 1
+# L_si_vec = np.array([77.5e-9])
+# I_sy_vec = np.array([33e-6])
+# tau_si_vec = np.array([250e-9])
 
 #%% run loops
 num_in_burst__array = np.zeros([num_L_si,num_I_sy,num_tau_si])
@@ -54,23 +61,25 @@ for ii in range(num_L_si):
                               input_synaptic_inductances = [[20e-12,1]],                     
                               thresholding_junction_critical_current = 40e-6,
                               bias_currents = [74e-6,36e-6,35e-6],
-                              integration_loop_self_inductance = 775e-12, 
-                              integration_loop_output_inductances = [[400e-12,1],[200e-12,1]], # first is to drive latching JJ, second is to drive refractory dendrite; both are of the form [L_self,k]
+                              integration_loop_self_inductance = 0e-12, 
+                              integration_loop_output_inductances = [[200e-12,1],[200e-12,1]], # first is to drive latching JJ, second is to drive refractory dendrite; both are of the form [L_self,k]
                               integration_loop_temporal_form = 'exponential',
                               integration_loop_time_constant = 5e-9,
                               refractory_temporal_form = 'exponential',
                               refractory_loop_circuit_inductances = [0e-12,20e-12,200e-12,77.5e-12],
                               refractory_time_constant = 50e-9,
                               refractory_thresholding_junction_critical_current = 40e-6,
-                              refractory_loop_self_inductance =775e-12,
+                              refractory_loop_self_inductance = 500e-12,
                               refractory_loop_output_inductance = 100e-12,
                               refractory_bias_currents = [74e-6,36e-6,35e-6],
                               refractory_receiving_input_inductance = [20e-12,1],                       
                               time_params = time_params)
                           
             neuron_1.run_sim()
-            plot_neuronal_response(neuron_1)            
+            plot_neuronal_response(neuron_1)    
+            plot_phase_portrait(neuron_1)
             num_in_burst__array[ii,jj,kk] = len(neuron_1.spike_times)
 
-#%% plot
+#%%
 plot_num_in_burst(I_sy_vec,L_si_vec,tau_si_vec,num_in_burst__array)
+

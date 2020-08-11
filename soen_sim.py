@@ -46,9 +46,9 @@ class input_signal():
         if 'spike_times' in kwargs:
             if (self.input_temporal_form == 'single_spike' or self.input_temporal_form == 'arbitrary_spike_train'):
                 self.spike_times = kwargs['spike_times']
-            elif self.input_temporal_form == 'constant_rate': # in this case, pulse_times has the form [rate,time_of_last_spike]
+            elif self.input_temporal_form == 'constant_rate': # in this case, spike_times has the form [rate,time_of_first_spike,time_of_last_spike]
                 isi = 1/kwargs['spike_times'][0]
-                self.spike_times = np.arange(0,kwargs['spike_times'][1],isi)
+                self.spike_times = np.arange(kwargs['spike_times'][1],kwargs['spike_times'][2]+isi,isi)
                 
         if 'stochasticity' in kwargs:
             if kwargs['stochasticity'] == 'gaussian' or kwargs['stochasticity'] == 'none':
@@ -1056,13 +1056,17 @@ class neuron():
         
         #then add synapses to neuron
         self.synapses = dict()
-        for name in self.input_synaptic_connections:             
-            self.synapses[synapse.synapses[name].name] = synapse.synapses[name]
+        for name_1 in self.input_synaptic_connections:
+            if hasattr(synapse.synapses[name_1],'input_signal'):
+                synapse.synapses[name_1].input_spike_times = copy.deepcopy(synapse.synapses[name_1].input_signal.spike_times)
+            else:
+                synapse.synapses[name_1].input_spike_times = []
+            self.synapses[synapse.synapses[name_1].name] = synapse.synapses[name_1]
             
         #also add direct connections to neuron
         self.direct_connections = dict()
-        for name in self.input_direct_connections:
-            self.direct_connections[input_signal.input_signals[name].name] = input_signal.input_signals[name]                      
+        for name_1 in self.input_direct_connections:
+            self.direct_connections[input_signal.input_signals[name_1].name] = input_signal.input_signals[name_1]                      
             
         #finally, add self to self as dendrite
         self.dendrites['{}__d'.format(self.name)] = dendrite.dendrites['{}__d'.format(self.name)]
@@ -1156,8 +1160,7 @@ class neuron():
         self = neuron_time_stepper(time_vec,self)
         
         # calculate spike times
-        self.output_voltage = self.integration_loop_output_inductances[0][0]*np.diff(self.I_ni_vec)
-        
+        self.output_voltage = self.I_ni_vec # self.integration_loop_output_inductances[0][0]*np.diff(self.I_ni_vec)        
         self.voltage_peaks, _ = find_peaks(self.output_voltage, distance = 5e-9/dt) # , height = min_peak_height, )
         self.spike_times = self.time_vec[self.voltage_peaks]
         
