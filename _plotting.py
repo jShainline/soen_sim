@@ -16,10 +16,37 @@ colors = color_dictionary()
 
 def plot_params():
     
-    plot_type = 'large' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' #
+    plot_type = '17.2__for_pubs' # 'large' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' #
     
     pp = dict()
-    
+        
+    if plot_type == '17.2__for_pubs':
+        
+        pp['title_font_size'] = 8
+        pp['subtitle_font_size'] = 8
+        pp['axes_labels_font_size'] = 8
+        pp['axes_labels_pad'] = 0 # 4
+        pp['tick_labels_font_size'] = 8
+        pp['legend_font_size'] = 8
+        pp['nominal_linewidth'] = 1
+        pp['fine_linewidth'] = 0.5
+        pp['bold_linewidth'] = 1.5
+        pp['small_markersize'] = 3
+        pp['nominal_markersize'] = 4
+        pp['big_markersize'] = 5
+        tn = 6.9 # 4*8.6/2.54
+        pp['fig_size'] = (tn,tn/1.618)
+        # pp['fig_size'] = (tn,tn/1.2)
+        pp['axes_linewidth'] = 1
+        
+        pp['major_tick_width'] = 0.75
+        pp['major_tick_length'] = 2
+        pp['minor_tick_width'] = 0.5
+        pp['minor_tick_length'] = 1
+        
+        pp['xmargin'] = 0 # 0.05 # space between traces and axes
+        pp['ymargin'] = 0.05 # 0.05
+        
     if plot_type == 'four_rows':
         
         pp['title_font_size'] = 6
@@ -909,7 +936,7 @@ def plot_wr_comparison(target_data,actual_data,main_title,sub_title,y_axis_label
 def plot_wr_comparison__dend_drive_and_response(main_title,target_data__drive,actual_data__drive,target_data,actual_data,wr_data_file_name,error__drive,error__signal):
     
     tt = time.time()    
-    save_str = 'soen_sim_wr_cmpr__dend__'+wr_data_file_name+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    # save_str = 'soen_sim_wr_cmpr__dend__'+wr_data_file_name+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
     
     fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)   
     fig.suptitle(main_title)
@@ -1337,10 +1364,10 @@ def plot_wr_comparison__synapse__tiles__with_drive(target_drive_array,actual_dri
         for jj in range(4):
             
             axs[i0[jj],i2[jj]].plot(target_drive_array[ii*4+jj][0,:]*1e6,target_drive_array[ii*4+jj][1,:]*1e6, '-', color = colors['yellow3'], linewidth = pp['nominal_linewidth'], label = 'WRSpice drive')
-            axs[i0[jj],i2[jj]].plot(actual_drive_array[ii*4+jj][0,:]*1e6,actual_drive_array[ii*4+jj][1,:]*1e6, '-', color = colors['green3'], linewidth = pp['nominal_linewidth'], label = 'soen_sim drive')   
+            axs[i0[jj],i2[jj]].plot(actual_drive_array[ii*4+jj][0,:]*1e6,actual_drive_array[ii*4+jj][1,:]*1e6, '-.', color = colors['green3'], linewidth = pp['nominal_linewidth'], label = 'soen_sim drive')   
             
             axs[i1[jj],i2[jj]].plot(target_data_array[ii*4+jj][0,:]*1e6,target_data_array[ii*4+jj][1,:]*1e6, '-', color = colors['red3'], linewidth = pp['nominal_linewidth'], label = 'WRSpice signal')
-            axs[i1[jj],i2[jj]].plot(actual_data_array[ii*4+jj][0,:]*1e6,actual_data_array[ii*4+jj][1,:]*1e6, '-', color = colors['blue3'], linewidth = pp['nominal_linewidth'], label = 'soen_sim signal')   
+            axs[i1[jj],i2[jj]].plot(actual_data_array[ii*4+jj][0,:]*1e6,actual_data_array[ii*4+jj][1,:]*1e6, '-.', color = colors['blue3'], linewidth = pp['nominal_linewidth'], label = 'soen_sim signal')   
   
             if jj == 3:
                 axs[i0[jj],i2[jj]].legend() 
@@ -1351,7 +1378,7 @@ def plot_wr_comparison__synapse__tiles__with_drive(target_drive_array,actual_dri
             axs[i1[jj],i2[jj]].set_ylabel(r'$I_{si}$ [$\mu$A]')
             
             axs[i0[jj],i2[jj]].set_title(legend_strings[ii][jj])
-            axs[i1[jj],i2[jj]].set_title('error_drive = {:7.5e}, error_signal = {:7.5e}'.format(error_array_drive[ii*4+jj],error_array_signal[ii*4+jj]))
+            axs[i1[jj],i2[jj]].set_title('e_drv = {:4.2e}, e_sig = {:4.2e}'.format(error_array_drive[ii*4+jj],error_array_signal[ii*4+jj]))
     
         plt.show()
         fig.savefig('figures/'+save_str+'.png') 
@@ -1815,18 +1842,18 @@ def plot_spd_response__waterfall(**kwargs): # (time_vec,time_vec_reduced,I_sy_li
 
     return
 
-def plot_dend_time_traces(time_vec,j_di,j_di_peaks,min_peak_height,I_di,file_name,):
+def plot_dend_time_traces(time_vec,j_di,j_di_peaks,min_peak_height,I_di,file_name):
     
     fig, ax = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)
     fig.suptitle(file_name)  
-    ax[0].plot(time_vec*1e9,j_di*1e3, '-', label = '$J_{di}$')             
-    ax[0].plot(time_vec[j_di_peaks]*1e9,j_di[j_di_peaks]*1e3, 'x')
+    ax[0].plot(time_vec*1e9,j_di*1e3, '-', color = colors['blue3'], label = '$J_{di}$')             
+    ax[0].plot(time_vec[j_di_peaks]*1e9,j_di[j_di_peaks]*1e3, 'x', color = colors['red3'])
     ax[0].plot([time_vec[0]*1e9,time_vec[-1]*1e9],[min_peak_height*1e3,min_peak_height*1e3], ':', color = colors['black'], label = 'peak cutoff')
     ax[0].set_xlabel(r'Time [ns]')
     ax[0].set_ylabel(r'Voltage [mV]')
     ax[0].legend() 
-    ax[1].plot(time_vec*1e9,I_di*1e6, '-', label = '$I_{di}$')             
-    ax[1].plot(time_vec[j_di_peaks]*1e9,I_di[j_di_peaks]*1e6, 'x')
+    ax[1].plot(time_vec*1e9,I_di*1e6, '-', color = colors['blue3'], label = '$I_{di}$')             
+    ax[1].plot(time_vec[j_di_peaks]*1e9,I_di[j_di_peaks]*1e6, 'x', color = colors['red3'])
     ax[1].set_xlabel(r'Time [ns]')
     ax[1].set_ylabel(r'Current [$\mu$V]')
     ax[1].legend()
@@ -1854,13 +1881,21 @@ def plot_dend_rate_array(**kwargs):
         I_drive_list = kwargs['I_drive_list']
         influx_list = kwargs['influx_list']
         master_rate_array = kwargs['master_rate_array']
-        
+    
     # num_drives = len(I_drive_list)
     num_drives = len(influx_list)
     cmap = mp.cm.get_cmap('gist_earth') # 'cividis' 'summer'
     fig = plt.figure()
     if 'file_name' in kwargs:
-        fig.suptitle(kwargs['file_name'])
+        str0 = kwargs['file_name']
+        fig.suptitle(str0)
+    else:        
+        if 'L_left' in kwargs:
+            str1 = 'L_left = {:5.2f}pH'.format(kwargs['L_left'])
+        if 'I_de' in kwargs:
+            str2 = 'I_de = {:5.2f}uA'.format(kwargs['I_de'])
+        fig.suptitle('{}; {}'.format(str1,str2))
+    
     ax = fig.add_subplot(111, projection='3d')
     
     I_di_min = 1000
@@ -1971,3 +2006,53 @@ def plot_phase_portrait(neuron_instance):
     plt.show()
     
     return
+
+    # color_list = [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+    #               colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+    #               colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+    #               colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+    #               colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+    #               colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+    #               colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+    #               colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
+    #               colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+    #               colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+    #               colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+    #               colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+    #               colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+    #               colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+    #               colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+    #               colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
+    #               colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+    #               colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+    #               colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+    #               colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+    #               colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+    #               colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+    #               colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+    #               colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
+    #               colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+    #               colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+    #               colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+    #               colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+    #               colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+    #               colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+    #               colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+    #               colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
+    #               colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+    #               colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+    #               colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+    #               colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+    #               colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+    #               colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+    #               colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+    #               colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
+    #               colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+    #               colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+    #               colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+    #               colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+    #               colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+    #               colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+    #               colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+    #               colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1'],
+    #               ]

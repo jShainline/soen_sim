@@ -13,7 +13,7 @@ import pickle
 
 p = physical_constants()
 
-# plt.close('all')
+plt.close('all')
 
 #%% set case
 
@@ -43,7 +43,7 @@ if num_jjs == 2:
     I_drive_array = [[cv(15.1,15.9,d1,16.0,30,d2),cv(13.8,13.9,d1,14.0,30,d2),cv(12.3,12.9,d1,13.0,30,d2),cv(10.8,10.9,d1,11.0,30,d2),cv(00.0,0.9,d1,10.0,30,d2),cv(0.0,0.9,d1,1.0,30,d2)], # L_left = 7
                      [cv(13.6,13.9,d1,14.0,30,d2),cv(12.2,12.9,d1,13.0,30,d2),cv(10.7,10.9,d1,11.0,30,d2),cv(09.1,09.9,d1,10.0,30,d2),cv(07.2,07.9,d1,8.0,30,d2),cv(0.0,0.9,d1,1.0,30,d2)], # L_left = 8
                      [cv(11.9,11.1,d1,12.0,30,d2),cv(10.6,10.9,d1,11.0,30,d2),cv(09.9,09.0,d1,09.0,30,d2),cv(07.4,07.9,d1,08.0,30,d2),cv(05.5,05.9,d1,6.0,30,d2),cv(0.9,0.0,d1,1.0,30,d2)], # L_left = 9
-                     [cv(10.4,10.9,d1,11.0,30,d2),cv(08.9,08.9,d1,09.0,30,d2),cv(07.4,07.9,d1,08.0,30,d2),cv(06.0,06.9,d1,06.0,30,d2),cv(03.7,03.9,d1,4.0,30,d2),cv(0.1,0.9,d1,1.0,30,d2)], # L_left = 10
+                     [cv(10.4,10.9,d1,11.0,30,d2),cv(08.9,08.9,d1,09.0,30,d2),cv(07.4,07.9,d1,08.0,30,d2),cv(05.7,05.9,d1,06.0,30,d2),cv(03.7,03.9,d1,4.0,30,d2),cv(0.1,0.9,d1,1.0,30,d2)], # L_left = 10
                      [cv(08.9,08.9,d1,09.0,30,d2),cv(07.3,07.9,d1,08.0,30,d2),cv(05.7,05.9,d1,06.0,30,d2),cv(03.0,03.9,d1,04.0,30,d2),cv(01.0,01.0,d1,2.0,30,d2),cv(0.0,0.9,d1,1.0,30,d2)], # L_left = 11
                      [cv(07.3,07.9,d1,08.0,30,d2),cv(05.7,05.9,d1,06.0,30,d2),cv(04.1,04.9,d1,05.0,30,d2),cv(02.3,02.9,d1,03.0,30,d2),cv(00.2,00.9,d1,1.0,30,d2),cv(0.0,0.9,d1,1.0,30,d2)], # L_left = 12
                      [cv(05.7,05.9,d1,06.0,30,d2),cv(04.1,04.9,d1,05.0,30,d2),cv(02.4,02.9,d1,03.0,30,d2),cv(00.6,00.9,d1,01.0,30,d2),cv(00.0,00.9,d1,1.0,30,d2),cv(0.0,0.9,d1,1.0,30,d2)]] # L_left = 13
@@ -63,171 +63,80 @@ t_sim = 100 # ns
 inductance_conversion = 1e12
 DI_loop_inductance = 77.5e-9
 
-#%% options
-
 plot_time_traces = False
 plot_rate_arrays = True
+min_peak_height = 100e-6 # 182e-6 # units of volts
+min_peak_distance = 10 # 175 # units of samples
 
-method = 'j_di_phase' # 'j_di_rate' # 'I_di' # 'j_di_phase' #
-
-if method == 'j_di_rate':        
-    min_peak_height = 182e-6 # units of volts
-    min_peak_distance = 175 # units of samples
-    min_ht = 1000
-    max_ht = -1000
-    min_dist = 1000
-    max_dist = -1000
-    
-if method == 'j_di_phase' or method == 'I_di':        
-    min_peak_height = 100e-6 # 182e-6 # units of volts
-    min_peak_distance = 10 # 175 # units of samples
-    downsample_factor = 2000 # dt = 0.1ps
-    window_size = 31 # samples/time steps for savitzky-golay filter (applied after downsample)
-    plot_phase_vec_during_processing = False
+downsample_factor = 500 # dt = 0.1ps
+window_size = 51 # samples/time steps for savitzky-golay filter (applied after downsample)
 
 #%%
 
-run_all = True
+run_all = False
 # loop to create rate files for all cases
 if run_all == True:
-    for pp in [3]: # range(num_L): # 
+    for pp in range(num_L): # [3]: # 
         
-        for qq in [3]: # range(num_I_de): # 
+        for qq in range(num_I_de): # [3]: #
                     
             # load wr data, find peaks, find rates
             I_drive_list = I_drive_array[pp][qq]
             j_di_rate_array = []
-            j_di_ifi_array = []            
             I_di_array = []
             
-            # I_drive_list = [10]
             num_drives = len(I_drive_list)
-            for ii in range(num_drives): # [0]: # 
+            for ii in range(num_drives):
                 
                 print('pp = {:d} of {:d}; qq = {:d} of {:d}; ii = {:d} of {:d}'.format(pp+1,num_L,qq+1,num_I_de,ii+1,num_drives))
                 
                 I_drive = I_drive_list[ii]
                 if num_jjs == 2:            
-                    directory = 'wrspice_data/2jj'            
+                    directory = 'wrspice_data/constant_drive/from_saeed/2jj/'            
                     file_name = 'dend_cnst_drv_1jj_Llft{:05.2f}pH_Lrgt{:05.2f}pH_Ide{:05.2f}uA_Idrv{:05.2f}uA_Ldi0077.50nH_taudi0775ms_dt00.1ps.dat'.format(L_left_list[pp],L_right_list[pp],I_de_list[qq],I_drive)
                     j_di_str = 'v(2)'
-                    j_di_phase_str = 'v(9)'
                     I_di_str = 'i(L2)'
                 elif num_jjs == 4:
-                    directory = 'wrspice_data/4jj'
+                    directory = 'wrspice_data/constant_drive/from_saeed/4jj/'
                     file_name = 'dend_cnst_drv_Llft{:05.2f}pH_Lrgt{:05.2f}pH_Ide{:05.2f}uA_Idrv{:05.2f}uA_Ldi0077.50nH_taudi0775ms_dt00.1ps.dat'.format(L_left_list[pp],L_right_list[pp],I_de_list[qq],I_drive) 
                     j_di_str = 'v(4)'
-                    j_di_phase_str = 'v(9)'
                     I_di_str = 'i(L4)'
                 data_dict = read_wr_data(directory+'/'+file_name)
                 
-                # assign data
+                # find peaks for each jj
                 time_vec = data_dict['time']
                 j_di = data_dict[j_di_str] # j_di = data_dict['v(5)']
-                j_di_phase = data_dict[j_di_phase_str]
-                j_di_phase = j_di_phase-j_di_phase[0]
-                I_di = data_dict[I_di_str]
-                
-                if method == 'j_di_phase':
-                    if plot_phase_vec_during_processing == True:
-                        fig, ax = plt.subplots(nrows = 1, ncols = 1)
-                        fig.suptitle('as loaded')
-                        ax.plot(time_vec*1e9,j_di_phase)
-                        ax.set_xlabel(r'time [ns]')
-                        ax.set_ylabel(r'$J_{di}$ phase [rad.]')
-                        plt.show()
-                
-                # find peaks for each jj          
+                          
+                # j_di_peaks, _ = find_peaks(j_di, height = jph[pp][qq][ii])
                 j_di_peaks, _ = find_peaks(j_di, height = min_peak_height, distance = min_peak_distance)
                 
-                if method == 'j_di_rate':
-                    if len(j_di_peaks) > 1:
-                        print('min(diff(j_di_peaks)) = {}'.format(np.min(np.diff(j_di_peaks))))
-                        print('max(diff(j_di_peaks)) = {}'.format(np.max(np.diff(j_di_peaks))))
-                        if np.min(np.diff(j_di_peaks)) < min_dist:
-                            min_dist = np.min(np.diff(j_di_peaks))
-                        if np.max(np.diff(j_di_peaks)) > max_dist:
-                            max_dist = np.max(np.diff(j_di_peaks))
-                        if np.min(j_di[j_di_peaks]) < min_ht:
-                            min_ht = np.min(j_di[j_di_peaks])
-                        if np.max(j_di[j_di_peaks]) > max_ht:
-                            max_ht = np.max(j_di[j_di_peaks])
-                    else:
-                        print('no peaks')
-
+                initial_ind = (np.abs(time_vec-2.0e-9)).argmin()
+                final_ind = j_di_peaks[-1]*2*downsample_factor     
+                time_vec = time_vec[initial_ind:final_ind]
+                j_di = j_di[initial_ind:final_ind]
+    
+                # find fluxon generation rate
+                I_di = data_dict[I_di_str]
+                I_di = I_di[initial_ind:final_ind]           
+                
+                # downsample
+                index_vec = np.arange(0,len(time_vec),downsample_factor)
+                I_di__avg = I_di[index_vec]
+                time_vec__avg = time_vec[index_vec]
+                
+                # apply smoothing filter
+                I_di__avg = savgol_filter(I_di__avg, window_size, 3) # polynomial order 3
+                time_vec__avg = savgol_filter(time_vec__avg, np.min([window_size,len(time_vec__avg)]), 3) # polynomial order 3
+    
                 if plot_time_traces == True:
                     plot_dend_time_traces(time_vec,j_di,j_di_peaks,min_peak_height,I_di,file_name)
-                                                            
-                # find fluxon generation rate   
-
-                if method == 'j_di_rate':
-                    j_di_ifi = np.diff(time_vec[j_di_peaks])
-                    j_di_rate = 1/j_di_ifi
-                    
-                    j_di_ifi_array.append(j_di_ifi)
-                    j_di_rate_array.append(j_di_rate)
-                    
-                    I_di_array.append(I_di[j_di_peaks])                           
-                
-                if method == 'j_di_phase' or method == 'I_di':
-                    
-                    # downsample
-                    initial_ind = (np.abs(time_vec-2.0e-9)).argmin()
-                    if method == 'j_di_rate':
-                        final_ind = (np.abs(time_vec-np.max(time_vec))).argmin()
-                    elif method == 'j_di_phase' or method == 'I_di':
-                        final_ind = np.min([j_di_peaks[-1]+window_size*downsample_factor,len(time_vec)-1]) # j_di_peaks[-1]*2*downsample_factor
-                    time_vec = time_vec[initial_ind:final_ind]
-                    j_di = j_di[initial_ind:final_ind]
-                    j_di_phase = j_di_phase[initial_ind:final_ind]-j_di_phase[initial_ind]
-                    I_di = I_di[initial_ind:final_ind]
-                    
-                    if plot_phase_vec_during_processing == True:
-                        fig, ax = plt.subplots(nrows = 1, ncols = 1)
-                        fig.suptitle('cropped')
-                        ax.plot(time_vec*1e9,j_di_phase)
-                        ax.set_xlabel(r'time [ns]')
-                        ax.set_ylabel(r'$J_{di}$ phase [rad.]')
-                        plt.show()
-                    
-                    index_vec = np.arange(0,len(time_vec),downsample_factor)
-                    I_di__avg = I_di[index_vec]
-                    j_di_phase__avg = j_di_phase[index_vec]
-                    time_vec__avg = time_vec[index_vec]
-                    
-                    if plot_phase_vec_during_processing == True:
-                        fig, ax = plt.subplots(nrows = 1, ncols = 1)
-                        fig.suptitle('downsampled')
-                        ax.plot(time_vec__avg*1e9,j_di_phase__avg)
-                        ax.set_xlabel(r'time [ns]')
-                        ax.set_ylabel(r'$J_{di}$ phase [rad.]')
-                        plt.show()                
-                    
-                    # apply smoothing filter
-                    I_di__avg = savgol_filter(I_di__avg, window_size, 3) # polynomial order 3
-                    j_di_phase__avg = savgol_filter(j_di_phase__avg, window_size, 3) # polynomial order 3
-                    time_vec__avg = savgol_filter(time_vec__avg, np.min([window_size,len(time_vec__avg)]), 3) # polynomial order 3
-                    
-                    if plot_phase_vec_during_processing == True:
-                        fig, ax = plt.subplots(nrows = 1, ncols = 1)
-                        fig.suptitle('smoothed')
-                        ax.plot(time_vec__avg*1e9,j_di_phase__avg)
-                        ax.set_xlabel(r'time [ns]')
-                        ax.set_ylabel(r'$J_{di}$ phase [rad.]')
-                        plt.show()                
-                    
-                    # calculation based on j_di_phase
-                    if method == 'j_di_phase':
-                        j_di_rate = (np.diff(j_di_phase__avg)/(2*np.pi))/np.diff(time_vec__avg)
-                    # calculation based on I_di
-                    if method == 'I_di':
-                        j_di_rate = (np.diff(I_di__avg)/np.diff(time_vec__avg))/(p['Phi0']/DI_loop_inductance)
-                        
-                    for nn in range(len(j_di_rate)):
-                        if j_di_rate[nn] < 0:
-                            j_di_rate[nn] = 0
-                    j_di_rate_array.append(j_di_rate)
-                    I_di_array.append(I_di__avg)
+    
+                j_di_rate = (np.diff(I_di__avg)/np.diff(time_vec__avg))/(p['Phi0']/DI_loop_inductance)
+                for nn in range(len(j_di_rate)):
+                    if j_di_rate[nn] < 0:
+                        j_di_rate[nn] = 0
+                j_di_rate_array.append(j_di_rate)
+                I_di_array.append(I_di__avg)
      
             # convert current drive to flux
             influx_list = []
@@ -259,7 +168,7 @@ if run_all == True:
                 
             # plot the rate array  
             if plot_rate_arrays == True:
-                plot_dend_rate_array(I_di_array = I_di_array__scaled, I_drive_list = I_drive_list, influx_list = influx_list, master_rate_array = master_rate_array, L_left = L_left_list[pp], I_de = I_de_list[qq])    
+                plot_dend_rate_array(I_di_array = I_di_array__scaled, I_drive_list = I_drive_list, influx_list = influx_list, master_rate_array = master_rate_array)    
             
             # save data
             save_string = 'master_dnd_rate_array_{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}'.format(num_jjs,L_left_list[pp]+10,L_right_list[pp],I_de_list[qq])
@@ -274,7 +183,7 @@ if run_all == True:
 
 
 #%% just plot
-if 1 == 2:
+if 1 == 1:
     
     L_left = 10
     L_right = 20

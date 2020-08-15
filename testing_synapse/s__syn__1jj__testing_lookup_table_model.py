@@ -10,7 +10,7 @@ from util import physical_constants
 from soen_sim import input_signal, synapse
 p = physical_constants()
 
-plt.close('all')
+# plt.close('all')
 
 #%%
 I_spd = 20e-6
