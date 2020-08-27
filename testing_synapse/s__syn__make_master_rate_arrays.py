@@ -19,7 +19,7 @@ plt.close('all')
 
 #%% load wr data, find peaks, find rates
 
-num_jjs = 1
+num_jjs = 3
 
 if num_jjs == 1:
     dI = 0.25
@@ -139,7 +139,7 @@ for I_si_pad in I_si_pad_list:
 
 #%% plot the rate vectors 
 
-num_jjs = 1
+num_jjs = 3
 I_si_pad = 100e-9
 file_name = 'master_syn_rate_array_{:1d}jj_Isipad{:04.0f}nA.soen'.format(num_jjs,I_si_pad*1e9)
 plot_syn_rate_array(file_name = file_name, I_drive_reduction_factor = 2)
@@ -157,9 +157,9 @@ save_session_data(data_array,save_string+'.soen',False)
 
 #%% load test
 
-if 1 == 2:
+if 1 == 1:
     
-    with open('../_circuit_data/master__syn__rate_array__Isipad0100nA.soen', 'rb') as data_file:         
+    with open('../_circuit_data/master_syn_rate_array_3jj_Isipad0010nA.soen', 'rb') as data_file:         
             data_array_imprt = pickle.load(data_file)
     # data_array_imported = load_session_data('session_data__master_rate_matrix__syn__2020-04-24_10-24-23.dat')
     I_si_array__imprt = data_array_imprt['I_si_array']

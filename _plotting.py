@@ -215,13 +215,13 @@ plt.rcParams['figure.figsize'] = pp['fig_size']
 plt.rcParams['figure.titlesize'] = pp['title_font_size']
 plt.rcParams['figure.autolayout'] = True
 
-# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
+plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue3'],colors['red1'],colors['red3'],colors['green1'],colors['green3'],colors['yellow1'],colors['yellow3']])
 
-plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
-                                                    colors['red5'],colors['red4'],colors['red3'],colors['red2'],colors['red1'],
-                                                    colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green3'],
-                                                    colors['yellow5'],colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+#                                                     colors['red5'],colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+#                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green3'],
+#                                                     colors['yellow5'],colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
 
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
 #                                                     colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
@@ -948,14 +948,14 @@ def plot_wr_comparison__dend_drive_and_response(main_title,target_data__drive,ac
     axs[0].set_xlabel(r'Time [$\mu$s]')
     axs[0].set_ylabel(r'$I_{flux}$ [$\mu$A]')
     axs[0].legend()
-    axs[0].set_title('Drive signal input to DR loop (error = {:1.5f}%)'.format(error__drive*100))
+    axs[0].set_title('Drive signal input to DR loop (error = {:7.5e})'.format(error__drive))
      
     axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim')   
     axs[1].plot(target_data[0,0:tf_ind]*1e6,target_data[1,0:tf_ind]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
     axs[1].set_xlabel(r'Time [$\mu$s]')
     axs[1].set_ylabel(r'$I_{di}$ [$\mu$A]')
     axs[1].legend()
-    axs[1].set_title('Output signal in the DI loop (error = {:1.5f}%)'.format(error__signal*100))
+    axs[1].set_title('Output signal in the DI loop (error = {:7.5e})'.format(error__signal))
     
     plt.show()
     # fig.savefig('figures/'+save_str+'.png') 
@@ -1867,6 +1867,8 @@ def plot_dend_rate_array(**kwargs):
     # plt.close('all')
     # Make data.
     
+    p = physical_constants()
+    
     if 'file_name' in kwargs:
         with open('../_circuit_data/'+kwargs['file_name'], 'rb') as data_file:         
             data_array = pickle.load(data_file)
@@ -1882,8 +1884,8 @@ def plot_dend_rate_array(**kwargs):
         influx_list = kwargs['influx_list']
         master_rate_array = kwargs['master_rate_array']
     
-    # num_drives = len(I_drive_list)
-    num_drives = len(influx_list)
+    num_drives = len(I_drive_list)
+    # num_drives = len(influx_list)
     cmap = mp.cm.get_cmap('gist_earth') # 'cividis' 'summer'
     fig = plt.figure()
     if 'file_name' in kwargs:
@@ -1900,17 +1902,17 @@ def plot_dend_rate_array(**kwargs):
     
     I_di_min = 1000
     I_di_max = -1000
-    # I_drive_min = 1000
-    # I_drive_max = -1000
-    influx_min = 1e9
-    influx_max = -1e9
+    I_drive_min = 1000
+    I_drive_max = -1000
+    # influx_min = 1e9
+    # influx_max = -1e9
     rate_min = 1000
     rate_max = -1000
     for ii in range(num_drives):
     #    ax.plot(I_di_array__scaled[ii][:],master_rate_array[ii][:]*1e-3, '-', label = 'I_drive = {}'.format(I_drive_list[ii]))  
             X3 = np.insert(I_di_array[ii][:],0,0)
-            # Z3 = I_drive_list[ii]
-            Z3 = influx_list[ii]
+            Z3 = I_drive_list[ii]
+            # Z3 = influx_list[ii]
             Y3 = np.insert(master_rate_array[ii][:]*1e-3,0,0)
             verts = [(X3[jj],Y3[jj]-0.5) for jj in range(len(X3))]
             ax.add_collection3d(PolyCollection([verts],color=cmap(1-ii/num_drives),alpha=0.3),zs=Z3, zdir='y')
@@ -1921,15 +1923,15 @@ def plot_dend_rate_array(**kwargs):
             if np.max(I_di_array[ii][:]) > I_di_max:
                 I_di_max = np.max(I_di_array[ii][:])
                 
-            # if np.min(I_drive_list[ii]) < I_drive_min:
-            #     I_drive_min = np.min(I_drive_list[ii])
-            # if np.max(I_drive_list[ii]) > I_drive_max:
-            #     I_drive_max = np.max(I_drive_list[ii])
+            if np.min(I_drive_list[ii]) < I_drive_min:
+                I_drive_min = np.min(I_drive_list[ii])
+            if np.max(I_drive_list[ii]) > I_drive_max:
+                I_drive_max = np.max(I_drive_list[ii])
                             
-            if np.min(influx_list[ii]) < influx_min:
-                influx_min = np.min(influx_list[ii])
-            if np.max(influx_list[ii]) > influx_max:
-                influx_max = np.max(influx_list[ii])
+            # if np.min(influx_list[ii]) < influx_min:
+            #     influx_min = np.min(influx_list[ii])
+            # if np.max(influx_list[ii]) > influx_max:
+            #     influx_max = np.max(influx_list[ii])
                 
             if np.min(master_rate_array[ii][:]*1e-3) < rate_min:
                 rate_min = np.min(master_rate_array[ii][:]*1e-3)
@@ -1943,8 +1945,8 @@ def plot_dend_rate_array(**kwargs):
     
     ax.set_xlabel(r'$I_{di}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_xlim3d(I_di_min-1,I_di_max+1)
     
-    # ax.set_ylabel('Idrive [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(I_drive_min-1,I_drive_max+1)
-    ax.set_ylabel('$\Phi_{in}$ [$\mu$A pH]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(influx_min-1,influx_max+1)
+    ax.set_ylabel('Idrive [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(I_drive_min-1,I_drive_max+1)
+    # ax.set_ylabel('$\Phi_{in}$ [$\mu$A pH]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(influx_min-1,influx_max+1)
     ax.zaxis.set_rotate_label(False)  # disable automatic rotation
     ax.set_zlabel(r'$r_{j_{di}}$ [kilofluxons per $\mu$s]',fontsize=24, fontweight='bold', rotation=96,labelpad=10) ; ax.set_zlim3d(rate_min-1,rate_max+1)
     ax.yaxis._axinfo['label']['space_factor'] = 30.0
@@ -1952,6 +1954,138 @@ def plot_dend_rate_array(**kwargs):
     ax.view_init(45,-30)
     
     plt.show()
+    
+    return
+
+def plot_dend_rate_array__norm_to_phi0(**kwargs):
+        
+    # plt.close('all')
+    # Make data.
+    
+    p = physical_constants()
+    
+    if 'file_name' in kwargs:
+        with open('../_circuit_data/'+kwargs['file_name'], 'rb') as data_file:         
+            data_array = pickle.load(data_file)
+        # data_array = load_session_data(kwargs['file_name'])
+        master_rate_array = data_array['rate_array']
+        influx_list = data_array['influx_list']        
+        I_di_array = data_array['I_di_array']
+                
+    elif 'I_di_array' in kwargs:
+        I_di_array = kwargs['I_di_array']
+        influx_list = kwargs['influx_list']
+        master_rate_array = kwargs['master_rate_array']
+    
+    # num_drives = len(I_drive_list)
+    ind = len(influx_list)-1 # np.abs(np.asarray(influx_list)-1e18*p['Phi0']/2).argmin()
+    if ind < len(influx_list)-1:
+        ind += 1
+    influx_list__reduced = np.asarray(influx_list[0:ind])/(1e18*p['Phi0']) # np.asarray(influx_list[0:ind]) # 
+    num_drives = len(influx_list__reduced)
+    cmap = mp.cm.get_cmap('gist_earth') # 'cividis' 'summer'
+    fig = plt.figure()
+    if 'file_name' in kwargs:
+        str0 = kwargs['file_name']
+        fig.suptitle(str0)
+    else:        
+        if 'L_left' in kwargs:
+            str1 = 'L_left = {:5.2f}pH'.format(kwargs['L_left'])
+        if 'I_de' in kwargs:
+            str2 = 'I_de = {:5.2f}uA'.format(kwargs['I_de'])
+        fig.suptitle('{}; {}'.format(str1,str2))
+    
+    ax = fig.add_subplot(111, projection='3d')
+    
+    I_di_min = 1000
+    I_di_max = -1000
+    influx_min = 1e9
+    influx_max = -1e9
+    rate_min = 1000
+    rate_max = -1000
+    for ii in range(num_drives): 
+            X3 = np.insert(I_di_array[ii][:],0,0)
+            Z3 = influx_list__reduced[ii]
+            Y3 = np.insert(master_rate_array[ii][:]*1e-3,0,0)
+            verts = [(X3[jj],Y3[jj]-0.5) for jj in range(len(X3))]
+            ax.add_collection3d(PolyCollection([verts],color=cmap(1-ii/num_drives),alpha=0.3),zs=Z3, zdir='y')
+            ax.plot(X3,Y3,Z3,linewidth=4, color=cmap(1-ii/num_drives), zdir='y',alpha=1)
+            
+            if np.min(I_di_array[ii][:]) < I_di_min:
+                I_di_min = np.min(I_di_array[ii][:])
+            if np.max(I_di_array[ii][:]) > I_di_max:
+                I_di_max = np.max(I_di_array[ii][:])
+                            
+            if np.min(influx_list__reduced[ii]) < influx_min:
+                influx_min = np.min(influx_list__reduced[ii])
+            if np.max(influx_list__reduced[ii]) > influx_max:
+                influx_max = np.max(influx_list__reduced[ii])
+                
+            if np.min(master_rate_array[ii][:]*1e-3) < rate_min:
+                rate_min = np.min(master_rate_array[ii][:]*1e-3)
+            if np.max(master_rate_array[ii][:]*1e-3) > rate_max:
+                rate_max = np.max(master_rate_array[ii][:]*1e-3)
+           
+    ax.set_xticks([0, 10, 20])
+    for t in ax.xaxis.get_major_ticks(): t.label.set_fontsize(24)
+    for t in ax.yaxis.get_major_ticks(): t.label.set_fontsize(24)
+    for t in ax.zaxis.get_major_ticks(): t.label.set_fontsize(24)
+    
+    ax.set_xlabel(r'$I_{di}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_xlim3d(I_di_min-1,I_di_max+1)
+    
+    ax.set_ylabel('$\Phi_{in}/\Phi_0$',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(influx_min-0.1,influx_max+0.1) #  [$\mu$A pH]
+    ax.zaxis.set_rotate_label(False)  # disable automatic rotation
+    ax.set_zlabel(r'$r_{j_{di}}$ [kilofluxons per $\mu$s]',fontsize=24, fontweight='bold', rotation=96,labelpad=10) ; ax.set_zlim3d(rate_min-1,rate_max+1)
+    ax.yaxis._axinfo['label']['space_factor'] = 30.0
+    
+    ax.view_init(45,-30)
+    
+    # ax = fig.add_subplot(121, projection='3d')
+    
+    # I_di_min = 1000
+    # I_di_max = -1000
+    # influx_min = 1e9
+    # influx_max = -1e9
+    # rate_min = 1000
+    # rate_max = -1000
+    # for ii in range(num_drives): 
+    #         X3 = np.insert(I_di_array[ii][:],0,0)
+    #         Z3 = influx_list__reduced[ii]
+    #         Y3 = np.insert(master_rate_array[ii][:]*1e-3,0,0)
+    #         verts = [(X3[jj],Y3[jj]-0.5) for jj in range(len(X3))]
+    #         ax.add_collection3d(PolyCollection([verts],color=cmap(1-ii/num_drives),alpha=0.3),zs=Z3, zdir='y')
+    #         ax.plot(X3,Y3,Z3,linewidth=4, color=cmap(1-ii/num_drives), zdir='y',alpha=1)
+            
+    #         if np.min(I_di_array[ii][:]) < I_di_min:
+    #             I_di_min = np.min(I_di_array[ii][:])
+    #         if np.max(I_di_array[ii][:]) > I_di_max:
+    #             I_di_max = np.max(I_di_array[ii][:])
+                            
+    #         if np.min(influx_list__reduced[ii]) < influx_min:
+    #             influx_min = np.min(influx_list__reduced[ii])
+    #         if np.max(influx_list__reduced[ii]) > influx_max:
+    #             influx_max = np.max(influx_list__reduced[ii])
+                
+    #         if np.min(master_rate_array[ii][:]*1e-3) < rate_min:
+    #             rate_min = np.min(master_rate_array[ii][:]*1e-3)
+    #         if np.max(master_rate_array[ii][:]*1e-3) > rate_max:
+    #             rate_max = np.max(master_rate_array[ii][:]*1e-3)
+           
+    # ax.set_xticks([0, 10, 20])
+    # for t in ax.xaxis.get_major_ticks(): t.label.set_fontsize(24)
+    # for t in ax.yaxis.get_major_ticks(): t.label.set_fontsize(24)
+    # for t in ax.zaxis.get_major_ticks(): t.label.set_fontsize(24)
+    
+    # ax.set_xlabel(r'$I_{di}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_xlim3d(I_di_min-1,I_di_max+1)
+    
+    # ax.set_ylabel('$\Phi_{in}$ [$\mu$A pH]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(influx_min-0.1,influx_max+0.1) #  [$\mu$A pH]
+    # ax.zaxis.set_rotate_label(False)  # disable automatic rotation
+    # ax.set_zlabel(r'$r_{j_{di}}$ [kilofluxons per $\mu$s]',fontsize=24, fontweight='bold', rotation=96,labelpad=10) ; ax.set_zlim3d(rate_min-1,rate_max+1)
+    # ax.yaxis._axinfo['label']['space_factor'] = 30.0
+    
+    # ax.view_init(45,-30)
+    
+    # plt.show()
     
     return
 
