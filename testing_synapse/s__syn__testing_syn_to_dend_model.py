@@ -59,123 +59,31 @@ for ii in range(len(I_drive_vec)):
             target_data__drive = np.vstack((data_dict['time'],data_dict[I_drive_str]))
 
             # setup soen sim for exp pulse seq
-            input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
-                                    time_vec = np.arange(0,tf+dt,dt), exponential_pulse_train = exp_pls_trn_params)            
+            input_1 = input_signal(name = 'input_synaptic_drive', 
+                                   input_temporal_form = 'single_spike', # 'single_spike' or 'constant_rate' or 'arbitrary_spike_train'
+                                   spike_times = [5e-9])            
         
-            sim_params = dict()
-            sim_params['dt'] = dt
-            sim_params['tf'] = tf
-            synapse_1 = synapse(name = 'synapse_under_test', num_jjs = num_jjs,
-                                'synaptic_circuit_inductors' = [100e-9,100e-9,400e-12],
-                                'synaptic_circuit_resistors' = [5e3,5],
-                                
-                                    )
-
-        
-        if  in kwargs:
-            if type(kwargs['synaptic_circuit_resistors']) == list:
-                if len(kwargs['synaptic_circuit_resistors']) == 2:
-                    self.synaptic_circuit_resistors = kwargs['synaptic_circuit_resistors']
-                else: ValueError('[soens_sim] len(synaptic_circuit_resistors) must be two (see circuit diagram in documentation)')
-            else:
-                raise ValueError('[soens_sim] synaptic_circuit_resistors must be a list of length two')
-        else:
-            self.synaptic_circuit_resistors =  # three resistors with units of ohms
-        
-        if 'synaptic_hotspot_duration' in kwargs:
-            self.synaptic_hotspot_duration = kwargs['synaptic_hotspot_duration']
-        else:
-            self.synaptic_hotspot_duration = 200e-12 # real number with units of seconds
-        
-        if 'synaptic_spd_current' in kwargs:
-            self.synaptic_spd_current = kwargs['synaptic_spd_current']
-        else:
-            self.synaptic_spd_current = 10e-6 # real number with units of amps   
-        # end synaptic receiver spd circuit specification
-        
-        # input signals                
-        if 'input_direct_connections' in kwargs:
-            self.input_direct_connections = kwargs['input_direct_connections']
-        else:
-            self.input_direct_connections = []
-        
-        if 'input_neuronal_connections' in kwargs:
-            self.input_neuronal_connections = kwargs['input_neuronal_connections']
-        else:
-            self.input_neuronal_connections = []
-        # end input signals
-        
-        # synaptic dendrite specification        
-        if 'num_jjs' in kwargs:
-            if kwargs['num_jjs'] == 2 or kwargs['num_jjs'] == 4:
-                self.num_jjs = kwargs['num_jjs']
-            else:
-                raise ValueError('[soens_sim] num_jjs must be 2 or 4')
-        else:
-            self.num_jjs = 4
-        
-        if 'inhibitory_or_excitatory' in kwargs:
-            if kwargs['inhibitory_or_excitatory'] == 'inhibitory' or kwargs['inhibitory_or_excitatory'] == 'excitatory':
-                _i_or_e = kwargs['inhibitory_or_excitatory']
-            else:
-                raise ValueError('[soens_sim] inhibitory_or_excitatory can either be ''inhibitory'' and ''excitatory''')
-        else:
-            _i_or_e = 'excitatory' # 'excitatory' by default
-        self.inhibitory_or_excitatory =  _i_or_e #'excitatory' by default
-                            
-        if 'synaptic_dendrite_circuit_inductances' in kwargs:
-            if type(kwargs['synaptic_dendrite_circuit_inductances']) == list:
-                self.synaptic_dendrite_circuit_inductances = kwargs['synaptic_dendrite_circuit_inductances']            
-        else:
-            self.synaptic_dendrite_circuit_inductances = [20e-12, 20e-12, 200e-12, 77.5e-12]            
-        
-        if 'synaptic_dendrite_input_synaptic_inductance' in kwargs:
-            self.synaptic_dendrite_input_synaptic_inductance = kwargs['synaptic_dendrite_input_synaptic_inductance']
-        else:
-            self.synaptic_dendrite_input_synaptic_inductance =  [20e-12,0.5] # [inductance (units of henries), mutual inductance efficiency (k)]
-            
-        if 'junction_critical_current' in kwargs:
-            self.junction_critical_current =  kwargs['junction_critical_current']
-        else:
-            self.junction_critical_current =  40e-6 #default Ic = 40 uA
-            
-        if 'bias_currents' in kwargs:
-            self.bias_currents = kwargs['bias_currents']
-        else:
-            self.bias_currents = [72e-6, 29e-6, 35e-6] #[bias to DR loop (J_th), bias to JTL, bias to DI loop]        
-            
-        if 'integration_loop_self_inductance' in kwargs:
-            # if type(kwargs['integration_loop_self_inductance']) == int or type(kwargs['integration_loop_self_inductance']) == float:
-            if kwargs['integration_loop_self_inductance'] < 0:
-                raise ValueError('[soens_sim] Integration loop self inductance associated with dendritic integration loop must be a real number between zero and infinity (units of henries)')
-            else:
-                 self.integration_loop_self_inductance = kwargs['integration_loop_self_inductance']
-        else: 
-            self.integration_loop_self_inductance = 10e-9 #default value, units of henries
-                        
-        if 'integration_loop_output_inductance' in kwargs:
-            if type(kwargs['integration_loop_output_inductance']) != list:
-                self.integration_loop_output_inductance = kwargs['integration_loop_output_inductance']
-                ti = self.integration_loop_output_inductance
-            if type(kwargs['integration_loop_output_inductance']) == list:
-                self.integration_loop_output_inductance = kwargs['integration_loop_output_inductance']
-                ti = sum(self.integration_loop_output_inductance)
-        else: 
-            self.integration_loop_output_inductance = 200e-12 #default value, units of henries
-        self.integration_loop_total_inductance = self.integration_loop_self_inductance+ti
-        
-        if 'integration_loop_time_constant' in kwargs:
-            self.integration_loop_time_constant = kwargs['integration_loop_time_constant']
-        else:
-            self.integration_loop_time_constant = 250e-9 #default time constant units of seconds
-        # end synaptic dendrite specification   
-
-            time_params = dict()
-            time_params['dt'] = dt
-            time_params['tf'] = tf
-            neuron_1 = neuron('dummy_neuron', input_dendritic_connections = ['dendrite_under_test'], 
-                              circuit_inductances = [0e-12,0e-12,200e-12,77.5e-12],
-                              input_dendritic_inductances = [[20e-12,1]], 
+            synapse_1 = synapse(name = 'synapse_under_test',
+                                synaptic_circuit_inductors = [100e-9,100e-9,400e-12],
+                                synaptic_circuit_resistors = [5e3,5],
+                                synaptic_hotspot_duration = 200e-12,
+                                synaptic_spd_current = 10e-6,
+                                input_direct_connectons = 'input_synaptic_drive',
+                                num_jjs = num_jjs,
+                                inhibitory_or_excitatory = 'excitatory',
+                                synaptic_dendrite_circuit_inductances = [0e-12,20e-12,200e-12,77.5e-12],
+                                synaptic_dendrite_input_synaptic_inductance = [20e-12,1],
+                                junction_critical_current = 40e-6,
+                                bias_currents = [72e-6, 36e-6, 35e-6],
+                                integration_loop_self_inductance = 77.5e-9,
+                                integration_loop_output_inductance = 200e-12,
+                                integration_loop_time_constant = 250e-9)
+       
+            neuron_1 = neuron('dummy_neuron',
+                              input_synaptic_connections = ['synapse_under_test'],
+                              input_synaptic_inductances = [[20e-12,1]],
+                              junction_critical_current = 40e-6,
+                              circuit_inductances = [0e-12,0e-12,200e-12,77.5e-12],                              
                               refractory_loop_circuit_inductances = [0e-12,20e-12,200e-12,77.5e-12],
                               refractory_time_constant = 50e-9,
                               refractory_thresholding_junction_critical_current = 40e-6,
@@ -184,7 +92,8 @@ for ii in range(len(I_drive_vec)):
                               refractory_bias_currents = [74e-6,36e-6,35e-6],
                               refractory_receiving_input_inductance = [20e-12,1],
                               neuronal_receiving_input_refractory_inductance = [20e-12,1],
-                              time_params = time_params)           
+                              integration_loop_time_constant = 25e-9,
+                              time_params = dict([['dt',dt],['tf',tf]]))           
             
             neuron_1.run_sim()
                                     
@@ -195,6 +104,7 @@ for ii in range(len(I_drive_vec)):
             error__signal = chi_squared_error(target_data,actual_data)
             
             plot_wr_comparison__dend_drive_and_response(file_name,target_data__drive,actual_data__drive,target_data,actual_data,file_name,error__drive,error__signal)
+
             
 #%% linear ramp
 

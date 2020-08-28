@@ -13,21 +13,19 @@ class input_signal():
     _next_uid = 0
     input_signals = dict()
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         
         #make new input signal
         self.uid = input_signal._next_uid
         input_signal._next_uid += 1
         self.unique_label = 'in'+str(self.uid)
         
-        if len(args) > 0:
-            if type(args[0]) == str:
-                _name = args[0]
-            elif type(args[0]) == int or type(args[0]) == float:
-                _name = str(args[0])
+        # name the synapse
+        if 'name' in kwargs:
+            self.name = kwargs['name']
         else:
-            _name = 'unnamed_input_signal'
-        self.name = _name
+            self.name = 'unnamed_input_signal__{}'.format(self.unique_label)
+        # end name 
         
         if 'input_temporal_form' in kwargs:
             if (kwargs['input_temporal_form'] == 'single_spike' or 
@@ -188,7 +186,7 @@ class synapse():
         if 'bias_currents' in kwargs:
             self.bias_currents = kwargs['bias_currents']
         else:
-            self.bias_currents = [72e-6, 29e-6, 35e-6] #[bias to DR loop (J_th), bias to JTL, bias to DI loop]        
+            self.bias_currents = [72e-6, 36e-6, 35e-6] #[bias to DR loop (J_th), bias to JTL, bias to DI loop]        
             
         if 'integration_loop_self_inductance' in kwargs:
             # if type(kwargs['integration_loop_self_inductance']) == int or type(kwargs['integration_loop_self_inductance']) == float:
@@ -197,7 +195,7 @@ class synapse():
             else:
                  self.integration_loop_self_inductance = kwargs['integration_loop_self_inductance']
         else: 
-            self.integration_loop_self_inductance = 10e-9 #default value, units of henries
+            self.integration_loop_self_inductance = 77.5e-9 #default value, units of henries
                         
         if 'integration_loop_output_inductance' in kwargs:
             if type(kwargs['integration_loop_output_inductance']) != list:
@@ -475,13 +473,9 @@ class neuron():
             self.input_dendritic_inductances =  [[]]
             
         if 'junction_critical_current' in kwargs:
-            # if type(kwargs['thresholding_junction_critical_current']) == float:
-            _Ic = kwargs['junction_critical_current']
-            # else:
-                # raise ValueError('[soens_sim] Junction critical current must be a real number with units of amps')
+            self.junction_critical_current = kwargs['junction_critical_current']
         else:
-            _Ic = 40e-6 #default J_th Ic = 40 uA
-        self.thresholding_junction_critical_current =  _Ic
+            self.junction_critical_current = 40e-6 #default Ic = 40 uA
                     
         if 'bias_currents' in kwargs:
             _Ib = kwargs['bias_currents']
@@ -509,13 +503,9 @@ class neuron():
         self.integration_loop_total_inductance = self.integration_loop_self_inductance+ti
         
         if 'integration_loop_time_constant' in kwargs:
-            if kwargs['integration_loop_time_constant'] < 0:
-                raise ValueError('[soens_sim] integration_loop_time_constant associated with neuronal decay must be a real number between zero and infinity')
-            else:
-                self.integration_loop_time_constant = kwargs['integration_loop_time_constant']
+            self.integration_loop_time_constant = kwargs['integration_loop_time_constant']
         else:
-            if self.integration_loop_temporal_form == 'exponential':
-                self.integration_loop_time_constant = 5e-9 #default time constant units of seconds        
+            self.integration_loop_time_constant = 25e-9 #default time constant units of seconds        
                 
         if 'time_params' in kwargs:
             self.time_params = kwargs['time_params']                 
@@ -535,11 +525,10 @@ class neuron():
             if self.refractory_temporal_form == 'exponential':
                 self.refractory_time_constant = 50e-9 #default time constant, units of seconds
             
-        if 'refractory_thresholding_junction_critical_current' in kwargs:
-            _Ic = kwargs['refractory_thresholding_junction_critical_current']
+        if 'refractory_junction_critical_current' in kwargs:
+            self.refractory_junction_critical_current = kwargs['refractory_junction_critical_current']
         else:
-            _Ic = 40e-6 #default J_th Ic = 40 uA
-        self.refractory_thresholding_junction_critical_current = _Ic
+            self.refractory_junction_critical_current = 40e-6 #default J_th Ic = 40 uA        
         
         if 'refractory_loop_circuit_inductances' in kwargs:
             if type(kwargs['refractory_loop_circuit_inductances']) == list and len(kwargs['refractory_loop_circuit_inductances']) == 4:
@@ -590,14 +579,9 @@ class neuron():
             self.neuronal_receiving_input_refractory_inductance =  [20e-12,1]
                 
         if 'homeostatic_time_constant' in kwargs:
-            # if type(kwargs['refractory_time_constant']) == int or type(kwargs['refractory_time_constant']) == float:
-            if kwargs['homeostatic_time_constant'] < 0:
-                raise ValueError('[soens_sim] time_constant associated with neuronal homeostasis must be a real number between zero and infinity')
-            else:
-                self.homeostatic_time_constant = kwargs['homeostatic_time_constant']
+            self.homeostatic_time_constant = kwargs['homeostatic_time_constant']
         else:
-            if self.homeostatic_temporal_form == 'exponential':
-                self.homeostatic_time_constant = 50e-9 #default time constant, units of seconds
+            self.homeostatic_time_constant = 50e-9 #default time constant, units of seconds
             
         if 'homeostatic_junction_critical_current' in kwargs:
             _Ic = kwargs['homeostatic_junction_critical_current']

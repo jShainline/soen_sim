@@ -59,7 +59,7 @@ for ii in range(len(I_drive_vec)):
             target_data__drive = np.vstack((data_dict['time'],data_dict[I_drive_str]))
 
             # setup soen sim for exp pulse seq
-            input_1 = input_signal('input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
+            input_1 = input_signal(name = 'input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
                                     time_vec = np.arange(0,tf+dt,dt), exponential_pulse_train = exp_pls_trn_params)            
 
             dendrite_1 = dendrite('dendrite_under_test', num_jjs = num_jjs,
@@ -71,17 +71,19 @@ for ii in range(len(I_drive_vec)):
                                     integration_loop_self_inductance = L_di, integration_loop_output_inductance = 0e-12,
                                     integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_di)
 
-            neuron_1 = neuron('dummy_neuron', input_dendritic_connections = ['dendrite_under_test'], 
+            neuron_1 = neuron('dummy_neuron', input_dendritic_connections = ['dendrite_under_test'],
+                              junction_critical_current = 40e-6,
                               circuit_inductances = [0e-12,0e-12,200e-12,77.5e-12],
                               input_dendritic_inductances = [[20e-12,1]], 
                               refractory_loop_circuit_inductances = [0e-12,20e-12,200e-12,77.5e-12],
                               refractory_time_constant = 50e-9,
-                              refractory_thresholding_junction_critical_current = 40e-6,
+                              refractory_junction_critical_current = 40e-6,
                               refractory_loop_self_inductance =775e-12,
                               refractory_loop_output_inductance = 100e-12,
                               refractory_bias_currents = [74e-6,36e-6,35e-6],
                               refractory_receiving_input_inductance = [20e-12,1],
                               neuronal_receiving_input_refractory_inductance = [20e-12,1],
+                              integration_loop_time_constant = 25e-9,
                               time_params = dict([['dt',dt],['tf',tf]]))           
             
             neuron_1.run_sim()
