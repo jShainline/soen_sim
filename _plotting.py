@@ -16,7 +16,7 @@ colors = color_dictionary()
 
 def plot_params():
     
-    plot_type = '17.2__for_pubs' # 'large' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' #
+    plot_type = 'large' # '17.2__for_pubs' # 'large' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' #
     
     pp = dict()
         
@@ -34,7 +34,7 @@ def plot_params():
         pp['small_markersize'] = 3
         pp['nominal_markersize'] = 4
         pp['big_markersize'] = 5
-        tn = 6.9 # 4*8.6/2.54
+        tn = 16 # 4*8.6/2.54
         pp['fig_size'] = (tn,tn/1.618)
         # pp['fig_size'] = (tn,tn/1.2)
         pp['axes_linewidth'] = 1
@@ -87,7 +87,7 @@ def plot_params():
         pp['small_markersize'] = 3
         pp['nominal_markersize'] = 4
         pp['big_markersize'] = 5
-        tn = 4*8.6/2.54
+        tn = 16
         pp['fig_size'] = (tn,tn/1.618)
         # pp['fig_size'] = (tn,tn/1.2)
         pp['axes_linewidth'] = 1
@@ -965,13 +965,13 @@ def plot_wr_comparison__dend_drive_and_response(main_title,target_data__drive,ac
 
 def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive,target_data,actual_data,wr_data_file_name,error_drive,error__si):
     
-    tt = time.time()    
-    save_str = 'soen_sim_wr_cmpr__sy__'+wr_data_file_name+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    # tt = time.time()    
+    # save_str = 'soen_sim_wr_cmpr__sy__'+wr_data_file_name+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
     
     fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)   
-    fig.suptitle('file: {}; error_drive = {:7.5e}, error_signal = {:7.5e}'.format(main_title,error_drive,error__si))
+    fig.suptitle('{}; error_drive = {:7.5e}, error_signal = {:7.5e}'.format(main_title,error_drive,error__si))
         
-    axs[0].plot(actual_drive[0,:]*1e6,actual_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['green3'], label = 'soen_drive')
+    axs[0].plot(actual_drive[0,:]*1e6,actual_drive[1,:]*1e6, '-o', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['green3'], label = 'soen_drive')
     axs[0].plot(target_drive[0,:]*1e6,target_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['yellow3'], label = 'wr_drive')  
     tn1 = np.min(target_drive[1,:])
     tn2 = np.max(target_drive[1,:])
@@ -980,12 +980,12 @@ def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive
             axs[0].plot([spike_times[ii]*1e6,spike_times[ii]*1e6],[tn1*1e6,tn2*1e6], '-.', color = colors['black'], linewidth = pp['fine_linewidth'], label = 'Spike times')             
         else:
             axs[0].plot([spike_times[ii]*1e6,spike_times[ii]*1e6],[tn1*1e6,tn2*1e6], '-.', color = colors['black'], linewidth = pp['fine_linewidth'])             
-    axs[0].set_xlabel(r'Time [$\mu$s]')
-    axs[0].set_ylabel(r'$I_{drive}$ [$\mu$A]')
+    # axs[0].set_xlabel(r'Time [$\mu$s]')
+    axs[0].set_ylabel(r'$I_{spd2}$ [$\mu$A]')
     axs[0].legend()
     # axs[0].set_title('Drive signal input SPD to Jsf (error = {:7.5e})'.format(error_drive))
      
-    axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['green3'], label = 'soen_sim')   
+    axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-o', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['green3'], label = 'soen_sim')   
     axs[1].plot(target_data[0,:]*1e6,target_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['yellow3'], label = 'WRSpice')             
     axs[1].set_xlabel(r'Time [$\mu$s]')
     axs[1].set_ylabel(r'$I_{si}$ [$\mu$A]')
@@ -1675,38 +1675,68 @@ def plot_syn_rate_array(**kwargs):
     return
 
 
-def plot__syn__error_vs_dt(dt_vec,error_array,error_drive_array):
+# def plot__syn__error_vs_dt(dt_vec,error_array,error_drive_array,I_de_vec,L_di_vec,tau_di_vec):
     
-    num_cases = 3
-    title_list = ['Vary $I_{sy}$','Vary $L_{si}$','Vary $tau_{si}$']
-    legend_list = [['$I_{sy}$ = 21uA','$I_{sy}$ = 27uA','$I_{sy}$ = 33uA','$I_{sy}$ = 39uA'],
-                   ['$L_{si}$ = 7.75nH','$L_{si}$ = 77.5nH','$L_{si}$ = 775nH','$L_{si}$ = 7.75$\mu$H'],
-                   ['$tau_{si}$ = 10ns','$tau_{si}$ = 50ns','$tau_{si}$ = 250ns','$tau_{si}$ = 1.25$\mu$s']]
+#     num_cases = 3
+#     title_list = ['Vary $I_{sy}$','Vary $L_{si}$','Vary $tau_{si}$']
+#     legend_list = [['$I_{sy}$ = 21uA','$I_{sy}$ = 27uA','$I_{sy}$ = 33uA','$I_{sy}$ = 39uA'],
+#                    ['$L_{si}$ = 7.75nH','$L_{si}$ = 77.5nH','$L_{si}$ = 775nH','$L_{si}$ = 7.75$\mu$H'],
+#                    ['$tau_{si}$ = 10ns','$tau_{si}$ = 50ns','$tau_{si}$ = 250ns','$tau_{si}$ = 1.25$\mu$s']]
     
-    color_list = ['blue3','red3','green3','yellow3']
-    fig, ax = plt.subplots(nrows = num_cases, ncols = 2)
-    for ii in range(num_cases):
+#     color_list = ['blue3','red3','green3','yellow3']
+#     fig, ax = plt.subplots(nrows = num_cases, ncols = 2)
+#     for ii in range(num_cases):
         
-        for jj in range(4):
-            ax[ii,0].loglog(dt_vec*1e9,error_drive_array[ii*4+jj,:], '-o', color = colors[color_list[jj]], markersize = pp['nominal_markersize'], label = legend_list[ii][jj] )    
-            ax[ii,1].loglog(dt_vec*1e9,error_array[ii*4+jj,:], '-o', color = colors[color_list[jj]], markersize = pp['nominal_markersize'], label = legend_list[ii][jj] )    
+#         for jj in range(4):
+#             ax[ii,0].loglog(dt_vec*1e9,error_drive_array[ii*4+jj,:], '-o', color = colors[color_list[jj]], markersize = pp['nominal_markersize'], label = legend_list[ii][jj] )    
+#             ax[ii,1].loglog(dt_vec*1e9,error_array[ii*4+jj,:], '-o', color = colors[color_list[jj]], markersize = pp['nominal_markersize'], label = legend_list[ii][jj] )    
         
-        ax[ii,0].set_xlabel(r'dt [ns]')
-        ax[ii,0].set_ylabel(r'Drive $Chi^2$ error')
-        ax[ii,0].set_title(title_list[ii])
-        ax[ii,0].legend()        
-        plt.sca(ax[ii,0])
-        plt.yticks([1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1e0])
+#         ax[ii,0].set_xlabel(r'dt [ns]')
+#         ax[ii,0].set_ylabel(r'Drive $Chi^2$ error')
+#         ax[ii,0].set_title(title_list[ii])
+#         ax[ii,0].legend()        
+#         plt.sca(ax[ii,0])
+#         plt.yticks([1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1e0])
         
-        ax[ii,1].set_xlabel(r'dt [ns]')
-        ax[ii,1].set_ylabel(r'Signal $Chi^2$ error')
-        ax[ii,1].set_title(title_list[ii])
-        ax[ii,1].legend()       
-        plt.sca(ax[ii,1])
-        plt.yticks([1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1e0])
+#         ax[ii,1].set_xlabel(r'dt [ns]')
+#         ax[ii,1].set_ylabel(r'Signal $Chi^2$ error')
+#         ax[ii,1].set_title(title_list[ii])
+#         ax[ii,1].legend()       
+#         plt.sca(ax[ii,1])
+#         plt.yticks([1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1e0])
         
-    # grid(True,which='both')
-    plt.show()
+#     # grid(True,which='both')
+#     plt.show()
+    
+#     return
+
+def plot__syn__error_vs_dt(dt_vec,error_array,error_drive_array,I_de_vec,L_di_vec,tau_di_vec):
+       
+    color_list = ['blue3','red3','green3','yellow3','bluegrey3']
+    for ii in range(len(I_de_vec)):
+        for jj in range(len(L_di_vec)):
+            
+            fig, ax = plt.subplots(nrows = 1, ncols = 2)
+            for kk in range(len(tau_di_vec)):
+            
+                ax[0].loglog(dt_vec*1e9,error_drive_array[ii,jj,kk,:], '-o', color = colors[color_list[kk]], markersize = pp['nominal_markersize'], label = 'tau_di = {:4.0f}ns'.format(tau_di_vec[kk]*1e9) )    
+                ax[1].loglog(dt_vec*1e9,error_array[ii,jj,kk,:], '-o', color = colors[color_list[kk]], markersize = pp['nominal_markersize'], label = 'tau_di = {:4.0f}ns'.format(tau_di_vec[kk]*1e9)  )    
+        
+            ax[0].set_xlabel(r'dt [ns]')
+            ax[0].set_ylabel(r'Drive $Chi^2$ error')
+            ax[0].legend()        
+            # plt.sca(ax[0])
+            # plt.yticks([1e-7,1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1e0])
+            
+            ax[1].set_xlabel(r'dt [ns]')
+            ax[1].set_ylabel(r'Signal $Chi^2$ error')
+            ax[1].set_title('I_de = {:5.2f} uA, L_di = {:7.2f} nH'.format(I_de_vec[ii]*1e6,L_di_vec[jj]*1e9))
+            ax[1].legend()       
+            # plt.sca(ax[1])
+            # plt.yticks([1e-7,1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1e0])
+        
+            # grid(True,which='both')
+            plt.show()
     
     return
 

@@ -81,7 +81,7 @@ def neuron_time_stepper(neuron_object):
         # print('sy_name = {}'.format(sy_name))
         
         #load all rate data to synapses 
-        _temp_str_2 = '{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}'.format(n.synapses[sy_name].num_jjs,inductance_conversion*n.synapses[sy_name].L_left,inductance_conversion*n.synapses[sy_name].L_right,current_conversion*n.synapses[sy_name].bias_currents[0])
+        _temp_str_2 = '{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}'.format(n.synapses[sy_name].num_jjs,inductance_conversion*n.dendrites['{}__d'.format(sy_name)].L_left,inductance_conversion*n.dendrites['{}__d'.format(sy_name)].L_right,current_conversion*n.synapses[sy_name].bias_currents[0])
         n.synapses[sy_name].I_di_array = I_di_array__dict[_temp_str_2]
         n.synapses[sy_name].influx_list__dend = influx_list__dend__dict[_temp_str_2]
         n.synapses[sy_name].rate_array__dend = rate_array__dend__dict[_temp_str_2]
@@ -89,10 +89,12 @@ def neuron_time_stepper(neuron_object):
         #change units to microamps and picohenries
         n.synapses[sy_name].I_fq = current_conversion*Phi0/n.synapses[sy_name].integration_loop_total_inductance
         n.synapses[sy_name].I_di_vec = np.zeros([nt])
-        n.synapses[sy_name].I_drive_vec = np.zeros([nt])
+        n.synapses[sy_name].I_spd2_vec = np.zeros([nt])
         n.synapses[sy_name].influx_vec = np.zeros([nt])
         n.synapses[sy_name].tau_di = current_conversion*n.synapses[sy_name].integration_loop_time_constant
         n.synapses[sy_name].M = inductance_conversion*n.dendrites['{}__d'.format(n.name)].input_synaptic_inductances[sy_name][1]*np.sqrt(n.synapses[sy_name].integration_loop_output_inductance*n.dendrites['{}__d'.format(n.name)].input_synaptic_inductances[sy_name][0])        
+        n.synapses[sy_name].M_self = inductance_conversion*n.synapses[sy_name].M_self
+        # self.synaptic_dendrite_input_synaptic_inductance[1]*np.sqrt(self.synaptic_dendrite_input_synaptic_inductance[0]*self.synaptic_circuit_inductors[2])
         
         n.synapses[sy_name].st_ind_last = 0
                               
@@ -143,7 +145,7 @@ def neuron_time_stepper(neuron_object):
             #change units to microamps and picohenries
             n.synapses[de__sy_name].I_fq = current_conversion*Phi0/n.synapses[de__sy_name].integration_loop_total_inductance
             n.synapses[de__sy_name].I_di_vec = np.zeros([nt])
-            n.synapses[de__sy_name].I_drive_vec = np.zeros([nt])
+            n.synapses[de__sy_name].I_spd2_vec = np.zeros([nt])
             n.synapses[de__sy_name].influx_vec = np.zeros([nt])
             n.synapses[de__sy_name].tau_di = current_conversion*n.synapses[de__sy_name].integration_loop_time_constant
             n.synapses[de__sy_name].M = inductance_conversion*n.dendrites['{}__d'.format(n.name)].input_synaptic_inductances[de__sy_name][1]*np.sqrt(n.synapses[de__sy_name].integration_loop_output_inductance*n.dendrites['{}__d'.format(n.name)].input_synaptic_inductances[de__sy_name][0])        
@@ -204,30 +206,31 @@ def neuron_time_stepper(neuron_object):
                                   
                 # find most recent spike time 
                 n.synapses[sy_name].st_ind = (np.abs(spike_times[:] - _pt)).argmin()
-                n.synapses[sy_name].I_spd2 = 0
                 if n.synapses[sy_name].st_ind == 0 and spike_times[n.synapses[sy_name].st_ind] > _pt:
-                    n.synapses[sy_name].I_spd2 = 0 # growth factor
+                    _gf = 0 # growth factor
                     # print('code 1: st_ind == 0 and spike_times[st_ind] > _pt')
                 if n.synapses[sy_name].st_ind > 0 and spike_times[n.synapses[sy_name].st_ind] > _pt:
                     n.synapses[sy_name].st_ind -= 1
                     # print('code 2: st_ind > 0 and spike_times[st_ind] > _pt')
                 if _pt - spike_times[n.synapses[sy_name].st_ind] > n.synapses[sy_name].spd_duration:
-                    n.synapses[sy_name].I_spd2 = 0 # growth factor
+                    _gf = 0 # growth factor
                     # print('code 3: _pt - spike_times[st_ind] > spd_duration')
-                if spike_times[n.synapses[sy_name].st_ind] <= _pt and time_conversion*(_pt - spike_times[n.synapses[sy_name].st_ind]) < n.synapses[sy_name].spd_duration:
+                if spike_times[n.synapses[sy_name].st_ind] <= _pt and time_conversion*(_pt - spike_times[n.synapses[sy_name].st_ind]) < time_conversion*n.synapses[sy_name].spd_duration:
                     # print('code 4')
                 
                     n.synapses[sy_name].dt_spk = _pt - spike_times[n.synapses[sy_name].st_ind]
-                    n.synapses[sy_name].I_spd2 = spd_response(n.synapses[sy_name].I_spd,n.synapses[sy_name].r1,n.synapses[sy_name].r2,n.synapses[sy_name].t0,n.synapses[sy_name].tau_plus,n.synapses[sy_name].tau_minus,n.synapses[sy_name].dt_spk)
+                    n.synapses[sy_name].I_spd2_vec[ii] = spd_response(current_conversion*n.synapses[sy_name].I_spd,n.synapses[sy_name].r1,n.synapses[sy_name].r2,n.synapses[sy_name].t0,n.synapses[sy_name].tau_plus,n.synapses[sy_name].tau_minus,n.synapses[sy_name].dt_spk)
                     n.synapses[sy_name].st_ind_last = n.synapses[sy_name].st_ind
                         
-                    n.synapses[sy_name].influx_vec[ii] = n.synapses[sy_name].I_spd2*n.synapses[sy_name].M_self
+                    n.synapses[sy_name].influx_vec[ii] = n.synapses[sy_name].I_spd2_vec[ii]*n.synapses[sy_name].M_self
                     ind1 = (np.abs(n.synapses[sy_name].influx_list__dend-n.synapses[sy_name].influx_vec[ii])).argmin()                             
                     
                     # no interpolation 
                     ind2 = (np.abs(n.synapses[sy_name].I_di_array[ind1]-n.synapses[sy_name].I_di_vec[ii])).argmin()
                     rate = n.synapses[sy_name].rate_array__dend[ind1][ind2] 
-                    n.synapses[sy_name].I_di_vec[ii+1] = rate*n.synapses[sy_name].I_fq*dt + (1-dt/n.synapses[sy_name].tau_di)*n.synapses[sy_name].I_di_vec[ii]
+                    _gf = rate*n.synapses[sy_name].I_fq*dt # growth factor
+                    
+                n.synapses[sy_name].I_di_vec[ii+1] = _gf + (1-dt/n.synapses[sy_name].tau_di)*n.synapses[sy_name].I_di_vec[ii]
                 
         # step through dendrites
         for de_name in n.input_dendritic_connections:
@@ -245,7 +248,7 @@ def neuron_time_stepper(neuron_object):
                     _prefactor = -1
                 elif n.synapses[de__sy_name].inhibitory_or_excitatory == 'excitatory':
                     _prefactor = 1
-                syn_flux += _prefactor*n.synapses[de__sy_name].M*n.synapses[de__sy_name].I_si_vec[ii+1]
+                syn_flux += _prefactor*n.synapses[de__sy_name].M*n.synapses[de__sy_name].I_di_vec[ii+1]
                 
             # calculate flux drive from other dendrites
             dend_flux = 0
@@ -384,7 +387,7 @@ def neuron_time_stepper(neuron_object):
                 _prefactor = -1
             elif n.synapses[sy_name].inhibitory_or_excitatory == 'excitatory':
                 _prefactor = 1
-            syn_flux += _prefactor*n.synapses[sy_name].M*n.synapses[sy_name].I_si_vec[ii+1]            
+            syn_flux += _prefactor*n.synapses[sy_name].M*n.synapses[sy_name].I_di_vec[ii+1]            
         dend_flux = 0
         for de_name in n.input_dendritic_connections:
             if n.dendrites[de_name].inhibitory_or_excitatory == 'inhibitory':

@@ -11,6 +11,9 @@ p = physical_constants()
 plt.close('all')
 
 #%%
+compare_to_wr = False
+
+#%%
 dt = 100e-12
 tf = 300e-9
 t0 = 200e-12
@@ -41,31 +44,37 @@ for ii in range(len(time_vec)):
         I_spd2[ii] = I_0*np.exp(-(_pt-t0)/tau_minus)
 
 #%% load wr
-directory = 'wrspice_data'
-file_name = 'syn_0jj.dat'
-data_dict = read_wr_data(directory+'/'+file_name)
-
-time_vec_wr = data_dict['time']
-initial_ind = (np.abs(time_vec_wr-1.0e-9)).argmin()
-time_vec_wr = time_vec_wr[initial_ind:]-time_vec_wr[initial_ind]
-I_spd2_wr = data_dict['L0#branch']
-I_spd2_wr = I_spd2_wr[initial_ind:]
-
-actual_data = np.vstack((time_vec[:],I_spd2[:]))
-target_data = np.vstack((time_vec_wr[:],I_spd2_wr[:]))
-
-error = chi_squared_error(target_data,actual_data)
+if compare_to_wr == True:
+    
+    directory = 'wrspice_data'
+    file_name = 'syn_0jj.dat'
+    data_dict = read_wr_data(directory+'/'+file_name)
+    
+    time_vec_wr = data_dict['time']
+    initial_ind = (np.abs(time_vec_wr-1.0e-9)).argmin()
+    time_vec_wr = time_vec_wr[initial_ind:]-time_vec_wr[initial_ind]
+    I_spd2_wr = data_dict['L0#branch']
+    I_spd2_wr = I_spd2_wr[initial_ind:]
+    
+    actual_data = np.vstack((time_vec[:],I_spd2[:]))
+    target_data = np.vstack((time_vec_wr[:],I_spd2_wr[:]))
+    
+    error = chi_squared_error(target_data,actual_data)
 # error = 1
 
 #%% plot
 
 fig = plt.figure()
-plt.title('error = {:6.4e}; r_spd2 = {}'.format(error, r_spd2))    
+if compare_to_wr == False:
+    plt.title('r_spd2 = {}'.format(r_spd2))    
+else:
+    plt.title('error = {:6.4e}; r_spd2 = {}'.format(error, r_spd2))    
 ax = fig.gca()
 
 color_list = [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']]
 ax.plot(time_vec*1e9,I_spd2*1e6, '-', color = colors['blue3'] , label = 'analytical') #
-ax.plot(time_vec_wr*1e9,I_spd2_wr*1e6, '-', color = colors['red3'] , label = 'spice') #
+if compare_to_wr == True:
+    ax.plot(time_vec_wr*1e9,I_spd2_wr*1e6, '-', color = colors['red3'] , label = 'spice') #
 
 ax.set_xlabel(r'Time [ns]')
 ax.set_ylabel(r'$I_{spd2}$ [$\mu$A]')

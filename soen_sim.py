@@ -142,6 +142,9 @@ class synapse():
             self.input_direct_connections = kwargs['input_direct_connections']
         else:
             self.input_direct_connections = []
+        for connection_name in self.input_direct_connections:
+            print('{}'.format(connection_name))
+            self.input_signal = input_signal.input_signals[connection_name]
         
         if 'input_neuronal_connections' in kwargs:
             self.input_neuronal_connections = kwargs['input_neuronal_connections']
@@ -219,14 +222,14 @@ class synapse():
                                    num_jjs = self.num_jjs,
                                    inhibitory_or_excitatory = self.inhibitory_or_excitatory, 
                                    circuit_inductances = self.synaptic_dendrite_circuit_inductances,
-                                   input_synaptic_connections = [self.name], 
-                                   input_synaptic_inductances = self.synaptic_dendrite_input_synaptic_inductance,
                                    junction_critical_current = self.junction_critical_current, 
                                    bias_currents = self.bias_currents,
+                                   input_synaptic_connections = [self.name], 
+                                   input_synaptic_inductances = [self.synaptic_dendrite_input_synaptic_inductance],
                                    integration_loop_self_inductance = self.integration_loop_self_inductance,
                                    integration_loop_output_inductance = self.integration_loop_output_inductance,
-                                   integration_loop_time_constant = self.integration_loop_time_constant)                
-        
+                                   integration_loop_time_constant = self.integration_loop_time_constant)                        
+                                   
         self.dendrite = synapse_dendrite
         # end make synaptic dendrite  
         
@@ -234,10 +237,12 @@ class synapse():
         self.L_tot = np.sum(self.synaptic_circuit_inductors)
         self.tau_plus = self.L_tot/(np.sum(self.synaptic_circuit_resistors))
         self.tau_minus = self.L_tot/self.synaptic_circuit_resistors[1]
-        self.spd_duration = 5*self.L_tot/self.tau_minus
+        self.spd_duration = 6*self.tau_minus
         self.t0 = self.synaptic_hotspot_duration
         self.I_spd = self.synaptic_spd_current
         self.M_self = self.synaptic_dendrite_input_synaptic_inductance[1]*np.sqrt(self.synaptic_dendrite_input_synaptic_inductance[0]*self.synaptic_circuit_inductors[2])
+        self.r1 = self.synaptic_circuit_resistors[0]
+        self.r2 = self.synaptic_circuit_resistors[1]
         # end configure spd
         
         synapse.synapses[self.name] = self
@@ -470,7 +475,7 @@ class neuron():
             else:
                 raise ValueError('[soens_sim] Input dendritic inductances to neurons are specified as a list of pairs of real numbers with one pair per dendritic connection. The first element of the pair is the inductance on the neuronal receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the dendritic and the neuronal receiving loop.')
         else:
-            self.input_dendritic_inductances =  [[]]
+            self.input_dendritic_inductances =  []
             
         if 'junction_critical_current' in kwargs:
             self.junction_critical_current = kwargs['junction_critical_current']
@@ -695,6 +700,7 @@ class neuron():
                     synapse.synapses[name_2].input_spike_times = []
                 dendrite.dendrites[name_1].synapses[synapse.synapses[name_2].name] = synapse.synapses[name_2]
                 self.synapses[name_2] = synapse.synapses[name_2]
+                self.dendrites[self.synapses[name_2].dendrite.name] = self.synapses[name_2].dendrite
                 
             #then add direct connections to dendrites
             dendrite.dendrites[name_1].direct_connections = dict()
@@ -718,6 +724,7 @@ class neuron():
             else:
                 synapse.synapses[name_1].input_spike_times = []
             self.synapses[synapse.synapses[name_1].name] = synapse.synapses[name_1]
+            self.dendrites[self.synapses[name_1].dendrite.name] = self.synapses[name_1].dendrite
             
         #also add direct connections to neuron
         self.direct_connections = dict()
@@ -734,9 +741,10 @@ class neuron():
         
         print_progress = False
     
-        # go through all dendrites in the neuron. remember the neuron itself is a dendrite, so it is included here
+        # go through all dendrites in the neuron. remember the neuron itself is a dendrite, so it is included here. synapses are dendrites, so they are included, too.
         # currently set up so all excitatory connections are on the left, all inhibitory on the right branch of the DR loop. is that good?
         for name_dendrite in self.dendrites:
+            # print('{}'.format(name_dendrite))
             
             if print_progress == True:
                 print('name_dendrite = {}'.format(name_dendrite))
@@ -761,6 +769,8 @@ class neuron():
                     print('2: self.dendrites[name_dendrite].L_right = {}'.format(self.dendrites[name_dendrite].L_right))
             
             for name_dendrite_in in self.dendrites[name_dendrite].input_dendritic_connections:
+                
+                # print('{}'.format(name_dendrite_in))
                 
                 if self.dendrites[name_dendrite_in].inhibitory_or_excitatory == 'excitatory':
                     self.dendrites[name_dendrite].L_left += self.dendrites[name_dendrite].input_dendritic_inductances[name_dendrite_in][0]
@@ -832,11 +842,11 @@ class neuron():
         self.construct_dendritic_drives()
         
         # simulate neuron in time         
-        self = neuron_time_stepper()
+        self = neuron_time_stepper(self)
         
         # calculate spike times
         self.output_voltage = self.I_ni_vec # self.integration_loop_output_inductances[0][0]*np.diff(self.I_ni_vec)        
-        self.voltage_peaks, _ = find_peaks(self.output_voltage, distance = 5e-9/dt) # , height = min_peak_height, )
+        self.voltage_peaks, _ = find_peaks(self.output_voltage) # , height = min_peak_height, ) # , distance = 10e-9/dt
         self.spike_times = self.time_vec[self.voltage_peaks]
         
         return self
