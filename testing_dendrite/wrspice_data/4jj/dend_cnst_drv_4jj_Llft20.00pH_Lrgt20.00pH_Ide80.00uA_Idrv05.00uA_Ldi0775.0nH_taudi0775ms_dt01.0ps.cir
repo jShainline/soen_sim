@@ -20,7 +20,7 @@ V0 1 0 pwl(0 1e5 0.2ns 1e5 0.3ns 0)
 .model jjSFQ1 jj(rtype=0, cct=1, vg=2.8m, icrit=1u, cap= 5f, vshunt=0.25mV)
 .control
 set maxdata=2560000
-tran 1p 596.046448n
+tran 1p 1455.191523n
 write ./dend_cnst_drv_4jj_Llft20.00pH_Lrgt20.00pH_Ide80.00uA_Idrv05.00uA_Ldi0775.0nH_taudi0775ms_dt01.0ps.dat v(5) i(L2) v(12)
 quit
 .endc
