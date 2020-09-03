@@ -16,7 +16,7 @@ colors = color_dictionary()
 
 def plot_params():
     
-    plot_type = 'large' # '17.2__for_pubs' # 'large' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' #
+    plot_type = '8.6__for_pubs' # '17.2__for_pubs' # 'large' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' '8.6__for_pubs'#
     
     pp = dict()
         
@@ -47,6 +47,8 @@ def plot_params():
         pp['xmargin'] = 0 # 0.05 # space between traces and axes
         pp['ymargin'] = 0.05 # 0.05
         
+        pp['linewidth'] = 2
+        
     if plot_type == 'four_rows':
         
         pp['title_font_size'] = 6
@@ -72,6 +74,8 @@ def plot_params():
         
         pp['xmargin'] = 0 # 0.05 # space between traces and axes
         pp['ymargin'] = 0.05 # 0.05
+        
+        pp['linewidth'] = 1
         
     if plot_type == 'large':
         
@@ -100,6 +104,8 @@ def plot_params():
         pp['xmargin'] = 0 # 0.05 # space between traces and axes
         pp['ymargin'] = 0.05 # 0.05
         
+        pp['linewidth'] = 2
+        
     if plot_type == 'two_rows':
         
         pp['title_font_size'] = 10
@@ -126,6 +132,8 @@ def plot_params():
         pp['xmargin'] = 0 # 0.05 # space between traces and axes
         pp['ymargin'] = 0.05 # 0.05
         
+        pp['linewidth'] = 1
+        
     if plot_type == 'single_frame':
         
         pp['title_font_size'] = 10
@@ -151,6 +159,36 @@ def plot_params():
         
         pp['xmargin'] = 0 # 0.05 # space between traces and axes
         pp['ymargin'] = 0.05 # 0.05
+        
+        pp['linewidth'] = 1
+        
+    if plot_type == '8.6__for_pubs':
+        
+        pp['title_font_size'] = 4
+        pp['subtitle_font_size'] = 4
+        pp['axes_labels_font_size'] = 10
+        pp['axes_labels_pad'] = 0 # 4
+        pp['tick_labels_font_size'] = 10
+        pp['legend_font_size'] = 6
+        pp['nominal_linewidth'] = 0.75
+        pp['fine_linewidth'] = 0.5
+        pp['bold_linewidth'] = 2
+        pp['nominal_markersize'] = 2
+        pp['big_markersize'] = 3
+        tn = 1.1*8.6/2.54
+        pp['fig_size'] = (tn,tn/1.618)
+        # pp['fig_size'] = (tn,tn/1.2)
+        pp['axes_linewidth'] = 0.75
+        
+        pp['major_tick_width'] = 0.75
+        pp['major_tick_length'] = 3
+        pp['minor_tick_width'] = 0.25
+        pp['minor_tick_length'] = 2
+        
+        pp['xmargin'] = 0 # 0.05 # space between traces and axes
+        pp['ymargin'] = 0.05 # 0.05 
+        
+        pp['linewidth'] = 1
      
     if plot_type == 'three_rows':
         
@@ -176,7 +214,9 @@ def plot_params():
         pp['minor_tick_length'] = 2
         
         pp['xmargin'] = 0.05 # space between traces and axes
-        pp['ymargin'] = 0.05   
+        pp['ymargin'] = 0.05
+        
+        pp['linewidth'] = 1
      
     if plot_type == 'four_tiles':
         
@@ -204,6 +244,8 @@ def plot_params():
         pp['xmargin'] = 0.05 # space between traces and axes
         pp['ymargin'] = 0.05
         
+        pp['linewidth'] = 1
+        
     return pp 
 
 pp = plot_params()
@@ -215,7 +257,7 @@ plt.rcParams['figure.figsize'] = pp['fig_size']
 plt.rcParams['figure.titlesize'] = pp['title_font_size']
 plt.rcParams['figure.autolayout'] = True
 
-plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue3'],colors['red1'],colors['red3'],colors['green1'],colors['green3'],colors['yellow1'],colors['yellow3']])
 
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
@@ -223,14 +265,14 @@ plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'
 #                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green3'],
 #                                                     colors['yellow5'],colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
 
-# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
-#                                                     colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
-#                                                     colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
-#                                                     colors['red4'],colors['red3'],colors['red2'],colors['red1'],
-#                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
-#                                                     colors['green4'],colors['green3'],colors['green2'],colors['green1'],
-#                                                     colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
-#                                                     colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
+plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+                                                    colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+                                                    colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+                                                    colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+                                                    colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+                                                    colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+                                                    colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+                                                    colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
 
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],
 #                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],
@@ -253,8 +295,10 @@ plt.rcParams['axes.titlepad'] = 0
 plt.rcParams['legend.fontsize'] = pp['legend_font_size']
 plt.rcParams['legend.loc'] = 'best'
 
+plt.rcParams['lines.linewidth'] = pp['linewidth']
+
 plt.rcParams['savefig.dpi'] = 300
-plt.rcParams['savefig.format'] = 'png'
+plt.rcParams['savefig.format'] = 'pdf'
 plt.rcParams['savefig.pad_inches'] = 0
 
 plt.rcParams['xtick.labelsize'] = pp['tick_labels_font_size']
@@ -935,32 +979,83 @@ def plot_wr_comparison(target_data,actual_data,main_title,sub_title,y_axis_label
 
 def plot_wr_comparison__dend_drive_and_response(main_title,target_data__drive,actual_data__drive,target_data,actual_data,wr_data_file_name,error__drive,error__signal):
     
-    tt = time.time()    
+    # tt = time.time()    
     # save_str = 'soen_sim_wr_cmpr__dend__'+wr_data_file_name+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
     
     fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)   
-    fig.suptitle(main_title)
+    # fig.suptitle(main_title)
     
     tf_ind = (np.abs(np.asarray(target_data__drive[0,:])-actual_data__drive[0,-1])).argmin()
     
-    axs[0].plot(actual_data__drive[0,:]*1e6,actual_data__drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim')   
-    axs[0].plot(target_data__drive[0,0:tf_ind]*1e6,target_data__drive[1,0:tf_ind]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
-    axs[0].set_xlabel(r'Time [$\mu$s]')
-    axs[0].set_ylabel(r'$I_{flux}$ [$\mu$A]')
+    M = np.sqrt(200e-12*20e-12)
+    Phi0 = 6.62606957e-34/(2*1.60217657e-19)
+    _pf = M/Phi0
+    # axs[0].plot(actual_data__drive[0,:]*1e6,actual_data__drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim (error = {:7.5e})'.format(error__drive))   
+    axs[0].plot(actual_data__drive[0,:]*1e6,_pf*actual_data__drive[1,:], '-', color = colors['blue3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim (error = {:7.5e})'.format(error__drive))   
+    # axs[0].plot(target_data__drive[0,0:tf_ind]*1e6,target_data__drive[1,0:tf_ind]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
+    axs[0].plot(target_data__drive[0,0:tf_ind]*1e6,_pf*target_data__drive[1,0:tf_ind], '-', color = colors['red3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
+    # axs[0].set_xlabel(r'Time [$\mu$s]')
+    # axs[0].set_ylabel(r'$I_{flux}$ [$\mu$A]')
+    axs[0].set_ylim([-0.02,0.52])
+    axs[0].set_ylabel(r'$\Phi_{a}/\Phi_0$')
     axs[0].legend()
-    axs[0].set_title('Drive signal input to DR loop (error = {:7.5e})'.format(error__drive))
+    # axs[0].set_title('Drive signal input to DR loop (error = {:7.5e})'.format(error__drive))
      
-    axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim')   
-    axs[1].plot(target_data[0,0:tf_ind]*1e6,target_data[1,0:tf_ind]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
+    axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', color = colors['blue3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim (error = {:7.5e})'.format(error__signal))   
+    axs[1].plot(target_data[0,0:tf_ind]*1e6,target_data[1,0:tf_ind]*1e6, '-', color = colors['red3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
     axs[1].set_xlabel(r'Time [$\mu$s]')
     axs[1].set_ylabel(r'$I_{di}$ [$\mu$A]')
+    # axs[1].set_ylim([0,8])
     axs[1].legend()
-    axs[1].set_title('Output signal in the DI loop (error = {:7.5e})'.format(error__signal))
+    # axs[1].set_title('Output signal in the DI loop (error = {:7.5e})'.format(error__signal))
     
     plt.show()
     # fig.savefig('figures/'+save_str+'.png') 
 
     return
+
+
+
+def plot_wr_comparison__dend_drive_and_response__compare_two(file_name,target_data__drive,actual_data__drive__1,actual_data__drive__2,target_data,actual_data__1,actual_data__2,error__drive__1,error__drive__2,error__signal__1,error__signal__2,dt_vec):
+    
+    # tt = time.time()    
+    # save_str = 'soen_sim_wr_cmpr__dend__'+wr_data_file_name+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    
+    fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)   
+    fig.suptitle(file_name)
+    
+    tf_ind = (np.abs(np.asarray(target_data__drive[0,:])-actual_data__drive__2[0,-1])).argmin()
+    
+    M = np.sqrt(200e-12*20e-12)
+    Phi0 = 6.62606957e-34/(2*1.60217657e-19)
+    _pf = M/Phi0
+    # axs[0].plot(actual_data__drive[0,:]*1e6,actual_data__drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim (error = {:7.5e})'.format(error__drive))   
+    axs[0].plot(actual_data__drive__1[0,:]*1e6,_pf*actual_data__drive__1[1,:], '-', color = colors['blue3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'dt = {:4.2f}ns; soen_sim (error = {:4.2e})'.format(dt_vec[0]*1e9,error__drive__1))   
+    axs[0].plot(actual_data__drive__2[0,:]*1e6,_pf*actual_data__drive__2[1,:], '-', color = colors['green3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'dt = {:4.2f}ns; soen_sim (error = {:4.2e})'.format(dt_vec[1]*1e9,error__drive__2))   
+    # axs[0].plot(target_data__drive[0,0:tf_ind]*1e6,target_data__drive[1,0:tf_ind]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
+    axs[0].plot(target_data__drive[0,0:tf_ind]*1e6,_pf*target_data__drive[1,0:tf_ind], '-', color = colors['red3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
+    # axs[0].set_xlabel(r'Time [$\mu$s]')
+    # axs[0].set_ylabel(r'$I_{flux}$ [$\mu$A]')
+    axs[0].set_ylim([-0.02,0.52])
+    axs[0].set_ylabel(r'$\Phi_{a}/\Phi_0$')
+    axs[0].legend()
+    # axs[0].set_title('Drive signal input to DR loop (error = {:7.5e})'.format(error__drive))
+     
+    axs[1].plot(actual_data__1[0,:]*1e6,actual_data__1[1,:]*1e6, '-', color = colors['blue3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim (dt = {:4.2f}ns; error = {:4.2e})'.format(dt_vec[0]*1e9,error__signal__1))   
+    axs[1].plot(actual_data__2[0,:]*1e6,actual_data__2[1,:]*1e6, '-', color = colors['green3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'soen_sim (dt = {:4.2f}ns; error = {:4.2e})'.format(dt_vec[1]*1e9,error__signal__2))   
+    axs[1].plot(target_data[0,0:tf_ind]*1e6,target_data[1,0:tf_ind]*1e6, '-', color = colors['red3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = 'WRSpice')             
+    axs[1].set_xlabel(r'Time [$\mu$s]')
+    axs[1].set_ylabel(r'$I_{di}$ [$\mu$A]')
+    # axs[1].set_ylim([0,8])
+    axs[1].set_xlim([0,0.1])
+    axs[1].legend()
+    # axs[1].set_title('Output signal in the DI loop (error = {:7.5e})'.format(error__signal))
+    
+    plt.show()
+    # fig.savefig('figures/'+save_str+'.png') 
+
+    return
+
 
 
 def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive,target_data,actual_data,wr_data_file_name,error_drive,error__si):
@@ -1662,10 +1757,13 @@ def plot_syn_rate_array(**kwargs):
     for t in ax.yaxis.get_major_ticks(): t.label.set_fontsize(24)
     for t in ax.zaxis.get_major_ticks(): t.label.set_fontsize(24)
     
-    ax.set_xlabel(r'$I_{si}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_xlim3d(I_si_min-1,I_si_max+1)    
-    ax.set_ylabel('$I_{drive}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(I_drive_min-1,I_drive_max+1)
+    ax.set_xlabel(r'$I_{si}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30)
+    ax.set_xlim3d(I_si_min-1,I_si_max+1)    
+    ax.set_ylabel('$I_{drive}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30)
+    ax.set_ylim3d(I_drive_min-1,I_drive_max+1)
     ax.zaxis.set_rotate_label(False)  # disable automatic rotation
-    ax.set_zlabel(r'$r_{j_{di}}$ [kilofluxons per $\mu$s]',fontsize=24, fontweight='bold', rotation=96,labelpad=10) ; ax.set_zlim3d(rate_min-1,rate_max+1)
+    ax.set_zlabel(r'$r_{j_{di}}$ [kilofluxons per $\mu$s]',fontsize=24, fontweight='bold', rotation=96,labelpad=10)
+    ax.set_zlim3d(rate_min-1,rate_max+1)
     ax.yaxis._axinfo['label']['space_factor'] = 30.0
     
     ax.view_init(45,-30)
@@ -1740,6 +1838,58 @@ def plot__syn__error_vs_dt(dt_vec,error_array,error_drive_array,I_de_vec,L_di_ve
     
     return
 
+
+def plot__syn__error_vs_dt__no_drive(dt_vec,error_array,error_drive_array,I_de_vec,L_di_vec,tau_di_vec):
+       
+    color_list = ['blue3','red3','green3','yellow3','bluegrey3']
+    for ii in range(len(I_de_vec)):
+        for jj in range(len(L_di_vec)):
+            
+            fig = plt.figure()
+            ax = fig.gca()
+            for kk in range(len(tau_di_vec)):
+                
+                ax.loglog(dt_vec*1e9,error_array[ii,jj,kk,:], '-', color = colors[color_list[kk]], markersize = pp['nominal_markersize'], label = 'tau_di = {:4.0f}ns'.format(tau_di_vec[kk]*1e9)  )    
+            
+            ax.set_xlabel(r'dt [ns]')
+            ax.set_ylabel(r'Signal $Chi^2$ error')
+            ax.set_title('I_de = {:5.2f} uA, L_di = {:7.2f} nH'.format(I_de_vec[ii]*1e6,L_di_vec[jj]*1e9))
+            ax.legend()   
+            ax.set_ylim([1e-6,1])
+
+            plt.show()
+    
+    return
+
+
+def plot__dend__error_vs_dt(dt_vec,error_array,error_drive_array,L_di_vec,tau_di_vec,title_str):
+       
+    # color_list = ['blue1','blue3','red1','red3','green1','green3']
+    color_list = [['blue1','blue3','blue5'],['red1','red3','red5'],['green1','green3','green5']]
+    fig, ax = plt.subplots(nrows = 1, ncols = 2)
+    for jj in range(len(L_di_vec)):        
+        for kk in range(len(tau_di_vec)):
+        
+            ax[0].loglog(dt_vec*1e9,error_drive_array[jj,kk,:], '-o', color = colors[color_list[jj][kk]], markersize = pp['nominal_markersize'], label = 'L_di = {:7.2f}nH, tau_di = {:4.0f}ns'.format(L_di_vec[jj]*1e9,tau_di_vec[kk]*1e9) )    
+            ax[1].loglog(dt_vec*1e9,error_array[jj,kk,:], '-o', color = colors[color_list[jj][kk]], markersize = pp['nominal_markersize'], label = 'L_di = {:7.2f}nH, tau_di = {:4.0f}ns'.format(L_di_vec[jj]*1e9,tau_di_vec[kk]*1e9)  )    
+    
+    ax[0].set_xlabel(r'dt [ns]')
+    ax[0].set_ylabel(r'Drive $Chi^2$ error')
+    ax[0].set_title(title_str)
+    ax[0].legend()        
+    # plt.sca(ax[0])
+    # plt.yticks([1e-7,1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1e0])
+    
+    ax[1].set_xlabel(r'dt [ns]')
+    ax[1].set_ylabel(r'Signal $Chi^2$ error')
+    ax[1].legend()       
+        # plt.sca(ax[1])
+        # plt.yticks([1e-7,1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1e0])
+    
+        # grid(True,which='both')
+    plt.show()
+    
+    return
 
 def plot_spd_response(**kwargs): # (time_vec,time_vec_reduced,I_sy_list,I_spd_array,I_spd_array_reduced):
 
@@ -1973,9 +2123,11 @@ def plot_dend_rate_array(**kwargs):
     for t in ax.yaxis.get_major_ticks(): t.label.set_fontsize(24)
     for t in ax.zaxis.get_major_ticks(): t.label.set_fontsize(24)
     
-    ax.set_xlabel(r'$I_{di}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_xlim3d(I_di_min-1,I_di_max+1)
+    ax.set_xlabel(r'$I_{di}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30)
+    ax.set_xlim3d(I_di_min-1,I_di_max+1)
     
-    ax.set_ylabel('Idrive [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(I_drive_min-1,I_drive_max+1)
+    ax.set_ylabel('Idrive [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30)
+    ax.set_ylim3d(I_drive_min-1,I_drive_max+1)
     # ax.set_ylabel('$\Phi_{in}$ [$\mu$A pH]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(influx_min-1,influx_max+1)
     ax.zaxis.set_rotate_label(False)  # disable automatic rotation
     ax.set_zlabel(r'$r_{j_{di}}$ [kilofluxons per $\mu$s]',fontsize=24, fontweight='bold', rotation=96,labelpad=10) ; ax.set_zlim3d(rate_min-1,rate_max+1)
@@ -2037,7 +2189,9 @@ def plot_dend_rate_array__norm_to_phi0(**kwargs):
             X3 = np.insert(I_di_array[ii][:],0,0)
             Z3 = influx_list__reduced[ii]
             Y3 = np.insert(master_rate_array[ii][:]*1e-3,0,0)
-            verts = [(X3[jj],Y3[jj]-0.5) for jj in range(len(X3))]
+            
+            # verts = [(X3[jj],Y3[jj]-0.5) for jj in range(len(X3))]
+            verts = [(X3[jj],Y3[jj]) for jj in range(len(X3))]
             ax.add_collection3d(PolyCollection([verts],color=cmap(1-ii/num_drives),alpha=0.3),zs=Z3, zdir='y')
             ax.plot(X3,Y3,Z3,linewidth=4, color=cmap(1-ii/num_drives), zdir='y',alpha=1)
             
@@ -2061,11 +2215,18 @@ def plot_dend_rate_array__norm_to_phi0(**kwargs):
     for t in ax.yaxis.get_major_ticks(): t.label.set_fontsize(24)
     for t in ax.zaxis.get_major_ticks(): t.label.set_fontsize(24)
     
-    ax.set_xlabel(r'$I_{di}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_xlim3d(I_di_min-1,I_di_max+1)
+    ax.set_xlabel(r'$I_{di}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30)
+    ax.set_xlim3d(I_di_min-1,I_di_max+1)
     
-    ax.set_ylabel('$\Phi_{in}/\Phi_0$',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(influx_min-0.1,influx_max+0.1) #  [$\mu$A pH]
+    # ax.set_ylabel('$\Phi_{in}/\Phi_0$',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(influx_min-0.05,influx_max+0.05) #  [$\mu$A pH]
+    ax.set_ylabel('$\Phi_{in}/\Phi_0$',fontsize=24, fontweight='bold', labelpad=30)
+    ax.set_ylim3d(0,1/2) #  [$\mu$A pH]
+    
     ax.zaxis.set_rotate_label(False)  # disable automatic rotation
-    ax.set_zlabel(r'$r_{j_{di}}$ [kilofluxons per $\mu$s]',fontsize=24, fontweight='bold', rotation=96,labelpad=10) ; ax.set_zlim3d(rate_min-1,rate_max+1)
+    ax.set_zlabel(r'$R_{fq}$ [fluxons per ns]',fontsize=24, fontweight='bold', rotation=96,labelpad=10)
+    ax.set_zlim3d(rate_min-1,rate_max+1)
+    # ax.set_zlim3d(0,45)
+    
     ax.yaxis._axinfo['label']['space_factor'] = 30.0
     
     ax.view_init(45,-30)

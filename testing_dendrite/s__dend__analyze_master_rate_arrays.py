@@ -17,26 +17,35 @@ num_jjs_list = [2,4]
 L_left = 20
 L_right = 20
 
-do__3d_rate_arrays = True
+do__3d_rate_arrays = False
 do__squid_response = True
+do__saturation = True
+do__threshold = True
 
+if do__threshold == True:
+    fig_th = plt.figure()
+    fig_th.suptitle('DR loop flux threshold')
 for num_jjs in num_jjs_list:
 
-    if num_jjs == 2:
-        dI_de = 2
-        I_de_vec = np.arange(70,80+dI_de,dI_de)
-        num_I_de = len(I_de_vec)
-    if num_jjs == 4:
-        dI_de = 2
-        I_de_vec = np.arange(70,80+dI_de,dI_de)
-        num_I_de = len(I_de_vec)
+    if num_jjs == 2:       
+        dI_de = 1
+        I_de_0 = 52
+        I_de_f = 80
     
-    fig_sq = plt.figure()
-    fig_sq.suptitle('num_jjs = {}'.format(num_jjs)) 
-    fig_sat = plt.figure()       
-    fig_sat.suptitle('num_jjs = {}'.format(num_jjs)) 
-    fig_th = plt.figure()
-    fig_th.suptitle('num_jjs = {}'.format(num_jjs)) 
+    if num_jjs == 4:
+        dI_de = 1
+        I_de_0 = 56
+        I_de_f = 81
+    
+    I_de_vec = np.arange(I_de_0,I_de_f+dI_de,dI_de)
+    num_I_de = len(I_de_vec)
+    
+    if do__squid_response == True:
+        fig_sq = plt.figure()
+        fig_sq.suptitle('squid response; num_jjs = {}'.format(num_jjs))
+    if do__saturation == True:
+        fig_sat = plt.figure()       
+        fig_sat.suptitle('DI loop saturation; num_jjs = {}'.format(num_jjs))     
     Phi_th_vec = np.zeros([len(I_de_vec)])
     for ii in range(len(I_de_vec)):
         I_de = I_de_vec[ii]        
@@ -65,38 +74,43 @@ for num_jjs in num_jjs_list:
             influx_list__2.insert(0,0)
              
             ax_sq = fig_sq.gca()    
-        ax_sq.plot(1e-18*np.asarray(influx_list__2)/p['Phi0'],np.asarray(rate_vec__temp)*1e-3, '-o', label = 'Ide = {:2.0f}uA'.format(I_de)) # , label = legend_text
+            ax_sq.plot(1e-18*np.asarray(influx_list__2)/p['Phi0'],np.asarray(rate_vec__temp)*1e-3, '-o', label = 'Ide = {:2.0f}uA'.format(I_de)) # , label = legend_text
 
         # I_di_sat versus applied flux
-        I_di_sat_vec = np.zeros([len(influx_list)])
-        for qq in range(len(influx_list)):
-            I_di_sat_vec[qq] = I_di_array[qq][-1]
-         
-        ax_sat = fig_sat.gca()    
-        ax_sat.plot(1e-18*np.asarray(influx_list)/p['Phi0'],I_di_sat_vec, '-o', label = 'Ide = {:2.0f}uA'.format(I_de)) # , label = legend_text
+        if do__saturation == True:
+            I_di_sat_vec = np.zeros([len(influx_list)])
+            for qq in range(len(influx_list)):
+                I_di_sat_vec[qq] = I_di_array[qq][-1]
+             
+            ax_sat = fig_sat.gca()    
+            ax_sat.plot(1e-18*np.asarray(influx_list)/p['Phi0'],I_di_sat_vec, '-o', label = 'Ide = {:2.0f}uA'.format(I_de)) # , label = legend_text
                     
         # Phi_th versus I_de    
-        Phi_th_vec[ii] = influx_list[1]
-        ax_th = fig_th.gca()    
-        ax_th.plot(I_de_vec,1e-18*np.asarray(Phi_th_vec)/p['Phi0'], '-o', label = 'num_jjs = {:1d}'.format(num_jjs)) # , label = legend_text
+        if do__threshold == True:
+            Phi_th_vec[ii] = influx_list[1]
     
-    # squid response curves of rate vs applied flux for I_di = 0         
-    ax_sq.set_xlim([0,1/2])   
-    ax_sq.set_xlabel(r'$\Phi_a/\Phi_0$')
-    ax_sq.set_ylabel(r'$R_{fq}$ [fluxons per ns]')
-    ax_sq.legend()
-    plt.show()
+    # squid response curves of rate vs applied flux for I_di = 0  
+    if do__squid_response == True:       
+        ax_sq.set_xlim([0,1/2])   
+        ax_sq.set_xlabel(r'$\Phi_a/\Phi_0$')
+        ax_sq.set_ylabel(r'$R_{fq}$ [fluxons per ns]')
+        ax_sq.legend()
+        plt.show()
          
     # I_di_sat versus applied flux
-    ax_sat.set_xlim([0,1/2])   
-    ax_sat.set_xlabel(r'$\Phi_a/\Phi_0$')
-    ax_sat.set_ylabel(r'$I^{di}_{sat}$ [$\mu$A]')
-    ax_sat.legend()
-    plt.show()
+    if do__saturation == True:
+        ax_sat.set_xlim([0,1/2])   
+        ax_sat.set_xlabel(r'$\Phi_a/\Phi_0$')
+        ax_sat.set_ylabel(r'$I^{di}_{sat}$ [$\mu$A]')
+        ax_sat.legend()
+        plt.show()
              
-    # Phi_th versus I_de     
-    ax_th.set_xlabel(r'$I^{de}$ [$\mu$A]')
-    ax_th.set_ylabel(r'$\Phi^{dr}_{th}/\Phi_0$')
-    ax_th.legend()
-    plt.show()
+    # Phi_th versus I_de  
+    if do__threshold == True:
+        ax_th = fig_th.gca()    
+        ax_th.plot(I_de_vec,1e-18*np.asarray(Phi_th_vec)/p['Phi0'], '-o', label = 'num_jjs = {:d}'.format(num_jjs)) # , label = legend_text
+        ax_th.set_xlabel(r'$I^{de}$ [$\mu$A]')
+        ax_th.set_ylabel(r'$\Phi^{dr}_{th}/\Phi_0$')
+        ax_th.legend()
+        plt.show()
         

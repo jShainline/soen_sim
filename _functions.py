@@ -270,7 +270,7 @@ def neuron_time_stepper(neuron_object):
             n.dendrites[de_name].influx_vec[ii] = syn_flux+dend_flux+dir_flux
             ind1 = (np.abs(n.dendrites[de_name].influx_list__dend-n.dendrites[de_name].influx_vec[ii])).argmin()                             
     
-            dendrite_interpolation = False
+            dendrite_interpolation = True
             if dendrite_interpolation == False:
                 
                 # no interpolation 
@@ -462,7 +462,7 @@ def dendritic_drive__piecewise_linear(time_vec,pwl):
         input_signal__dd[t1_ind] = pwl[ii][1]
         for jj in range(len(partial_time_vec)-1):
             input_signal__dd[t1_ind+jj+1] = input_signal__dd[t1_ind+jj]+(partial_time_vec[jj+1]-partial_time_vec[jj])*slope
-    input_signal__dd[t2_ind:] = input_signal__dd[t2_ind]*np.ones([len(time_vec)-t2_ind])
+    input_signal__dd[t2_ind:] = pwl[-1][1]*np.ones([len(time_vec)-t2_ind])
     
     return input_signal__dd
 

@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 # from soen_sim import input_signal, synapse, dendrite, neuron
-from _plotting import plot_wr_comparison__synapse, plot__syn__error_vs_dt
+from _plotting import plot_wr_comparison__synapse, plot__syn__error_vs_dt, plot__syn__error_vs_dt__no_drive
 from _functions import read_wr_data, chi_squared_error
 from soen_sim import input_signal, synapse, neuron # dendrite, 
 
@@ -11,7 +11,8 @@ from soen_sim import input_signal, synapse, neuron # dendrite,
 #%% single pulse
 I_spd = 10e-6
 
-dt_vec = np.concatenate([np.arange(0.01e-9,0.11e-9,0.01e-9),np.arange(0.2e-9,1.1e-9,0.1e-9),np.arange(2e-9,11e-9,1e-9)]) # np.arange(2e-9,11e-9,1e-9) # 
+# dt_vec = np.concatenate([np.arange(0.01e-9,0.11e-9,0.01e-9),np.arange(0.2e-9,1.1e-9,0.1e-9),np.arange(2e-9,11e-9,1e-9)]) # np.arange(2e-9,11e-9,1e-9) # 
+dt_vec = np.logspace(np.log10(0.01e-9),np.log10(10e-9),60)
 
 num_jjs = 4
 if num_jjs == 2:
@@ -51,8 +52,7 @@ for ii in range(len(I_de_vec)):
             norm__drive = 0
             for rr in range(len(target_data[0,:])):
                 norm += np.abs( target_data[1,rr] )**2  
-                norm__drive += np.abs( target_data__drive[1,rr] )**2
-            
+                norm__drive += np.abs( target_data__drive[1,rr] )**2            
             print('done calculating chi^2 norm.')
     
             for qq in range(len(dt_vec)):
@@ -125,4 +125,7 @@ for ii in range(len(I_de_vec)):
                 print('done calculating chi^2s.')
                 
 #%%
-plot__syn__error_vs_dt(np.asarray(dt_vec),error_mat,error_drive_mat,I_de_vec,L_di_vec,tau_di_vec)
+# plot__syn__error_vs_dt(np.asarray(dt_vec),error_mat,error_drive_mat,I_de_vec,L_di_vec,tau_di_vec)
+plot__syn__error_vs_dt__no_drive(np.asarray(dt_vec),error_mat,error_drive_mat,I_de_vec,L_di_vec,tau_di_vec)
+
+# plt.close('all')
