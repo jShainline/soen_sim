@@ -17,10 +17,10 @@ num_jjs_list = [2,4]
 L_left = 20
 L_right = 20
 
-do__3d_rate_arrays = False
-do__squid_response = True
-do__saturation = True
-do__threshold = True
+do__3d_rate_arrays = True
+do__squid_response = False
+do__saturation = False
+do__threshold = False
 
 if do__threshold == True:
     fig_th = plt.figure()
@@ -35,14 +35,14 @@ for num_jjs in num_jjs_list:
     if num_jjs == 4:
         dI_de = 1
         I_de_0 = 56
-        I_de_f = 81
+        I_de_f = 90
     
     I_de_vec = np.arange(I_de_0,I_de_f+dI_de,dI_de)
     num_I_de = len(I_de_vec)
     
     if do__squid_response == True:
         fig_sq = plt.figure()
-        fig_sq.suptitle('squid response; num_jjs = {}'.format(num_jjs))
+        # fig_sq.suptitle('squid response; num_jjs = {}'.format(num_jjs))
     if do__saturation == True:
         fig_sat = plt.figure()       
         fig_sat.suptitle('DI loop saturation; num_jjs = {}'.format(num_jjs))     
@@ -74,7 +74,7 @@ for num_jjs in num_jjs_list:
             influx_list__2.insert(0,0)
              
             ax_sq = fig_sq.gca()    
-            ax_sq.plot(1e-18*np.asarray(influx_list__2)/p['Phi0'],np.asarray(rate_vec__temp)*1e-3, '-o', label = 'Ide = {:2.0f}uA'.format(I_de)) # , label = legend_text
+            ax_sq.plot(1e-18*np.asarray(influx_list__2)/p['Phi0'],np.asarray(rate_vec__temp)*1e-3, '-', label = 'Ide = {:2.0f}uA'.format(I_de)) # , label = legend_text
 
         # I_di_sat versus applied flux
         if do__saturation == True:
@@ -94,7 +94,11 @@ for num_jjs in num_jjs_list:
         ax_sq.set_xlim([0,1/2])   
         ax_sq.set_xlabel(r'$\Phi_a/\Phi_0$')
         ax_sq.set_ylabel(r'$R_{fq}$ [fluxons per ns]')
-        ax_sq.legend()
+        # ax_sq.legend()
+        if num_jjs == 2:
+            ax_sq.set_ylim([0,65])
+        if num_jjs == 4:
+            ax_sq.set_ylim([0,65])
         plt.show()
          
     # I_di_sat versus applied flux
@@ -102,7 +106,7 @@ for num_jjs in num_jjs_list:
         ax_sat.set_xlim([0,1/2])   
         ax_sat.set_xlabel(r'$\Phi_a/\Phi_0$')
         ax_sat.set_ylabel(r'$I^{di}_{sat}$ [$\mu$A]')
-        ax_sat.legend()
+        # ax_sat.legend()
         plt.show()
              
     # Phi_th versus I_de  
@@ -111,6 +115,6 @@ for num_jjs in num_jjs_list:
         ax_th.plot(I_de_vec,1e-18*np.asarray(Phi_th_vec)/p['Phi0'], '-o', label = 'num_jjs = {:d}'.format(num_jjs)) # , label = legend_text
         ax_th.set_xlabel(r'$I^{de}$ [$\mu$A]')
         ax_th.set_ylabel(r'$\Phi^{dr}_{th}/\Phi_0$')
-        ax_th.legend()
+        # ax_th.legend()
         plt.show()
         

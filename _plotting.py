@@ -16,11 +16,11 @@ colors = color_dictionary()
 
 def plot_params():
     
-    plot_type = '8.6__for_pubs' # '17.2__for_pubs' # 'large' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' '8.6__for_pubs'#
+    plot_type = '8_6__for_pubs' #'8_6__for_pubs'# '17_2__for_pubs' # 'large' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' 
     
     pp = dict()
         
-    if plot_type == '17.2__for_pubs':
+    if plot_type == '17_2__for_pubs':
         
         pp['title_font_size'] = 8
         pp['subtitle_font_size'] = 8
@@ -48,6 +48,36 @@ def plot_params():
         pp['ymargin'] = 0.05 # 0.05
         
         pp['linewidth'] = 2
+        pp['markersize'] = 2        
+            
+    if plot_type == '8_6__for_pubs':
+        
+        pp['title_font_size'] = 4
+        pp['subtitle_font_size'] = 4
+        pp['axes_labels_font_size'] = 10
+        pp['axes_labels_pad'] = 0 # 4
+        pp['tick_labels_font_size'] = 10
+        pp['legend_font_size'] = 6
+        pp['nominal_linewidth'] = 0.75
+        pp['fine_linewidth'] = 0.5
+        pp['bold_linewidth'] = 2
+        pp['nominal_markersize'] = 2
+        pp['big_markersize'] = 3
+        tn = 1.1*8.6/2.54
+        pp['fig_size'] = (tn,tn/1.618)
+        # pp['fig_size'] = (tn,tn/1.2)
+        pp['axes_linewidth'] = 0.75
+        
+        pp['major_tick_width'] = 0.75
+        pp['major_tick_length'] = 3
+        pp['minor_tick_width'] = 0.25
+        pp['minor_tick_length'] = 2
+        
+        pp['xmargin'] = 0 # 0.05 # space between traces and axes
+        pp['ymargin'] = 0.05 # 0.05 
+        
+        pp['linewidth'] = 1
+        pp['markersize'] = 1.5
         
     if plot_type == 'four_rows':
         
@@ -76,6 +106,7 @@ def plot_params():
         pp['ymargin'] = 0.05 # 0.05
         
         pp['linewidth'] = 1
+        pp['markersize'] = 2
         
     if plot_type == 'large':
         
@@ -105,6 +136,7 @@ def plot_params():
         pp['ymargin'] = 0.05 # 0.05
         
         pp['linewidth'] = 2
+        pp['markersize'] = 4
         
     if plot_type == 'two_rows':
         
@@ -133,6 +165,7 @@ def plot_params():
         pp['ymargin'] = 0.05 # 0.05
         
         pp['linewidth'] = 1
+        pp['markersize'] = 2
         
     if plot_type == 'single_frame':
         
@@ -161,34 +194,8 @@ def plot_params():
         pp['ymargin'] = 0.05 # 0.05
         
         pp['linewidth'] = 1
-        
-    if plot_type == '8.6__for_pubs':
-        
-        pp['title_font_size'] = 4
-        pp['subtitle_font_size'] = 4
-        pp['axes_labels_font_size'] = 10
-        pp['axes_labels_pad'] = 0 # 4
-        pp['tick_labels_font_size'] = 10
-        pp['legend_font_size'] = 6
-        pp['nominal_linewidth'] = 0.75
-        pp['fine_linewidth'] = 0.5
-        pp['bold_linewidth'] = 2
-        pp['nominal_markersize'] = 2
-        pp['big_markersize'] = 3
-        tn = 1.1*8.6/2.54
-        pp['fig_size'] = (tn,tn/1.618)
-        # pp['fig_size'] = (tn,tn/1.2)
-        pp['axes_linewidth'] = 0.75
-        
-        pp['major_tick_width'] = 0.75
-        pp['major_tick_length'] = 3
-        pp['minor_tick_width'] = 0.25
-        pp['minor_tick_length'] = 2
-        
-        pp['xmargin'] = 0 # 0.05 # space between traces and axes
-        pp['ymargin'] = 0.05 # 0.05 
-        
-        pp['linewidth'] = 1
+        pp['markersize'] = 2
+
      
     if plot_type == 'three_rows':
         
@@ -217,6 +224,7 @@ def plot_params():
         pp['ymargin'] = 0.05
         
         pp['linewidth'] = 1
+        pp['markersize'] = 2
      
     if plot_type == 'four_tiles':
         
@@ -245,13 +253,14 @@ def plot_params():
         pp['ymargin'] = 0.05
         
         pp['linewidth'] = 1
+        pp['markersize'] = 2
         
     return pp 
 
 pp = plot_params()
 
 plt.rcParams['font.family'] = ['sans-serif']
-plt.rcParams['font.sans-serif'] = 'Verdana'#'Computer Modern Sans Serif'
+plt.rcParams['font.sans-serif'] = ['Computer Modern Sans serif']#'Computer Modern Sans Serif'
 
 plt.rcParams['figure.figsize'] = pp['fig_size']
 plt.rcParams['figure.titlesize'] = pp['title_font_size']
@@ -296,6 +305,7 @@ plt.rcParams['legend.fontsize'] = pp['legend_font_size']
 plt.rcParams['legend.loc'] = 'best'
 
 plt.rcParams['lines.linewidth'] = pp['linewidth']
+plt.rcParams['lines.markersize'] = pp['markersize']
 
 plt.rcParams['savefig.dpi'] = 300
 plt.rcParams['savefig.format'] = 'pdf'
@@ -2210,24 +2220,25 @@ def plot_dend_rate_array__norm_to_phi0(**kwargs):
             if np.max(master_rate_array[ii][:]*1e-3) > rate_max:
                 rate_max = np.max(master_rate_array[ii][:]*1e-3)
            
-    ax.set_xticks([0, 10, 20])
-    for t in ax.xaxis.get_major_ticks(): t.label.set_fontsize(24)
-    for t in ax.yaxis.get_major_ticks(): t.label.set_fontsize(24)
-    for t in ax.zaxis.get_major_ticks(): t.label.set_fontsize(24)
+    ax.set_xticks([0,10,20,30])
+    for t in ax.xaxis.get_major_ticks(): t.label.set_fontsize(8)
+    for t in ax.yaxis.get_major_ticks(): t.label.set_fontsize(8)
+    for t in ax.zaxis.get_major_ticks(): t.label.set_fontsize(8)
     
-    ax.set_xlabel(r'$I_{di}$ [$\mu$A]',fontsize=24, fontweight='bold', labelpad=30)
-    ax.set_xlim3d(I_di_min-1,I_di_max+1)
+    ax.set_xlabel(r'$I_{di}$ [$\mu$A]',fontsize=8, fontweight='bold', labelpad=2)
+    # ax.set_xlim3d(I_di_min-1,I_di_max+1)
+    ax.set_xlim3d(0,35)
     
     # ax.set_ylabel('$\Phi_{in}/\Phi_0$',fontsize=24, fontweight='bold', labelpad=30) ; ax.set_ylim3d(influx_min-0.05,influx_max+0.05) #  [$\mu$A pH]
-    ax.set_ylabel('$\Phi_{in}/\Phi_0$',fontsize=24, fontweight='bold', labelpad=30)
+    ax.set_ylabel('$\Phi_{in}/\Phi_0$',fontsize=8, fontweight='bold', labelpad=2)
     ax.set_ylim3d(0,1/2) #  [$\mu$A pH]
     
     ax.zaxis.set_rotate_label(False)  # disable automatic rotation
-    ax.set_zlabel(r'$R_{fq}$ [fluxons per ns]',fontsize=24, fontweight='bold', rotation=96,labelpad=10)
-    ax.set_zlim3d(rate_min-1,rate_max+1)
-    # ax.set_zlim3d(0,45)
+    ax.set_zlabel(r'$R_{fq}$ [fluxons per ns]',fontsize=8, fontweight='bold', rotation=96,labelpad=2)
+    # ax.set_zlim3d(rate_min-1,rate_max+1)
+    ax.set_zlim3d(0,65)
     
-    ax.yaxis._axinfo['label']['space_factor'] = 30.0
+    ax.yaxis._axinfo['label']['space_factor'] = 3.0
     
     ax.view_init(45,-30)
     
