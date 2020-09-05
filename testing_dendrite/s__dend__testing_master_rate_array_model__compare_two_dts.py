@@ -107,7 +107,6 @@ for kk in range(len(tau_di_vec)):
 
 dt_vec = [100e-12,1e-9]
 
-num_jjs = 4
 L_di_vec = np.asarray([77.5,775,7750])*1e-9
 tau_di_vec = np.asarray([10,100,1000])*1e-9 
 

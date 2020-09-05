@@ -11,10 +11,10 @@ from soen_sim import input_signal, synapse, neuron # dendrite,
 #%% single pulse
 I_spd = 10e-6
 
-# dt_vec = np.concatenate([np.arange(0.01e-9,0.11e-9,0.01e-9),np.arange(0.2e-9,1.1e-9,0.1e-9),np.arange(2e-9,11e-9,1e-9)]) # np.arange(2e-9,11e-9,1e-9) # 
-dt_vec = np.logspace(np.log10(0.01e-9),np.log10(10e-9),60)
+dt_vec = np.concatenate([np.arange(0.01e-9,0.11e-9,0.01e-9),np.arange(0.2e-9,1.1e-9,0.1e-9),np.arange(2e-9,11e-9,1e-9)]) # np.arange(2e-9,11e-9,1e-9) # 
+# dt_vec = np.logspace(np.log10(0.01e-9),np.log10(10e-9),60)
 
-num_jjs = 4
+num_jjs = 2
 if num_jjs == 2:
     I_de_vec = np.asarray([8.13,12.91])*1e-6
 elif num_jjs == 4:

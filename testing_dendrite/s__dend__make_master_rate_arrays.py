@@ -17,7 +17,7 @@ plt.close('all')
 
 #%% set case
 
-num_jjs = 4 # 2 or 4
+num_jjs = 2 # 2 or 4
 
 
 #%% options
@@ -34,14 +34,14 @@ if num_jjs == 2:
 
     # dendritic firing junction bias current
     dI_de = 1
-    I_de_0 = 50
+    I_de_0 = 52
     I_de_f = 80
 
 elif num_jjs == 4:
     
     # dendritic firing junction bias current
     dI_de = 1
-    I_de_0 = 50
+    I_de_0 = 56
     I_de_f = 90
     
 I_de_list = np.arange(I_de_0,I_de_f+dI_de,dI_de)
@@ -113,7 +113,7 @@ if method == 'j_di_phase' or method == 'I_di':
     min_peak_height = 100e-6 # 182e-6 # units of volts
     min_peak_distance = 10 # 175 # units of samples
     if num_jjs == 2:
-        downsample_factor = 300 # dt = 1ps
+        downsample_factor = 2000 # 300 # dt = 1ps
         window_size = 11 # samples/time steps for savitzky-golay filter (applied after downsample)
     elif num_jjs == 4:
         downsample_factor = 2000 # dt = 1ps
@@ -309,45 +309,3 @@ if run_all == True:
             print('\n\nsaving session data ...\n\n')
             # save_session_data(data_array,save_string)
             save_session_data(data_array,save_string+'.soen',False)
-
-
-#%% just plot
-if 1 == 1:
-    
-    num_jjs = 4
-    L_left = 20
-    L_right = 20
-    I_de = 74
-    
-    file_name = 'master_dnd_rate_array_{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}.soen'.format(num_jjs,L_left,L_right,I_de)
-    # plot_dend_rate_array(file_name = file_name)
-    plot_dend_rate_array__norm_to_phi0(file_name = file_name)
-            
-    # plt.close('all')
-    # for pp in range(num_L):
-    #     for qq in range(num_I_de):
-            
-    #         file_name = 'master_dnd_rate_array_{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}.soen'.format(num_jjs,L_left_list[pp],L_right_list[pp],I_de_list[qq])
-    #         plot_dend_rate_array(file_name = file_name)
-            # plot_dend_rate_array__norm_to_phi0(file_name = file_name)
-
-        
-#%% debugging
-if 1 == 2:
-
-    L_left = 10
-    L_right = 20
-    I_de = 72
-    file_name = 'master_dnd_rate_array_{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}.soen'.format(num_jjs,L_left+10,L_right,I_de)
-    with open('../_circuit_data/'+file_name, 'rb') as data_file:         
-        data_array = pickle.load(data_file)
-        # data_array = load_session_data(kwargs['file_name'])
-        rate_array = data_array['rate_array']
-        influx_list = data_array['influx_list']
-        I_di_array = data_array['I_di_array']
-            
-    I_di = 0
-    ind1 = (np.abs(np.asarray(influx_list)-1000)).argmin()
-    ind2 = (np.abs(I_di_array[ind1]-I_di)).argmin()        
-    rate = rate_array[ind1][ind2]                  
-    print('ind1 = {}; ind2 = {}; rate = {}'.format(ind1,ind2,rate))

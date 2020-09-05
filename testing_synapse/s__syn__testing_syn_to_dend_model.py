@@ -13,9 +13,9 @@ I_spd = 10e-6
 dt = 0.01e-9
 spike_times = [5e-9]
 
-num_jjs = 4
+num_jjs = 2
 if num_jjs == 2:
-    I_de_vec = np.asarray([8.13,12.91])*1e-6
+    I_de_vec = np.asarray([70])*1e-6
 elif num_jjs == 4:
     I_de_vec = np.asarray([70])*1e-6
 L_di_vec = np.asarray([7.75,77.5,775,7750])*1e-9 # ,775,7750

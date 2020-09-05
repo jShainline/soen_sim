@@ -13,7 +13,7 @@ plt.close('all')
 
 #%%
 
-num_jjs_list = [2,4]
+num_jjs_list = [2] # [2,4]
 L_left = 20
 L_right = 20
 
@@ -28,14 +28,20 @@ if do__threshold == True:
 for num_jjs in num_jjs_list:
 
     if num_jjs == 2:       
-        dI_de = 1
-        I_de_0 = 52
-        I_de_f = 80
+        # dI_de = 1
+        # I_de_0 = 52
+        # I_de_f = 80
+        dI_de = 5
+        I_de_0 = 63
+        I_de_f = 78
     
     if num_jjs == 4:
-        dI_de = 1
-        I_de_0 = 56
-        I_de_f = 90
+        # dI_de = 1
+        # I_de_0 = 56
+        # I_de_f = 90
+        dI_de = 5
+        I_de_0 = 63
+        I_de_f = 78
     
     I_de_vec = np.arange(I_de_0,I_de_f+dI_de,dI_de)
     num_I_de = len(I_de_vec)
