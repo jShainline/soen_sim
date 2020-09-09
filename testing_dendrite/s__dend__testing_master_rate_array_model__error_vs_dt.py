@@ -6,13 +6,13 @@ from _functions import read_wr_data
 from soen_sim import input_signal, dendrite, neuron #synapse, 
 
 # plt.close('all')
-
+# 
 #%%
 
-num_jjs = 2
+num_jjs = 4
 # dt_vec = np.concatenate([np.arange(0.01e-9,0.11e-9,0.005e-9),np.arange(0.2e-9,1.1e-9,0.05e-9),np.arange(2e-9,11e-9,.05e-9)]) # np.arange(0.2e-9,1.1e-9,0.1e-9) # 
 
-dt_vec = np.logspace(np.log10(0.01e-9),np.log10(10e-9),60)
+dt_vec = np.logspace(np.log10(0.01e-9),np.log10(10e-9),59)
 
 #%% linear ramp
 
@@ -171,9 +171,6 @@ for jj in range(len(L_di_vec__sq_pls_seq)):
                                     integration_loop_self_inductance = L_di, integration_loop_output_inductance = 0e-12,
                                     integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_di)
     
-            time_params = dict()
-            time_params['dt'] = dt
-            time_params['tf'] = tf
             neuron_1 = neuron('dummy_neuron', input_dendritic_connections = ['dendrite_under_test'], 
                               circuit_inductances = [0e-12,0e-12,200e-12,77.5e-12],
                               input_dendritic_inductances = [[20e-12,1]], 
@@ -185,7 +182,7 @@ for jj in range(len(L_di_vec__sq_pls_seq)):
                               refractory_bias_currents = [74e-6,36e-6,35e-6],
                               refractory_receiving_input_inductance = [20e-12,1],
                               neuronal_receiving_input_refractory_inductance = [20e-12,1],
-                              time_params = time_params)           
+                              time_params = dict([['dt',dt],['tf',tf]]))           
             
             neuron_1.run_sim()
                                     
@@ -213,9 +210,11 @@ for jj in range(len(L_di_vec__sq_pls_seq)):
             print('done calculating chi^2s.')    
 
 #%%
-
+# plt.close('all')
 plot__dend__error_vs_dt(np.asarray(dt_vec),error_mat__lin_ramp,error_drive_mat__lin_ramp,L_di_vec__lin_ramp,tau_di_vec__lin_ramp,'num_jjs = {:d}, lin_ramp'.format(num_jjs))
 plot__dend__error_vs_dt(np.asarray(dt_vec),error_mat__sq_pls_seq,error_drive_mat__sq_pls_seq,L_di_vec__sq_pls_seq,tau_di_vec__sq_pls_seq,'num_jjs = {:d}, sq_pls_seq'.format(num_jjs))
+
+
 
 #%%
 

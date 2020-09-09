@@ -10,7 +10,7 @@ plt.close('all')
             
 #%% linear ramp
 
-num_jjs = 4
+num_jjs = 2
 dt_vec = [100e-12,1e-9]
 
 if num_jjs == 2:

@@ -218,7 +218,7 @@ class synapse():
         # end synaptic dendrite specification   
         
         # make synaptic dendrite
-        synapse_dendrite = dendrite('{}__d'.format(self.name),
+        synapse_dendrite = dendrite(name = '{}__d'.format(self.name),
                                    num_jjs = self.num_jjs,
                                    inhibitory_or_excitatory = self.inhibitory_or_excitatory, 
                                    circuit_inductances = self.synaptic_dendrite_circuit_inductances,
@@ -270,14 +270,12 @@ class dendrite():
         self.unique_label = 'd'+str(self.uid)
         dendrite._next_uid += 1
         
-        if len(args) > 0:
-            if type(args[0]) == str:
-                _name = args[0]
-            elif type(args[0]) == int or type(args[0]) == float:
-                _name = str(args[0])
+        # name the dendrite
+        if 'name' in kwargs:
+            self.name = kwargs['name']
         else:
-            _name = 'unnamed_dendrite'
-        self.name = _name
+            self.name = 'unnamed_dendrite__{}'.format(self.unique_label)
+        # end name 
         
         if 'num_jjs' in kwargs:
             if kwargs['num_jjs'] == 2 or kwargs['num_jjs'] == 4:
@@ -413,14 +411,21 @@ class neuron():
         # self._instances.add(weakref.ref(self))
         neuron._next_uid += 1
 
-        if len(args) > 0:
-            if type(args[0]) == str:
-                _name = args[0]
-            elif type(args[0]) == int or type(args[0]) == float:
-                _name = str(args[0])
+        # if len(args) > 0:
+        #     if type(args[0]) == str:
+        #         _name = args[0]
+        #     elif type(args[0]) == int or type(args[0]) == float:
+        #         _name = str(args[0])
+        # else:
+        #     _name = 'unnamed_neuron'
+        # self.name = _name
+        
+        # name the neuron
+        if 'name' in kwargs:
+            self.name = kwargs['name']
         else:
-            _name = 'unnamed_neuron'
-        self.name = _name
+            self.name = 'unnamed_neuron__{}'.format(self.unique_label)
+        # end name
         
         if 'num_jjs' in kwargs:
             if kwargs['num_jjs'] == 2 or kwargs['num_jjs'] == 4:
@@ -647,7 +652,7 @@ class neuron():
         temp_list_2 = self.input_dendritic_inductances
         temp_list_2.append(self.neuronal_receiving_input_refractory_inductance)
         # print('self.circuit_inductances = {}'.format(self.circuit_inductances))
-        neuron_dendrite = dendrite('{}__d'.format(self.name),
+        neuron_dendrite = dendrite(name = '{}__d'.format(self.name),
                                    num_jjs = self.num_jjs,
                                    inhibitory_or_excitatory = 'excitatory', 
                                    circuit_inductances = self.circuit_inductances,
@@ -664,7 +669,7 @@ class neuron():
                                    integration_loop_time_constant = self.integration_loop_time_constant)                
                  
         # make refractory dendrite
-        refractory_loop = dendrite('{}__r'.format(self.name),
+        refractory_loop = dendrite(name = '{}__r'.format(self.name),
                                   num_jjs = self.num_jjs,
                                   inhibitory_or_excitatory = 'inhibitory',
                                   circuit_inductances = self.refractory_loop_circuit_inductances,

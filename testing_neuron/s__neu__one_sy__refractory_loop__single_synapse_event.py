@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 import pickle
 
 # from soen_sim import input_signal, synapse, dendrite, neuron
-from _plotting import plot_neuronal_response
+from _plotting import plot_neuronal_response, plot_phase_portrait
 from _functions import read_wr_data, chi_squared_error, dendritic_drive__piecewise_linear, dendritic_drive__exp_pls_train__LR, dendritic_drive__square_pulse_train
 from soen_sim import input_signal, synapse, dendrite, neuron
 
@@ -12,13 +12,9 @@ plt.close('all')
 #%% sim params
 
 dt = 100e-12
-tf = 0.2e-6
+tf = 0.4e-6
 
-# create sim_params dictionary
-sim_params = dict()
-sim_params['dt'] = dt
-sim_params['tf'] = tf
-sim_params['synapse_model'] = 'lookup_table'
+num_jjs = 4
 
 
 #%% synapse
@@ -30,67 +26,56 @@ I_spd = 20e-6
 # tau_si = 250e-9
 
 spike_times = [5e-9]    
-I_sy = 36e-6
+I_sy = 74e-6
 L_si = 77.5e-9
 tau_si = 200e-9 # 1e-6 # 
 
 # initialize input signal
-input_1 = input_signal('in', input_temporal_form = 'arbitrary_spike_train', spike_times = spike_times)
-    
+input_1 = input_signal(name = 'in', 
+                        input_temporal_form = 'single_spike', # 'single_spike' or 'constant_rate' or 'arbitrary_spike_train'
+                        spike_times = spike_times)            
+        
 # initialize synapse
-synapse_1 = synapse('sy', num_jjs = 3, integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_si, 
-                    integration_loop_self_inductance = L_si, integration_loop_output_inductance = 200e-12, 
-                    synaptic_bias_currents = [I_spd,I_sy,36e-6,35e-6],
-                    input_signal_name = 'in', synapse_model_params = sim_params)
-
-# synapse_1.run_sim() 
-
-# actual_drive = np.vstack((synapse_1.time_vec[:],synapse_1.I_spd[:]))
-# actual_drive_array.append(actual_drive)
-# actual_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_si[:])) 
-# sf_data = np.vstack((synapse_1.time_vec[:],synapse_1.I_sf[:]))
-# actual_data_array.append(actual_data)
+synapse_1 = synapse(name = 'sy',
+                    synaptic_circuit_inductors = [100e-9,100e-9,400e-12],
+                    synaptic_circuit_resistors = [5e3,4.008],
+                    synaptic_hotspot_duration = 200e-12,
+                    synaptic_spd_current = 10e-6,
+                    input_direct_connections = ['in'],
+                    num_jjs = num_jjs,
+                    inhibitory_or_excitatory = 'excitatory',
+                    synaptic_dendrite_circuit_inductances = [0e-12,20e-12,200e-12,77.5e-12],
+                    synaptic_dendrite_input_synaptic_inductance = [20e-12,1],
+                    junction_critical_current = 40e-6,
+                    bias_currents = [I_sy, 36e-6, 35e-6],
+                    integration_loop_self_inductance = L_si,
+                    integration_loop_output_inductance = 200e-12,
+                    integration_loop_time_constant = tau_si)
 
 #%% neuron
 
-time_params = dict()
-time_params['dt'] = dt
-time_params['tf'] = 400e-9 # tau_si
-neuron_1 = neuron('ne', num_jjs = 4,
-                  circuit_inductances = [0e-12,0e-12,200e-12,77.5e-12],
-                  input_synaptic_connections = ['sy'], 
-                  input_synaptic_inductances = [[20e-12,1]],                     
-                  thresholding_junction_critical_current = 40e-6,
-                  bias_currents = [74e-6,36e-6,35e-6],
-                  integration_loop_self_inductance = 1e-15, 
-                  integration_loop_output_inductances = [[400e-12,1],[200e-12,1]], # first is to drive latching JJ, second is to drive refractory dendrite; both are of the form [L_self,k]
-                  integration_loop_temporal_form = 'exponential',
-                  integration_loop_time_constant = 25e-9,
-                  refractory_temporal_form = 'exponential',
+neuron_1 = neuron(name = 'ne', num_jjs = num_jjs,
+                  input_synaptic_connections = ['sy'],
+                  input_synaptic_inductances = [[20e-12,1]],
+                  junction_critical_current = 40e-6,
+                  circuit_inductances = [0e-12,0e-12,200e-12,77.5e-12],                              
                   refractory_loop_circuit_inductances = [0e-12,20e-12,200e-12,77.5e-12],
                   refractory_time_constant = 50e-9,
                   refractory_thresholding_junction_critical_current = 40e-6,
-                  refractory_loop_self_inductance =775e-12,
+                  refractory_loop_self_inductance = 775e-12,
                   refractory_loop_output_inductance = 100e-12,
                   refractory_bias_currents = [74e-6,36e-6,35e-6],
                   refractory_receiving_input_inductance = [20e-12,1],
                   neuronal_receiving_input_refractory_inductance = [20e-12,1],
-                  homeostatic_temporal_form = 'exponential',
-                  homeostatic_time_constant = 10e-9,
-                  homeostatic_thresholding_junction_critical_current = 40e-6,
-                  homeostatic_loop_self_inductance = 775e-12,
-                  homeostatic_loop_output_inductance = 200e-12,
-                  homeostatic_loop_circuit_inductances = [20e-12,20e-12,200e-12,77.5e-12],
-                  homeostatic_bias_currents = [71.5e-6,36e-6,35e-6],
-                  homeostatic_receiving_input_inductance = [10e-12,1],
-                  neuronal_receiving_input_homeostatic_inductance = [20e-12,1],
-                  time_params = time_params)
+                  integration_loop_time_constant = 25e-9,
+                  integration_loop_output_inductances = [[400e-12,1],[200e-12,1]], # first is to drive latching JJ, second is to drive refractory dendrite; both are of the form [L_self,k]
+                  time_params = dict([['dt',dt],['tf',tf]])) 
               
 neuron_1.run_sim()
 
 #%% plot
 plot_neuronal_response(neuron_1)
-
+plot_phase_portrait(neuron_1)
 
 
 

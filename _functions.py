@@ -32,7 +32,7 @@ def neuron_time_stepper(neuron_object):
     p = physical_constants()
     Phi0 = p['Phi0']
     
-    Ic = 40 # so dumb to hard-code this here 
+    # Ic = 40 # so dumb to hard-code this here 
            
     
     #-------------------
@@ -42,23 +42,30 @@ def neuron_time_stepper(neuron_object):
     print('loading dendrite rate array ...')
     # DR loop inductances (in all cases, left side has additional 10pH through which flux is coupled (M = k*sqrt(L1*L2); in this case k = 1, L1 = 200pH, L2 = 10pH))
     dL = 3 # pH
-    L_left_list = np.arange(17,23+dL,dL) # pH
-    L_right_list = np.flip(np.arange(17,23+dL,dL)) # pH
+    # L_left_list = np.arange(17,23+dL,dL) # pH
+    # L_right_list = np.flip(np.arange(17,23+dL,dL)) # pH
+    L_left_list = np.arange(20,20+dL,dL) # pH
+    L_right_list = np.flip(np.arange(20,20+dL,dL)) # pH
     num_L = len(L_right_list)
     
     # dendritic firing junction bias current
-    dI = 2 # uA
-    I_de_list = np.arange(70,80+dI,dI) # uA
-    num_I_de = len(I_de_list)
+    dI = 1 # uA
+    I_de_list_2jj = np.arange(52,80+dI,dI) # uA
+    I_de_list_4jj = np.arange(56,84+dI,dI) # uA
     
     # 'master__dnd_2jj__rate_array__Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}'.format(L_left_list[pp],L_right_list[pp],I_de_list[qq])
     # master__dnd_2jj__rate_array__Llft09.00_Lrgt21.00_Ide72.00.soen
     I_di_array__dict = dict()
     influx_list__dend__dict = dict()
     rate_array__dend__dict = dict()
-    for pp in range(num_L):    
-        for qq in range(num_I_de):
-            for numjj in [2,4]:
+    for pp in range(num_L):  
+        for numjj in [2,4]: 
+            if numjj == 2:
+                I_de_list = I_de_list_2jj
+            elif numjj == 4:
+                I_de_list = I_de_list_4jj
+            num_I_de = len(I_de_list)
+            for qq in range(num_I_de):
                 
                 _temp_str_1 = '../_circuit_data/master_dnd_rate_array_'
                 _temp_str_2 = '{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}'.format(numjj,L_left_list[pp],L_right_list[pp],I_de_list[qq])
@@ -97,6 +104,7 @@ def neuron_time_stepper(neuron_object):
         # self.synaptic_dendrite_input_synaptic_inductance[1]*np.sqrt(self.synaptic_dendrite_input_synaptic_inductance[0]*self.synaptic_circuit_inductors[2])
         
         n.synapses[sy_name].st_ind_last = 0
+        n.synapses[sy_name].spd_current_memory = 0
                               
     #initialize all dendrites, the synapses on the dendrites, and the direct connections to the dendrites
     print('configuring dendrites ...')
@@ -151,6 +159,7 @@ def neuron_time_stepper(neuron_object):
             n.synapses[de__sy_name].M = inductance_conversion*n.dendrites['{}__d'.format(n.name)].input_synaptic_inductances[de__sy_name][1]*np.sqrt(n.synapses[de__sy_name].integration_loop_output_inductance*n.dendrites['{}__d'.format(n.name)].input_synaptic_inductances[de__sy_name][0])        
             
             n.synapses[de__sy_name].st_ind_last = 0
+            n.synapses[de__sy_name].spd_current_memory = 0
             
         for de__de_name in n.dendrites[de_name].input_dendritic_connections:
             # print('de__de_name = {}'.format(de__de_name))
@@ -206,20 +215,32 @@ def neuron_time_stepper(neuron_object):
                                   
                 # find most recent spike time 
                 n.synapses[sy_name].st_ind = (np.abs(spike_times[:] - _pt)).argmin()
-                if n.synapses[sy_name].st_ind == 0 and spike_times[n.synapses[sy_name].st_ind] > _pt:
+                if n.synapses[sy_name].st_ind == 0 and spike_times[n.synapses[sy_name].st_ind] > _pt: # first spike has not arrived
                     _gf = 0 # growth factor
                     # print('code 1: st_ind == 0 and spike_times[st_ind] > _pt')
-                if n.synapses[sy_name].st_ind > 0 and spike_times[n.synapses[sy_name].st_ind] > _pt:
+                if n.synapses[sy_name].st_ind > 0 and spike_times[n.synapses[sy_name].st_ind] > _pt: # go back to previous spike
                     n.synapses[sy_name].st_ind -= 1
                     # print('code 2: st_ind > 0 and spike_times[st_ind] > _pt')
-                if _pt - spike_times[n.synapses[sy_name].st_ind] > n.synapses[sy_name].spd_duration:
+                if _pt - spike_times[n.synapses[sy_name].st_ind] > n.synapses[sy_name].spd_duration: # outside SPD pulse range
                     _gf = 0 # growth factor
                     # print('code 3: _pt - spike_times[st_ind] > spd_duration')
-                if spike_times[n.synapses[sy_name].st_ind] <= _pt and time_conversion*(_pt - spike_times[n.synapses[sy_name].st_ind]) < time_conversion*n.synapses[sy_name].spd_duration:
+                if spike_times[n.synapses[sy_name].st_ind] <= _pt and time_conversion*(_pt - spike_times[n.synapses[sy_name].st_ind]) < time_conversion*n.synapses[sy_name].spd_duration: # the case that counts    
                     # print('code 4')
-                
-                    n.synapses[sy_name].dt_spk = _pt - spike_times[n.synapses[sy_name].st_ind]
-                    n.synapses[sy_name].I_spd2_vec[ii] = spd_response(current_conversion*n.synapses[sy_name].I_spd,n.synapses[sy_name].r1,n.synapses[sy_name].r2,n.synapses[sy_name].t0,n.synapses[sy_name].tau_plus,n.synapses[sy_name].tau_minus,n.synapses[sy_name].dt_spk)
+                    
+                    n.synapses[sy_name].dt_spk = _pt - spike_times[n.synapses[sy_name].st_ind]                    
+                    
+                    #this block to avoid spd drive going too low at the onset of each spike                    
+                    tn = spd_response(current_conversion*n.synapses[sy_name].I_spd,n.synapses[sy_name].r1,n.synapses[sy_name].r2,n.synapses[sy_name].t0,n.synapses[sy_name].tau_plus,n.synapses[sy_name].tau_minus,n.synapses[sy_name].dt_spk)
+                    if n.synapses[sy_name].st_ind - n.synapses[sy_name].st_ind_last == 1:                        
+                        spd_current = np.max([n.synapses[sy_name].I_spd2_vec[ii-1],tn])
+                        n.synapses[sy_name].spd_current_memory = spd_current
+                    if n.synapses[sy_name].spd_current_memory > 0 and tn < n.synapses[sy_name].spd_current_memory:
+                        spd_current = n.synapses[sy_name].spd_current_memory
+                    else:
+                        spd_current = tn
+                        n.synapses[sy_name].spd_current_memory = 0
+                    n.synapses[sy_name].I_spd2_vec[ii] = spd_current
+                    
                     n.synapses[sy_name].st_ind_last = n.synapses[sy_name].st_ind
                         
                     n.synapses[sy_name].influx_vec[ii] = n.synapses[sy_name].I_spd2_vec[ii]*n.synapses[sy_name].M_self

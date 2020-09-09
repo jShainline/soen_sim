@@ -17,7 +17,7 @@ colors = color_dictionary()
 
 def plot_params():
     
-    plot_type = 'square' # 'square' '8_6__for_pubs'# '17_2__for_pubs' # 'large' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' 
+    plot_type = '8_6__for_pubs' # 'square' '8_6__for_pubs'# '17_2__for_pubs' # 'large' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' 
     
     pp = dict()
         
@@ -65,8 +65,9 @@ def plot_params():
         pp['nominal_markersize'] = 2
         pp['big_markersize'] = 3
         tn = 1.1*8.6/2.54
-        pp['fig_size'] = (tn,tn/1.618)
-        # pp['fig_size'] = (tn,tn/1.2)
+        # pp['fig_size'] = (tn,tn/1.618)
+        pp['fig_size'] = (tn,0.8*tn)
+        # pp['fig_size'] = (tn,0.85*1.618**tn)
         pp['axes_linewidth'] = 0.75
         
         pp['major_tick_width'] = 0.75
@@ -141,11 +142,11 @@ def plot_params():
     if plot_type == 'large':
         
         pp['title_font_size'] = 10
-        pp['subtitle_font_size'] = 10
+        pp['subtitle_font_size'] = 6
         pp['axes_labels_font_size'] = 14
         pp['axes_labels_pad'] = 0 # 4
         pp['tick_labels_font_size'] = 14
-        pp['legend_font_size'] = 10
+        pp['legend_font_size'] = 8
         pp['nominal_linewidth'] = 2
         pp['fine_linewidth'] = 1.5
         pp['bold_linewidth'] = 3
@@ -781,17 +782,17 @@ def plot_neuronal_response(neuron_instance):
     # input synapses     
     for name_1 in neuron_instance.input_synaptic_connections:
         
-        axs[0].plot(time_vec*1e6,neuron_instance.synapses[name_1].I_spd_vec, 
-                    '-', color = colors['green3'], markersize = pp['nominal_markersize'], label = name_1+' ($I_{sy}$ = '+'{:5.2f}$\mu$A)'.format(neuron_instance.synapses[name_1].I_sy))         
+        axs[0].plot(time_vec*1e6,neuron_instance.synapses[name_1].I_spd2_vec, 
+                    '-', color = colors['green3'], markersize = pp['nominal_markersize'], label = name_1+' ($I_{sy}$ = '+'{:5.2f}$\mu$A)'.format(neuron_instance.synapses[name_1].bias_currents[0]))         
         
-        axs[1].plot(time_vec*1e6,neuron_instance.synapses[name_1].I_si_vec, '-', color = colors['green3'], markersize = pp['nominal_markersize'], 
+        axs[1].plot(time_vec*1e6,neuron_instance.synapses[name_1].I_di_vec, '-', color = colors['green3'], markersize = pp['nominal_markersize'], 
                     label = name_1+' ($L_{si}$ = '+'{:4.0f}nH'.format(neuron_instance.synapses[name_1].integration_loop_total_inductance*1e9)+
                             '; $tau_{si}$ = '+'{:3.0f}ns)'.format(neuron_instance.synapses[name_1].integration_loop_time_constant*1e9))
         
         for _time in neuron_instance.synapses[name_1].input_spike_times:
             _time_ind = (np.abs(neuron_instance.time_vec-_time)).argmin()
-            axs[0].plot(time_vec[_time_ind]*1e6,neuron_instance.synapses[name_1].I_spd_vec[_time_ind], 'o', color = colors['green5'], markersize = pp['nominal_markersize'])  
-            axs[1].plot(time_vec[_time_ind]*1e6,neuron_instance.synapses[name_1].I_si_vec[_time_ind], 'o', color = colors['green5'], markersize = pp['nominal_markersize'])  
+            axs[0].plot(time_vec[_time_ind]*1e6,neuron_instance.synapses[name_1].I_spd2_vec[_time_ind], 'o', color = colors['green5'], markersize = pp['nominal_markersize'])  
+            axs[1].plot(time_vec[_time_ind]*1e6,neuron_instance.synapses[name_1].I_di_vec[_time_ind], 'o', color = colors['green5'], markersize = pp['nominal_markersize'])  
             axs[2].plot(time_vec[_time_ind]*1e6,Phi_0*neuron_instance.influx_vec[_time_ind], 'o', color = colors['blue5'], markersize = pp['nominal_markersize'])
                
          
@@ -1087,7 +1088,7 @@ def plot_wr_comparison__dend_drive_and_response__compare_two(file_name,target_da
     axs[1].set_xlabel(r'Time [$\mu$s]')
     axs[1].set_ylabel(r'$I_{di}$ [$\mu$A]')
     # axs[1].set_ylim([0,8])
-    axs[1].set_xlim([0,0.1])
+    axs[1].set_xlim([0,np.round(target_data__drive[0,-1]*1e6/0.01)*0.01])
     axs[1].legend()
     # axs[1].set_title('Output signal in the DI loop (error = {:7.5e})'.format(error__signal))
     
@@ -1106,7 +1107,7 @@ def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive
     fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)   
     fig.suptitle('{}; error_drive = {:7.5e}, error_signal = {:7.5e}'.format(main_title,error_drive,error__si))
         
-    axs[0].plot(actual_drive[0,:]*1e6,actual_drive[1,:]*1e6, '-o', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['green3'], label = 'soen_drive')
+    axs[0].plot(actual_drive[0,:]*1e6,actual_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['green3'], label = 'soen_drive')
     axs[0].plot(target_drive[0,:]*1e6,target_drive[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['yellow3'], label = 'wr_drive')  
     tn1 = np.min(target_drive[1,:])
     tn2 = np.max(target_drive[1,:])
@@ -1120,7 +1121,7 @@ def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive
     axs[0].legend()
     # axs[0].set_title('Drive signal input SPD to Jsf (error = {:7.5e})'.format(error_drive))
      
-    axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-o', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['green3'], label = 'soen_sim')   
+    axs[1].plot(actual_data[0,:]*1e6,actual_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['green3'], label = 'soen_sim')   
     axs[1].plot(target_data[0,:]*1e6,target_data[1,:]*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], color = colors['yellow3'], label = 'WRSpice')             
     axs[1].set_xlabel(r'Time [$\mu$s]')
     axs[1].set_ylabel(r'$I_{si}$ [$\mu$A]')
@@ -1132,6 +1133,37 @@ def plot_wr_comparison__synapse(main_title,spike_times,target_drive,actual_drive
 
     return fig
 
+
+def plot_wr_comparison__synapse__n_fq_vs_I_de(M_vec,I_de_array,n_fq_1_array,n_fq_soen_array,num_jjs):
+    
+    fig = plt.figure()
+    ax = fig.gca()
+    fig.suptitle('num_jjs = {}\nM_big: n_fq_max = {:4.0f}; n_fq_min = {:4.0f}; n_fq_max/n_fq_min = {:4.0f}\nM_small: n_fq_max = {:4.0f}; n_fq_min = {:4.0f}; n_fq_max/n_fq_min = {:4.0f}'.format(num_jjs,n_fq_1_array[1][-1],n_fq_1_array[1][0],n_fq_1_array[1][-1]/n_fq_1_array[1][0],n_fq_1_array[0][-1],n_fq_1_array[0][0],n_fq_1_array[0][-1]/n_fq_1_array[0][0]))
+    
+    color_list_1 = ['red3','yellow3']
+    # color_list_2 = ['yellow1','yellow3']
+    color_list_3 = ['blue3','green3']
+    for ii in range(len(M_vec)):
+        ax.plot(I_de_array[ii]*1e6,n_fq_1_array[ii], '-s', color = colors[color_list_1[ii]], label = 'M = {:5.2f}pH; WR'.format(np.sqrt(M_vec[ii]*20e-12)*1e12))
+        # ax.plot(I_de_array[ii]*1e6,n_fq_2_array[ii], '-o', color = colors[color_list_2[ii]], label = 'M = {}pH; WR: n_fq_2'.format(np.sqrt(M_vec[ii]*20e-12)*1e12))
+        ax.plot(I_de_array[ii]*1e6,n_fq_soen_array[ii], '-o', color = colors[color_list_3[ii]], label = 'M = {:5.2f}pH; soen'.format(np.sqrt(M_vec[ii]*20e-12)*1e12))
+
+    ax.legend()
+    ax.set_xlabel('$I_{de}$ [$\mu$A]')
+    ax.set_ylabel('$n_{fq}$')
+    if num_jjs == 2:
+        ax.set_ylim([0,4000])
+        ax.set_xlim([56,80])
+    if num_jjs == 4:
+        ax.set_ylim([0,3000])
+        ax.set_xlim([60,85])
+        
+    ax.set_ylim([0,4000])
+    ax.set_xlim([55,85])
+
+    plt.show()
+
+    return
 
 def plot_wr_comparison__synapse__spd_jj_test(main_title,spike_times,target_drive,actual_drive,target_data,actual_data,wr_data_file_name,V_fq,j_peaks,V_avg,time_avg,V_sf):
     
@@ -1906,25 +1938,23 @@ def plot__dend__error_vs_dt(dt_vec,error_array,error_drive_array,L_di_vec,tau_di
        
     # color_list = ['blue1','blue3','red1','red3','green1','green3']
     color_list = [['blue1','blue3','blue5'],['red1','red3','red5'],['green1','green3','green5']]
-    fig, ax = plt.subplots(nrows = 1, ncols = 2)
+    fig, ax = plt.subplots(nrows = 1, ncols = 1)
+    ax.loglog(dt_vec*1e9,error_drive_array[0,0,:], '-o', color = colors['grey8'], markersize = pp['nominal_markersize'], label = 'drive' )    
     for jj in range(len(L_di_vec)):        
         for kk in range(len(tau_di_vec)):
-        
-            ax[0].loglog(dt_vec*1e9,error_drive_array[jj,kk,:], '-o', color = colors[color_list[jj][kk]], markersize = pp['nominal_markersize'], label = 'L_di = {:7.2f}nH, tau_di = {:4.0f}ns'.format(L_di_vec[jj]*1e9,tau_di_vec[kk]*1e9) )    
-            ax[1].loglog(dt_vec*1e9,error_array[jj,kk,:], '-o', color = colors[color_list[jj][kk]], markersize = pp['nominal_markersize'], label = 'L_di = {:7.2f}nH, tau_di = {:4.0f}ns'.format(L_di_vec[jj]*1e9,tau_di_vec[kk]*1e9)  )    
-    
-    ax[0].set_xlabel(r'dt [ns]')
-    ax[0].set_ylabel(r'Drive $Chi^2$ error')
-    ax[0].set_title(title_str)
-    ax[0].legend()        
+                    
+            ax.loglog(dt_vec*1e9,error_array[jj,kk,:], '-o', color = colors[color_list[jj][kk]], markersize = pp['nominal_markersize'], label = 'L_di = {:7.2f}nH, tau_di = {:4.0f}ns'.format(L_di_vec[jj]*1e9,tau_di_vec[kk]*1e9)  )    
+     
     # plt.sca(ax[0])
     # plt.yticks([1e-7,1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1e0])
     
-    ax[1].set_xlabel(r'dt [ns]')
-    ax[1].set_ylabel(r'Signal $Chi^2$ error')
-    ax[1].legend()       
-        # plt.sca(ax[1])
-        # plt.yticks([1e-7,1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1e0])
+    ax.set_xlabel(r'dt [ns]')
+    ax.set_ylabel(r'Signal $Chi^2$ error')
+    ax.legend()    
+    
+    ax.set_ylim([1e-7,3e-1])
+    # ax.set_ylim([1e-5,1e0])
+    # ax.set_ylim([1e-8,4e1])
     
         # grid(True,which='both')
     plt.show()
@@ -2342,6 +2372,54 @@ def plot_dend_rate_array__norm_to_phi0(**kwargs):
     # plt.show()
     
     return
+
+def plot__syn__wr_cmpr__single_pulse(soen_time,soen_drive,soen_response,wr_time,wr_drive,wr_response,L_di_vec,tau_di_vec,chi_drive,chi_signal,num_jjs):
+     
+    fig, ax = plt.subplots(nrows = 5, ncols = 1, sharex = True, sharey = False)
+    fig.suptitle('num_jjs = {}'.format(num_jjs))
+    
+    ax[0].plot(np.asarray(wr_time[-1][-1][:])*1e9,np.asarray(wr_drive)*1e6, '-', color = colors['red3'], label = 'WR drive')
+    ax[0].plot(soen_time[-1][-1][:],soen_drive, '-', color = colors['blue3'], label = 'soen drive, err = {:4.2e}'.format(chi_drive))
+    ax[0].set_ylabel(r'$I_{spd2}$ [$\mu$A]')
+    color_roots = ['blue','red','yellow','green','bluegrey']
+    for ii in range(len(L_di_vec)):
+        for jj in range(len(tau_di_vec)):
+            
+            ax[ii+1].plot(np.asarray(wr_time[ii][jj][:])*1e9,np.asarray(wr_response[ii][jj][:])*1e6, '-', color = colors['{}{:d}'.format(color_roots[jj],5)], label = 'WR')
+            ax[ii+1].plot(soen_time[ii][jj][:]*1e9,soen_response[ii][jj][:], '-', color = colors['{}{:d}'.format(color_roots[jj],3)], label = 'soen: tau = {:4.0f}ns; err = {:4.2e}'.format(tau_di_vec[jj]*1e9,chi_signal[ii][jj]))
+            ax[ii+1].set_ylabel(r'$I^{di}$ [$\mu$A]')
+            ax[ii+1].legend()
+                 
+    ax[4].set_xlabel(r'Time [ns]')
+    ax[4].set_xlim([0,100])
+
+    plt.show()
+
+    return
+
+def plot__syn__wr_cmpr__pulse_train(soen_time,soen_drive,soen_response,wr_time,wr_drive,wr_response,L_di_vec,I_de_vec,chi_drive,chi_signal,num_jjs):
+     
+    fig, ax = plt.subplots(nrows = 5, ncols = 1, sharex = True, sharey = False)
+    fig.suptitle('num_jjs = {}'.format(num_jjs))
+    
+    ax[0].plot(np.asarray(wr_time[-1][-1][:])*1e9,np.asarray(wr_drive)*1e6, '-', color = colors['yellow3'], label = 'WR drive')
+    ax[0].plot(soen_time[-1][-1][:],soen_drive, '-', color = colors['blue3'], label = 'soen drive, err = {:4.2e}'.format(chi_drive))
+    ax[0].set_ylabel(r'$I_{spd2}$ [$\mu$A]')
+    # color_roots = ['blue','red','yellow','green','bluegrey']
+    for jj in range(len(I_de_vec)):
+        for ii in range(len(L_di_vec)):        
+            
+            ax[jj*2+ii+1].plot(np.asarray(wr_time[jj][ii][:])*1e9,np.asarray(wr_response[jj][ii][:])*1e6, '-', color = colors['red3'], label = 'WR')
+            ax[jj*2+ii+1].plot(soen_time[jj][ii][:]*1e9,soen_response[jj][ii][:], '-', color = colors['blue3'], label = 'soen: Ide = {:4.0f}uA; err = {:4.2e}'.format(I_de_vec[jj]*1e6,chi_signal[jj][ii]))
+            ax[jj*2+ii+1].set_ylabel(r'$I^{di}$ [$\mu$A]')
+            ax[jj*2+ii+1].legend()
+                 
+    ax[4].set_xlabel(r'Time [ns]')
+    ax[4].set_xlim([0,500])
+
+    plt.show()
+
+    return 
 
 def plot_num_in_burst(I_sy_vec,L_si_vec,tau_si_vec,num_in_burst):
     
