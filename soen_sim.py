@@ -143,7 +143,7 @@ class synapse():
         else:
             self.input_direct_connections = []
         for connection_name in self.input_direct_connections:
-            print('{}'.format(connection_name))
+            # print('{}'.format(connection_name))
             self.input_signal = input_signal.input_signals[connection_name]
         
         if 'input_neuronal_connections' in kwargs:
@@ -355,6 +355,7 @@ class dendrite():
             self.junction_critical_current =  kwargs['junction_critical_current']
         else:
             self.junction_critical_current =  40e-6 #default Ic = 40 uA
+        self.I_c = self.junction_critical_current*1e6
             
         if 'bias_currents' in kwargs:
             self.bias_currents = kwargs['bias_currents']
@@ -486,6 +487,7 @@ class neuron():
             self.junction_critical_current = kwargs['junction_critical_current']
         else:
             self.junction_critical_current = 40e-6 #default Ic = 40 uA
+        self.I_c = self.junction_critical_current*1e6
                     
         if 'bias_currents' in kwargs:
             _Ib = kwargs['bias_currents']
@@ -524,6 +526,11 @@ class neuron():
             time_params['dt'] = 0.1e-9
             time_params['tf'] = 1e-6
             self.time_params = time_params
+            
+        if 'refractory_dendrite_num_jjs' in kwargs:
+            self.refractory_dendrite_num_jjs = kwargs['refractory_dendrite_num_jjs']
+        else:
+            self.refractory_dendrite_num_jjs = 4
                 
         if 'refractory_time_constant' in kwargs:
             # if type(kwargs['refractory_time_constant']) == int or type(kwargs['refractory_time_constant']) == float:
@@ -670,7 +677,7 @@ class neuron():
                  
         # make refractory dendrite
         refractory_loop = dendrite(name = '{}__r'.format(self.name),
-                                  num_jjs = self.num_jjs,
+                                  num_jjs = self.refractory_dendrite_num_jjs,
                                   inhibitory_or_excitatory = 'inhibitory',
                                   circuit_inductances = self.refractory_loop_circuit_inductances,
                                   junction_critical_current = self.refractory_junction_critical_current,
@@ -851,8 +858,13 @@ class neuron():
         
         # calculate spike times
         self.output_voltage = self.I_ni_vec # self.integration_loop_output_inductances[0][0]*np.diff(self.I_ni_vec)        
-        self.voltage_peaks, _ = find_peaks(self.output_voltage) # , height = min_peak_height, ) # , distance = 10e-9/dt
+        self.voltage_peaks, _ = find_peaks(self.output_voltage, distance = 10e-9/dt, height = 10) # , height = min_peak_height, ) # , distance = 10e-9/dt
         self.spike_times = self.time_vec[self.voltage_peaks]
+        self.interspike_intervals = np.diff(self.spike_times)
+        if len(self.interspike_intervals) > 0:
+            self.max_rate = 1/np.min(self.interspike_intervals)
+        else:
+            self.max_rate = 0
         
         return self
     

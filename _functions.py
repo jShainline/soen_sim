@@ -51,7 +51,7 @@ def neuron_time_stepper(neuron_object):
     # dendritic firing junction bias current
     dI = 1 # uA
     I_de_list_2jj = np.arange(52,80+dI,dI) # uA
-    I_de_list_4jj = np.arange(56,84+dI,dI) # uA
+    I_de_list_4jj = np.arange(56,85+dI,dI) # uA
     
     # 'master__dnd_2jj__rate_array__Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}'.format(L_left_list[pp],L_right_list[pp],I_de_list[qq])
     # master__dnd_2jj__rate_array__Llft09.00_Lrgt21.00_Ide72.00.soen
@@ -246,10 +246,55 @@ def neuron_time_stepper(neuron_object):
                     n.synapses[sy_name].influx_vec[ii] = n.synapses[sy_name].I_spd2_vec[ii]*n.synapses[sy_name].M_self
                     ind1 = (np.abs(n.synapses[sy_name].influx_list__dend-n.synapses[sy_name].influx_vec[ii])).argmin()                             
                     
-                    # no interpolation 
-                    ind2 = (np.abs(n.synapses[sy_name].I_di_array[ind1]-n.synapses[sy_name].I_di_vec[ii])).argmin()
-                    rate = n.synapses[sy_name].rate_array__dend[ind1][ind2] 
-                    _gf = rate*n.synapses[sy_name].I_fq*dt # growth factor
+                    synapse_interpolation = True
+                    if synapse_interpolation == False:
+                        
+                        # no interpolation 
+                        ind2 = (np.abs(n.synapses[sy_name].I_di_array[ind1]-n.synapses[sy_name].I_di_vec[ii])).argmin()
+                        rate = n.synapses[sy_name].rate_array__dend[ind1][ind2] 
+                        _gf = rate*n.synapses[sy_name].I_fq*dt # growth factor 
+                
+                    elif synapse_interpolation == True:
+                        
+                        # interpolation
+                        influx_actual = n.synapses[sy_name].influx_vec[ii]
+                        influx_closest = n.synapses[sy_name].influx_list__dend[ind1]
+                        if influx_actual > influx_closest:
+                            if ind1 < len(n.synapses[sy_name].influx_list__dend)-1:
+                                ind1_p = ind1+1                        
+                            else:
+                                ind1_p = ind1
+                            ind2 = (np.abs(n.synapses[sy_name].I_di_array[ind1]-n.synapses[sy_name].I_di_vec[ii])).argmin()
+                            ind2_p = (np.abs(n.synapses[sy_name].I_di_array[ind1_p]-n.synapses[sy_name].I_di_vec[ii])).argmin()
+                            rate1 = n.synapses[sy_name].rate_array__dend[ind1][ind2]
+                            rate2 = n.synapses[sy_name].rate_array__dend[ind1_p][ind2_p]
+                            influx_next_closest = n.synapses[sy_name].influx_list__dend[ind1_p]
+                            x = influx_actual - influx_closest
+                            if influx_next_closest != influx_closest:
+                                m = (rate2-rate1)/(influx_next_closest-influx_closest)
+                            else:
+                                m = 0
+                            rate = m*x+rate1
+                        elif influx_actual < influx_closest:
+                            if ind1 > 0:
+                                ind1_p = ind1-1
+                            else:
+                                ind1_p = ind1
+                            ind2 = (np.abs(n.synapses[sy_name].I_di_array[ind1]-n.synapses[sy_name].I_di_vec[ii])).argmin()
+                            ind2_p = (np.abs(n.synapses[sy_name].I_di_array[ind1_p]-n.synapses[sy_name].I_di_vec[ii])).argmin()
+                            rate1 = n.synapses[sy_name].rate_array__dend[ind1][ind2]
+                            rate2 = n.synapses[sy_name].rate_array__dend[ind1_p][ind2_p]
+                            influx_next_closest = n.synapses[sy_name].influx_list__dend[ind1_p]
+                            x = influx_closest - influx_actual
+                            if influx_next_closest != influx_closest:
+                                m = (rate1-rate2)/(influx_closest-influx_next_closest)
+                            else:
+                                m = 0
+                            rate = -m*x+rate1
+                        elif influx_actual == influx_closest:
+                            ind2 = (np.abs(n.synapses[sy_name].I_di_array[ind1]-n.synapses[sy_name].I_di_vec[ii])).argmin()
+                            rate = n.synapses[sy_name].rate_array__dend[ind1][ind2] 
+                        _gf = rate*n.synapses[sy_name].I_fq*dt # + (1-dt/n.dendrites[de_name].tau_di)*n.dendrites[de_name].I_di_vec[ii]                        
                     
                 n.synapses[sy_name].I_di_vec[ii+1] = _gf + (1-dt/n.synapses[sy_name].tau_di)*n.synapses[sy_name].I_di_vec[ii]
                 
@@ -338,8 +383,37 @@ def neuron_time_stepper(neuron_object):
                     rate = -m*x+rate1
                 elif influx_actual == influx_closest:
                     ind2 = (np.abs(n.dendrites[de_name].I_di_array[ind1]-n.dendrites[de_name].I_di_vec[ii])).argmin()
-                    rate = n.dendrites[de_name].rate_array__dend[ind1][ind2] 
-                n.dendrites[de_name].I_di_vec[ii+1] = rate*n.dendrites[de_name].I_fq*dt + (1-dt/n.dendrites[de_name].tau_di)*n.dendrites[de_name].I_di_vec[ii]  
+                    rate = n.dendrites[de_name].rate_array__dend[ind1][ind2]
+                
+                _gf = rate*n.dendrites[de_name].I_fq*dt
+                
+                handle_discrete_fluxons = True
+                if handle_discrete_fluxons == True:
+                    
+                    # if _gf > 0:
+                        # print('_gf__dend = {}'.format(_gf))
+                    
+                    # if n.dendrites[de_name].I_fq >= n.dendrites[de_name].I_c/4:
+                    #     _gf2 = 0
+                    #     while rate > 1e-3:
+                    #         _gf2 += n.dendrites[de_name].I_fq
+                    #         ind2 = (np.abs(n.dendrites[de_name].I_di_array[ind1]-n.dendrites[de_name].I_di_vec[ii]-_gf2)).argmin()        
+                    #         rate = n.dendrites[de_name].rate_array__dend[ind1][ind2]
+                    #     _gf = _gf2
+                    
+                    if n.dendrites[de_name].I_fq >= n.dendrites[de_name].I_c/4:
+                        num_fq = np.ceil(_gf/n.dendrites[de_name].I_fq).astype(int)
+                        
+                        counter = 0                    
+                        for qq in range(num_fq):
+                            ind2 = (np.abs(n.dendrites[de_name].I_di_array[ind1]-n.dendrites[de_name].I_di_vec[ii]-(qq+1)*n.dendrites[de_name].I_fq)).argmin()        
+                            rate = n.dendrites[de_name].rate_array__dend[ind1][ind2]
+                            if rate < 1e-3 and counter == 0:
+                                num_fq_add = qq+1
+                                counter = 1                    
+                                _gf = num_fq_add*n.dendrites[de_name].I_fq
+                            
+                n.dendrites[de_name].I_di_vec[ii+1] = _gf + (1-dt/n.dendrites[de_name].tau_di)*n.dendrites[de_name].I_di_vec[ii]  
                 
                 
                 # influx_actual = n.dendrites[de_name].influx_vec[ii]
@@ -452,7 +526,37 @@ def neuron_time_stepper(neuron_object):
         # elif rate == 0:
         #     n.state = 'quiescent'
 
-        n.I_ni_vec[ii+1] = rate*n.I_fq*dt + (1-dt/n.tau_ni)*n.I_ni_vec[ii]
+        _gf = rate*n.I_fq*dt
+        
+        if handle_discrete_fluxons == True:
+            
+            # if _gf > 0:
+            #     print('_gf = {}'.format(_gf))
+                
+            # if n.I_fq >= n.I_c/4:
+            #     _gf2 = 0
+            #     while rate > 1e-3:
+            #         _gf2 += n.I_fq
+            #         ind2 = (np.abs(n.dendrites['{}__d'.format(n.name)].I_di_array[ind1]-n.I_ni_vec[ii]-_gf2)).argmin()        
+            #         rate = n.dendrites['{}__d'.format(n.name)].rate_array__dend[ind1][ind2]
+            #     _gf = _gf2
+            
+            if n.I_fq >= n.dendrites[de_name].I_c/4:
+                num_fq = np.ceil(_gf/n.I_fq).astype(int)
+                # if num_fq > 0:
+                #     print('num_fq = {}'.format(num_fq))
+                counter = 0                    
+                for qq in range(num_fq):
+                    ind2 = (np.abs(n.dendrites['{}__d'.format(n.name)].I_di_array[ind1]-n.I_ni_vec[ii]-(qq+1)*n.I_fq)).argmin()        
+                    rate = n.dendrites['{}__d'.format(n.name)].rate_array__dend[ind1][ind2]
+                    if rate < 1e-3 and counter == 0:
+                        num_fq_add = qq+1
+                        # print('num_fq_add = {}'.format(num_fq_add))
+                        counter = 1                    
+                        _gf = num_fq_add*n.I_fq
+                        # print('_gf2 = {}'.format(_gf))
+                    
+        n.I_ni_vec[ii+1] = _gf + (1-dt/n.tau_ni)*n.I_ni_vec[ii]
         n.dendrites['{}__d'.format(n.name)].I_di_vec[ii+1] = n.I_ni_vec[ii+1]
 
     print('\ndone running neuron simulation. total time was {:.3}s\n'.format(time.time()-t_init))        

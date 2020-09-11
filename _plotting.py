@@ -17,7 +17,7 @@ colors = color_dictionary()
 
 def plot_params():
     
-    plot_type = '8_6__for_pubs' # 'square' '8_6__for_pubs'# '17_2__for_pubs' # 'large' # 'two_rows' # 'three_rows' # 'four_rows' # 'large' # 'single_frame' # 'four_tiles' 
+    plot_type = 'large' # 'square' '8_6__for_pubs'# '17_2__for_pubs' # 'large'
     
     pp = dict()
         
@@ -29,27 +29,60 @@ def plot_params():
         pp['axes_labels_pad'] = 0 # 4
         pp['tick_labels_font_size'] = 8
         pp['legend_font_size'] = 8
-        pp['nominal_linewidth'] = 1
+        pp['nominal_linewidth'] = 0.75
         pp['fine_linewidth'] = 0.5
         pp['bold_linewidth'] = 1.5
         pp['small_markersize'] = 3
         pp['nominal_markersize'] = 4
         pp['big_markersize'] = 5
-        tn = 16 # 4*8.6/2.54
-        pp['fig_size'] = (tn,tn/1.618)
+        # tn = 1.1*17.2/2.54 # 4*8.6/2.54
+        # pp['fig_size'] = (tn,tn/1.618)
+        tn = 1.0*17.2/2.54 # 4*8.6/2.54
+        pp['fig_size'] = (tn,0.8*tn)
         # pp['fig_size'] = (tn,tn/1.2)
-        pp['axes_linewidth'] = 1
+        pp['axes_linewidth'] = 0.75
         
         pp['major_tick_width'] = 0.75
-        pp['major_tick_length'] = 2
-        pp['minor_tick_width'] = 0.5
-        pp['minor_tick_length'] = 1
+        pp['major_tick_length'] = 3
+        pp['minor_tick_width'] = 0.25
+        pp['minor_tick_length'] = 2
         
         pp['xmargin'] = 0 # 0.05 # space between traces and axes
         pp['ymargin'] = 0.05 # 0.05
         
         pp['linewidth'] = 2
-        pp['markersize'] = 2        
+        pp['markersize'] = 2   
+        
+        # for neuron single synapse event time traces
+        # pp['title_font_size'] = 8
+        # pp['subtitle_font_size'] = 8
+        # pp['axes_labels_font_size'] = 8
+        # pp['axes_labels_pad'] = 0 # 4
+        # pp['tick_labels_font_size'] = 8
+        # pp['legend_font_size'] = 8
+        # pp['nominal_linewidth'] = 0.75
+        # pp['fine_linewidth'] = 0.5
+        # pp['bold_linewidth'] = 1.5
+        # pp['small_markersize'] = 3
+        # pp['nominal_markersize'] = 4
+        # pp['big_markersize'] = 5
+        # # tn = 1.1*17.2/2.54 # 4*8.6/2.54
+        # # pp['fig_size'] = (tn,tn/1.618)
+        # tn = 1.0*17.2/2.54 # 4*8.6/2.54
+        # pp['fig_size'] = (tn,0.8*tn)
+        # # pp['fig_size'] = (tn,tn/1.2)
+        # pp['axes_linewidth'] = 0.75
+        
+        # pp['major_tick_width'] = 0.75
+        # pp['major_tick_length'] = 3
+        # pp['minor_tick_width'] = 0.25
+        # pp['minor_tick_length'] = 2
+        
+        # pp['xmargin'] = 0 # 0.05 # space between traces and axes
+        # pp['ymargin'] = 0.05 # 0.05
+        
+        # pp['linewidth'] = 2
+        # pp['markersize'] = 2 
             
     if plot_type == '8_6__for_pubs':
         
@@ -65,8 +98,8 @@ def plot_params():
         pp['nominal_markersize'] = 2
         pp['big_markersize'] = 3
         tn = 1.1*8.6/2.54
-        # pp['fig_size'] = (tn,tn/1.618)
-        pp['fig_size'] = (tn,0.8*tn)
+        pp['fig_size'] = (tn,tn/1.618)
+        # pp['fig_size'] = (tn,tn)
         # pp['fig_size'] = (tn,0.85*1.618**tn)
         pp['axes_linewidth'] = 0.75
         
@@ -80,9 +113,39 @@ def plot_params():
         
         pp['linewidth'] = 1
         pp['markersize'] = 1.5
+        
+        
+        # pp['title_font_size'] = 4
+        # pp['subtitle_font_size'] = 4
+        # pp['axes_labels_font_size'] = 10
+        # pp['axes_labels_pad'] = 0 # 4
+        # pp['tick_labels_font_size'] = 10
+        # pp['legend_font_size'] = 6
+        # pp['nominal_linewidth'] = 0.75
+        # pp['fine_linewidth'] = 0.5
+        # pp['bold_linewidth'] = 2
+        # pp['nominal_markersize'] = 2
+        # pp['big_markersize'] = 3
+        # tn = 1.1*8.6/2.54
+        # # pp['fig_size'] = (tn,tn/1.618)
+        # pp['fig_size'] = (tn,0.8*tn)
+        # # pp['fig_size'] = (tn,0.85*1.618**tn)
+        # pp['axes_linewidth'] = 0.75
+        
+        # pp['major_tick_width'] = 0.75
+        # pp['major_tick_length'] = 3
+        # pp['minor_tick_width'] = 0.25
+        # pp['minor_tick_length'] = 2
+        
+        # pp['xmargin'] = 0 # 0.05 # space between traces and axes
+        # pp['ymargin'] = 0.05 # 0.05 
+        
+        # pp['linewidth'] = 1
+        # pp['markersize'] = 1.5
             
     if plot_type == 'square':
         
+        # for phase portraits
         pp['title_font_size'] = 4
         pp['subtitle_font_size'] = 4
         pp['axes_labels_font_size'] = 8
@@ -94,9 +157,9 @@ def plot_params():
         pp['bold_linewidth'] = 2
         pp['nominal_markersize'] = 2
         pp['big_markersize'] = 3
-        tn = 1.1*8.6/2.54
+        tn = 0.5*8.6/2.54
         # pp['fig_size'] = (tn,tn)
-        pp['fig_size'] = (tn,tn/1.2)
+        pp['fig_size'] = (tn,tn)
         pp['axes_linewidth'] = 0.75
         
         pp['major_tick_width'] = 0.75
@@ -110,34 +173,6 @@ def plot_params():
         pp['linewidth'] = 1
         pp['markersize'] = 1.5
         
-    if plot_type == 'four_rows':
-        
-        pp['title_font_size'] = 6
-        pp['subtitle_font_size'] = 4
-        pp['axes_labels_font_size'] = 8
-        pp['axes_labels_pad'] = 0 # 4
-        pp['tick_labels_font_size'] = 8
-        pp['legend_font_size'] = 8
-        pp['nominal_linewidth'] = 1
-        pp['fine_linewidth'] = 0.5
-        pp['bold_linewidth'] = 1.5
-        pp['nominal_markersize'] = 2
-        pp['big_markersize'] = 3
-        tn = 2*8.6/2.54
-        pp['fig_size'] = (tn,1*tn/1.618)
-        # pp['fig_size'] = (tn,tn/1.2)
-        pp['axes_linewidth'] = 1
-        
-        pp['major_tick_width'] = 0.75
-        pp['major_tick_length'] = 3
-        pp['minor_tick_width'] = 0.25
-        pp['minor_tick_length'] = 2
-        
-        pp['xmargin'] = 0 # 0.05 # space between traces and axes
-        pp['ymargin'] = 0.05 # 0.05
-        
-        pp['linewidth'] = 1
-        pp['markersize'] = 2
         
     if plot_type == 'large':
         
@@ -168,123 +203,7 @@ def plot_params():
         
         pp['linewidth'] = 2
         pp['markersize'] = 4
-        
-    if plot_type == 'two_rows':
-        
-        pp['title_font_size'] = 10
-        pp['subtitle_font_size'] = 8
-        pp['axes_labels_font_size'] = 8
-        pp['axes_labels_pad'] = 0 # 4
-        pp['tick_labels_font_size'] = 8
-        pp['legend_font_size'] = 8
-        pp['nominal_linewidth'] = 0.75
-        pp['fine_linewidth'] = 0.5
-        pp['bold_linewidth'] = 2
-        pp['nominal_markersize'] = 2
-        pp['big_markersize'] = 3
-        tn = 1.075*8.6/2.54
-        pp['fig_size'] = (tn,2*tn/1.618)
-        # pp['fig_size'] = (tn,tn/1.2)
-        pp['axes_linewidth'] = 1
-        
-        pp['major_tick_width'] = 0.75
-        pp['major_tick_length'] = 3
-        pp['minor_tick_width'] = 0.25
-        pp['minor_tick_length'] = 2
-        
-        pp['xmargin'] = 0 # 0.05 # space between traces and axes
-        pp['ymargin'] = 0.05 # 0.05
-        
-        pp['linewidth'] = 1
-        pp['markersize'] = 2
-        
-    if plot_type == 'single_frame':
-        
-        pp['title_font_size'] = 10
-        pp['subtitle_font_size'] = 10
-        pp['axes_labels_font_size'] = 10
-        pp['axes_labels_pad'] = 0 # 4
-        pp['tick_labels_font_size'] = 10
-        pp['legend_font_size'] = 10
-        pp['nominal_linewidth'] = 0.75
-        pp['fine_linewidth'] = 0.5
-        pp['bold_linewidth'] = 2
-        pp['nominal_markersize'] = 2
-        pp['big_markersize'] = 3
-        tn = 1.075*8.6/2.54
-        pp['fig_size'] = (tn,tn/1.618)
-        # pp['fig_size'] = (tn,tn/1.2)
-        pp['axes_linewidth'] = 0.75
-        
-        pp['major_tick_width'] = 0.75
-        pp['major_tick_length'] = 3
-        pp['minor_tick_width'] = 0.25
-        pp['minor_tick_length'] = 2
-        
-        pp['xmargin'] = 0 # 0.05 # space between traces and axes
-        pp['ymargin'] = 0.05 # 0.05
-        
-        pp['linewidth'] = 1
-        pp['markersize'] = 2
-
-     
-    if plot_type == 'three_rows':
-        
-        pp['title_font_size'] = 14
-        pp['subtitle_font_size'] = 10
-        pp['axes_labels_font_size'] = 10
-        pp['axes_labels_pad'] = 0 # 4
-        pp['tick_labels_font_size'] = 10
-        pp['legend_font_size'] = 8
-        pp['nominal_linewidth'] = 0.75
-        pp['fine_linewidth'] = 0.5
-        pp['bold_linewidth'] = 2
-        pp['nominal_markersize'] = 1
-        pp['big_markersize'] = 2
-        tn = 1.075*8.6/2.54
-        pp['fig_size'] = (tn,3*tn/1.618)
-        # pp['fig_size'] = (tn,tn/1.2)
-        pp['axes_linewidth'] = 1
-        
-        pp['major_tick_width'] = 0.75
-        pp['major_tick_length'] = 3
-        pp['minor_tick_width'] = 0.25
-        pp['minor_tick_length'] = 2
-        
-        pp['xmargin'] = 0.05 # space between traces and axes
-        pp['ymargin'] = 0.05
-        
-        pp['linewidth'] = 1
-        pp['markersize'] = 2
-     
-    if plot_type == 'four_tiles':
-        
-        pp['title_font_size'] = 14
-        pp['subtitle_font_size'] = 10
-        pp['axes_labels_font_size'] = 10
-        pp['axes_labels_pad'] = 0 # 4
-        pp['tick_labels_font_size'] = 10
-        pp['legend_font_size'] = 8
-        pp['nominal_linewidth'] = 1
-        pp['fine_linewidth'] = 0.5
-        pp['bold_linewidth'] = 2
-        pp['nominal_markersize'] = 2
-        pp['big_markersize'] = 3
-        tn = 17.2/2.54
-        pp['fig_size'] = (tn,tn/1.618)
-        # pp['fig_size'] = (tn,tn/1.2)
-        pp['axes_linewidth'] = 1
-        
-        pp['major_tick_width'] = 0.75
-        pp['major_tick_length'] = 3
-        pp['minor_tick_width'] = 0.25
-        pp['minor_tick_length'] = 2
-        
-        pp['xmargin'] = 0.05 # space between traces and axes
-        pp['ymargin'] = 0.05
-        
-        pp['linewidth'] = 1
-        pp['markersize'] = 2
+    
         
     return pp 
 
@@ -305,18 +224,37 @@ plt.rcParams['figure.autolayout'] = True
 #                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green3'],
 #                                                     colors['yellow5'],colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
 
-plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
-                                                    colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
-                                                    colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
-                                                    colors['red4'],colors['red3'],colors['red2'],colors['red1'],
-                                                    colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
-                                                    colors['green4'],colors['green3'],colors['green2'],colors['green1'],
-                                                    colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
-                                                    colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+#                                                     colors['blue4'],colors['blue3'],colors['blue2'],colors['blue1'],
+#                                                     colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5'],
+#                                                     colors['red4'],colors['red3'],colors['red2'],colors['red1'],
+#                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+#                                                     colors['green4'],colors['green3'],colors['green2'],colors['green1'],
+#                                                     colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+#                                                     colors['yellow4'],colors['yellow3'],colors['yellow2'],colors['yellow1']])
 
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2'],colors['blue3'],colors['blue4'],
 #                                                     colors['green1'],colors['green2'],colors['green3'],colors['green4'],
-#                                                     colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4']])
+#                                                     colors['yellow1'],colors['yellow2'],colors['yellow3'],colors['yellow4'],
+#                                                     colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5']])
+
+
+# for num in burst vs Isy _ num_jjs = 2
+plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue3'],
+                                                    colors['green1'],colors['green3'],
+                                                    colors['red1'],colors['red3']])
+
+# for num in burst vs Isy _ num_jjs = 4
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue3'],colors['blue5'],
+#                                                     colors['green1'],colors['green3'],colors['green5'],
+#                                                     colors['red1'],colors['red3'],colors['red5'],
+#                                                     colors['yellow1'],colors['yellow3'],colors['yellow5']])
+
+# plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['red1'],colors['green1'],colors['yellow1'],
+#                                                    colors['blue2'],colors['red2'],colors['green2'],colors['yellow2'],
+#                                                    colors['blue3'],colors['red3'],colors['green3'],colors['yellow3'],
+#                                                    colors['blue4'],colors['red4'],colors['green4'],colors['yellow4'],
+#                                                    colors['blue5'],colors['red5'],colors['green5'],colors['yellow5']])
 
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue3'],colors['red1'],colors['red3'],colors['green1'],colors['green3'],colors['yellow1'],colors['yellow3']])
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue3'],colors['red3'],colors['green3'],colors['yellow3']])
@@ -773,47 +711,61 @@ def plot_neuronal_response(neuron_instance):
     # save_str = 'bursting__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
     
     # p = physical_constants()
-    Phi_0 = 1 # 1e18*p['Phi0']    
+    # Phi_0 = 1 # 1e18*p['Phi0']  
+    Phi_0 = 1e18*6.62606957e-34/(2*1.60217657e-19)
     
     time_vec = neuron_instance.time_vec
     fig, axs = plt.subplots(nrows = 6, ncols = 1, sharex = True, sharey = False)   
-    # fig.suptitle('Current in the neuronal receiving loop versus time')
+    fig.suptitle('num in burst = {}'.format(len(neuron_instance.spike_times)))
     
     # input synapses     
     for name_1 in neuron_instance.input_synaptic_connections:
         
-        axs[0].plot(time_vec*1e6,neuron_instance.synapses[name_1].I_spd2_vec, 
-                    '-', color = colors['green3'], markersize = pp['nominal_markersize'], label = name_1+' ($I_{sy}$ = '+'{:5.2f}$\mu$A)'.format(neuron_instance.synapses[name_1].bias_currents[0]))         
+        # axs[0].plot(time_vec*1e6,neuron_instance.synapses[name_1].I_spd2_vec, 
+        #             '-', color = colors['green3'], markersize = pp['nominal_markersize'], label = name_1+': $I_{sy}$ = '+'{:5.2f}$\mu$A'.format(neuron_instance.synapses[name_1].bias_currents[0]*1e6))   
+        axs[0].plot(time_vec*1e6,neuron_instance.synapses[name_1].I_spd2_vec*neuron_instance.synapses[name_1].M_self/Phi_0, 
+                    '-', color = colors['green3'], markersize = pp['nominal_markersize'], label = name_1+': $I_{sy}$ = '+'{:5.2f}$\mu$A'.format(neuron_instance.synapses[name_1].bias_currents[0]*1e6))
         
         axs[1].plot(time_vec*1e6,neuron_instance.synapses[name_1].I_di_vec, '-', color = colors['green3'], markersize = pp['nominal_markersize'], 
-                    label = name_1+' ($L_{si}$ = '+'{:4.0f}nH'.format(neuron_instance.synapses[name_1].integration_loop_total_inductance*1e9)+
-                            '; $tau_{si}$ = '+'{:3.0f}ns)'.format(neuron_instance.synapses[name_1].integration_loop_time_constant*1e9))
+                    label = name_1+': $L_{si}$ = '+'{:5.2f}nH'.format(neuron_instance.synapses[name_1].integration_loop_total_inductance*1e9)+
+                            '; $tau_{si}$ = '+'{:4.0f}ns'.format(neuron_instance.synapses[name_1].integration_loop_time_constant*1e9))
         
         for _time in neuron_instance.synapses[name_1].input_spike_times:
             _time_ind = (np.abs(neuron_instance.time_vec-_time)).argmin()
             axs[0].plot(time_vec[_time_ind]*1e6,neuron_instance.synapses[name_1].I_spd2_vec[_time_ind], 'o', color = colors['green5'], markersize = pp['nominal_markersize'])  
             axs[1].plot(time_vec[_time_ind]*1e6,neuron_instance.synapses[name_1].I_di_vec[_time_ind], 'o', color = colors['green5'], markersize = pp['nominal_markersize'])  
-            axs[2].plot(time_vec[_time_ind]*1e6,Phi_0*neuron_instance.influx_vec[_time_ind], 'o', color = colors['blue5'], markersize = pp['nominal_markersize'])
+            axs[2].plot(time_vec[_time_ind]*1e6,neuron_instance.influx_vec[_time_ind]/Phi_0, 'o', color = colors['blue5'], markersize = pp['nominal_markersize'])
                
-         
+    
+    # axs[0].set_ylabel(r'$I^{spd2}$ [$\mu$A]')
+    axs[0].set_ylabel(r'$\Phi^{sr}_a/\Phi_0$')
+    axs[0].set_ylim([0,0.5])
+    axs[0].set_yticks([0,0.25,0.5])
+    axs[0].legend()
+     
     axs[1].set_ylabel(r'$I^{si}$ [$\mu$A]')
-    # axs[4].set_title('Contribution from each synapse')
     axs[1].legend() 
     
-    axs[0].set_ylabel(r'$I^{sy}_{spd}$ [$\mu$A]')
-    # axs[5].set_title('Contribution from each synapse')
-    axs[0].legend()
     
     # neuron
-    axs[2].plot(time_vec*1e6,Phi_0*neuron_instance.influx_vec, '-', color = colors['blue3'], label = neuron_instance.name)
-    axs[3].plot(time_vec*1e6,neuron_instance.I_ni_vec, '-', color = colors['blue3'], label = neuron_instance.name+' ($tau_{ni}$ = '+'{:3.0f}ns)'.format(neuron_instance.integration_loop_time_constant*1e9))
+    axs[2].plot(time_vec*1e6,neuron_instance.influx_vec/Phi_0, '-', color = colors['blue3'], label = neuron_instance.name+': $n_j$ = '+'{:d}'.format(neuron_instance.num_jjs))
+    x1 = time_vec[0]*1e6
+    x2 = time_vec[-1]*1e6
+    y1 = neuron_instance.dendrites['{}__d'.format(neuron_instance.name)].influx_list__dend[1]/Phi_0
+    y2 = -y1
+    ylims = axs[2].get_ylim()
+    print(ylims)
+    axs[2].plot([x1,x2],[y1,y1], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = 'th')
+    axs[2].plot([x1,x2],[y2,y2], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = 'th')    
+    axs[3].plot(time_vec*1e6,neuron_instance.I_ni_vec, '-', color = colors['blue3'], label = neuron_instance.name+': $tau_{ni}$ = '+'{:4.0f}ns'.format(neuron_instance.integration_loop_time_constant*1e9))
     # for _st in range(len(neuron_instance.spike_times)):
         # axs[2].plot([neuron_instance.spike_times[_st]*1e6,neuron_instance.spike_times[_st]*1e6], [np.min(Phi_0*neuron_instance.influx_vec),np.max(Phi_0*neuron_instance.influx_vec)],':', color = colors['greengrey1'])
         # axs[3].plot([neuron_instance.spike_times[_st]*1e6,neuron_instance.spike_times[_st]*1e6], [np.min(neuron_instance.I_ni_vec),np.max(neuron_instance.I_ni_vec)],':', color = colors['greengrey1'])
     axs[3].plot(neuron_instance.spike_times*1e6,neuron_instance.output_voltage[neuron_instance.voltage_peaks], 'x', color = colors['blue5'])
     
-    axs[2].set_ylabel(r'$\Phi^{nr}_{a}$ [$\mu$A pH]')
+    axs[2].set_ylabel(r'$\Phi^{nr}_{a}/\Phi_0$')
     axs[2].legend()
+    axs[2].set_ylim(ylims)
     
     axs[3].set_ylabel(r'$I^{ni}$ [$\mu$A]')
     axs[3].legend()
@@ -825,21 +777,21 @@ def plot_neuronal_response(neuron_instance):
     
     # refractory dendrite
     name = '{}__r'.format(neuron_instance.name)
-    axs[4].plot(time_vec*1e6,Phi_0*neuron_instance.dendrites[name].influx_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name)
-    axs[4].plot(time_vec[neuron_instance.voltage_peaks]*1e6,Phi_0*neuron_instance.dendrites[name].influx_vec[neuron_instance.voltage_peaks], 'x', color = colors['red5'])
-    axs[5].plot(time_vec*1e6,neuron_instance.dendrites[name].I_di_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name+' ($tau_{ri}$ = '+'{:3.0f}ns)'.format(neuron_instance.dendrites[name].integration_loop_time_constant*1e9))        
+    axs[4].plot(time_vec*1e6,neuron_instance.dendrites[name].influx_vec/Phi_0, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name+': $n_j$ = '+'{:d}; '.format(neuron_instance.dendrites[name].num_jjs))
+    axs[4].plot(time_vec[neuron_instance.voltage_peaks]*1e6,neuron_instance.dendrites[name].influx_vec[neuron_instance.voltage_peaks]/Phi_0, 'x', color = colors['red5'])
+    axs[5].plot(time_vec*1e6,neuron_instance.dendrites[name].I_di_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name+': $tau_{ri}$ = '+'{:4.0f}ns'.format(neuron_instance.dendrites[name].integration_loop_time_constant*1e9))        
     axs[5].plot(time_vec[neuron_instance.voltage_peaks]*1e6,neuron_instance.dendrites[name].I_di_vec[neuron_instance.voltage_peaks], 'x', color = colors['red5'])
     
     # for name in neuron_instance.input_dendritic_connections:
         # axs[4].plot(time_vec*1e6,Phi_0*neuron_instance.dendrites[name].influx_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name)
         # axs[5].plot(time_vec*1e6,neuron_instance.dendrites[name].I_di_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name+' ($tau_{ri}$ = '+'{:3.0f}ns)'.format(neuron_instance.dendrites[name].integration_loop_time_constant*1e9))        
     
-    axs[4].set_ylabel(r'$\Phi^{dr}_{ref}$ [$\mu$A pH]')
+    axs[4].set_ylabel(r'$\Phi^{rr}_{a}/\Phi_0$')
     axs[4].legend()
          
-    axs[5].set_ylabel(r'$I^{di}_{ref}$ [$\mu$A]')
+    axs[5].set_ylabel(r'$I^{ri}$ [$\mu$A]')
     axs[5].set_xlabel(r'Time [$\mu$s]')
-    axs[5].legend()     
+    axs[5].legend()  
     
     plt.show()       
     # fig.savefig('figures/'+save_str+'.png')
@@ -847,49 +799,211 @@ def plot_neuronal_response(neuron_instance):
     return
 
 
-def plot_neuronal_response__single_synaptic_pulse(neuron_instance,plot_save_string = ''):
+def plot_neuronal_response__single_synaptic_pulse(neuron_instance):
     
-    tt = time.time()   
-    save_str = 'bursting__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
+    # tt = time.time()   
+    # save_str = 'bursting__'+plot_save_string+'__'+time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(tt))
     
-    time_vec = neuron_instance.time_vec
-    fig, axs = plt.subplots(nrows = 2, ncols = 1, sharex = True, sharey = False)   
-    fig.suptitle('Current in the neuronal receiving loop versus time')
+    # p = physical_constants()
+    # Phi_0 = 1 # 1e18*p['Phi0']  
     
-    #upper panel, total I_nr
-    axs[0].plot(time_vec*1e6,neuron_instance.cell_body_circulating_current*1e6, '-', color = colors['blue_3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = neuron_instance.name+' ('+neuron_instance.unique_label+')')        
-    #spike times
-    ylim = axs[0].get_ylim()
-    for ii in range(len(neuron_instance.spike_times)):
-        if ii == len(neuron_instance.spike_times):
-            axs[0].plot([neuron_instance.spike_times[ii]*1e6, neuron_instance.spike_times[ii]*1e6], [ylim[0], ylim[1]], ':', color = colors['grey_12'], linewidth = pp['fine_linewidth'], label = 'spike times')
-        else:
-            axs[0].plot([neuron_instance.spike_times[ii]*1e6, neuron_instance.spike_times[ii]*1e6], [ylim[0], ylim[1]], ':', color = colors['grey_12'], linewidth = pp['fine_linewidth'])
-    #threshold
-    xlim = axs[0].get_xlim()
-    axs[0].plot([xlim[0],xlim[1]], [neuron_instance.thresholding_junction_critical_current*1e6,neuron_instance.thresholding_junction_critical_current*1e6], '-.', color = colors['red_5'], linewidth = pp['fine_linewidth'], label = 'Threshold')
-    axs[0].set_ylabel(r'$I_{nr}$ [$\mu$A]')
-    axs[0].set_title('Total current in NR loop')
-    axs[0].legend()
-
-    #lower panel, scaled contributions from each synapse    
-    max1 = max(neuron_instance.synapses[0].coupling_factor*neuron_instance.synapses[0].I_si)
-    max2 = max(neuron_instance.synapses[1].coupling_factor*neuron_instance.synapses[1].I_si)
-    if max2 > 0:
-        tn = max1/max2
+    legends = True
+    
+    Phi_0 = 1e18*6.62606957e-34/(2*1.60217657e-19)
+    
+    time_vec = neuron_instance.time_vec    
+    fig, axs = plt.subplots(nrows = 6, ncols = 1, sharex = True, sharey = False)   
+    if legends == True:
+        _term = neuron_instance.max_rate*1e-6
+        fig.suptitle('num in burst = {:d}; max rate = {:5.2f}MHz'.format(len(neuron_instance.spike_times),_term))
+    
+    # input synapses     
+    for name_1 in neuron_instance.input_synaptic_connections:
+        
+        # axs[0].plot(time_vec*1e6,neuron_instance.synapses[name_1].I_spd2_vec, 
+        #             '-', color = colors['green3'], markersize = pp['nominal_markersize'], label = name_1+': $I_{sy}$ = '+'{:5.2f}$\mu$A'.format(neuron_instance.synapses[name_1].bias_currents[0]*1e6))   
+        axs[0].plot(time_vec*1e6,neuron_instance.synapses[name_1].I_spd2_vec*neuron_instance.synapses[name_1].M_self/Phi_0, 
+                    '-', color = colors['green3'], label = name_1+': $I_{sy}$ = '+'{:5.2f}$\mu$A'.format(neuron_instance.synapses[name_1].bias_currents[0]*1e6))
+        x1 = time_vec[0]*1e6
+        x2 = time_vec[-1]*1e6
+        y1 = neuron_instance.synapses['{}'.format(name_1)].influx_list__dend[1]/Phi_0
+        ylims = axs[0].get_ylim()
+        axs[0].plot([x1,x2],[y1,y1], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = 'th')
+        axs[0].set_ylim(ylims)
+        
+        axs[1].plot(time_vec*1e6,neuron_instance.synapses[name_1].I_di_vec, '-', color = colors['green3'],
+                    label = name_1+': $L_{si}$ = '+'{:5.2f}nH'.format(neuron_instance.synapses[name_1].integration_loop_total_inductance*1e9)+
+                            '; $tau_{si}$ = '+'{:4.0f}ns'.format(neuron_instance.synapses[name_1].integration_loop_time_constant*1e9))
+        
+        for _time in neuron_instance.synapses[name_1].input_spike_times:
+            _time_ind = (np.abs(neuron_instance.time_vec-_time)).argmin()
+            axs[0].plot(time_vec[_time_ind]*1e6,neuron_instance.synapses[name_1].I_spd2_vec[_time_ind], 'o', markersize = pp['nominal_markersize'], color = colors['green5'])  
+            axs[1].plot(time_vec[_time_ind]*1e6,neuron_instance.synapses[name_1].I_di_vec[_time_ind], 'o', markersize = pp['nominal_markersize'], color = colors['green5'])  
+            axs[2].plot(time_vec[_time_ind]*1e6,neuron_instance.influx_vec[_time_ind]/Phi_0, 'o', markersize = pp['nominal_markersize'], color = colors['blue5'])
+                   
+    # axs[0].set_ylabel(r'$I^{spd2}$ [$\mu$A]')
+    axs[0].set_ylabel(r'$\Phi^{sr}_a/\Phi_0$')
+    # axs[0].set_ylim([0,0.5])
+    # axs[0].set_yticks([0,0.25,0.5])
+     
+    axs[1].set_ylabel(r'$I^{si}$ [$\mu$A]')    
+    
+    # neuron
+    axs[2].plot(time_vec*1e6,neuron_instance.influx_vec/Phi_0, '-', color = colors['blue3'], label = neuron_instance.name+': $n_j$ = '+'{:d}'.format(neuron_instance.num_jjs))
+    y1 = neuron_instance.dendrites['{}__d'.format(neuron_instance.name)].influx_list__dend[1]/Phi_0
+    y2 = -y1
+    ylims = axs[2].get_ylim()
+    axs[2].plot([x1,x2],[y1,y1], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = 'th')
+    axs[2].plot([x1,x2],[y2,y2], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = '-th')    
+    axs[3].plot(time_vec*1e6,neuron_instance.I_ni_vec, '-', color = colors['blue3'], label = neuron_instance.name+': $tau_{ni}$ = '+'{:4.0f}ns'.format(neuron_instance.integration_loop_time_constant*1e9))
+    # for _st in range(len(neuron_instance.spike_times)):
+        # axs[2].plot([neuron_instance.spike_times[_st]*1e6,neuron_instance.spike_times[_st]*1e6], [np.min(Phi_0*neuron_instance.influx_vec),np.max(Phi_0*neuron_instance.influx_vec)],':', color = colors['greengrey1'])
+        # axs[3].plot([neuron_instance.spike_times[_st]*1e6,neuron_instance.spike_times[_st]*1e6], [np.min(neuron_instance.I_ni_vec),np.max(neuron_instance.I_ni_vec)],':', color = colors['greengrey1'])
+    axs[3].plot(neuron_instance.spike_times*1e6,neuron_instance.output_voltage[neuron_instance.voltage_peaks], 'x', markersize = pp['nominal_markersize'], color = colors['blue5'])
+    
+    axs[2].set_ylabel(r'$\Phi^{nr}_{a}/\Phi_0$')
+    axs[2].set_ylim(ylims)
+    
+    axs[3].set_ylabel(r'$I^{ni}$ [$\mu$A]')
+    
+    # axs[4].plot(time_vec[0:-1]*1e6,neuron_instance.output_voltage*1e9, '-', color = colors['yellow3'], label = '$V^{out}$')
+    # axs[4].plot(neuron_instance.spike_times*1e6,neuron_instance.output_voltage[neuron_instance.voltage_peaks]*1e9, 'x', color = colors['yellow5'])
+    # axs[4].set_ylabel(r'$V^{out}$ [$nV$]')
+    # axs[4].legend()
+    
+    # refractory dendrite
+    name = '{}__r'.format(neuron_instance.name)
+    axs[4].plot(time_vec*1e6,neuron_instance.dendrites[name].influx_vec/Phi_0, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name+': $n_j$ = '+'{:d}; '.format(neuron_instance.dendrites[name].num_jjs))
+    axs[4].plot(time_vec[neuron_instance.voltage_peaks]*1e6,neuron_instance.dendrites[name].influx_vec[neuron_instance.voltage_peaks]/Phi_0, 'x', markersize = pp['nominal_markersize'], color = colors['red5'])
+    y1 = neuron_instance.dendrites[name].influx_list__dend[1]/Phi_0
+    ylims = axs[4].get_ylim()
+    axs[4].plot([x1,x2],[y1,y1], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = 'th')
+    axs[4].set_ylim(ylims)
+    axs[5].plot(time_vec*1e6,neuron_instance.dendrites[name].I_di_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name+': $tau_{ri}$ = '+'{:4.0f}ns'.format(neuron_instance.dendrites[name].integration_loop_time_constant*1e9))        
+    axs[5].plot(time_vec[neuron_instance.voltage_peaks]*1e6,neuron_instance.dendrites[name].I_di_vec[neuron_instance.voltage_peaks], 'x', markersize = pp['nominal_markersize'], color = colors['red5'])
+    
+    # for name in neuron_instance.input_dendritic_connections:
+        # axs[4].plot(time_vec*1e6,Phi_0*neuron_instance.dendrites[name].influx_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name)
+        # axs[5].plot(time_vec*1e6,neuron_instance.dendrites[name].I_di_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name+' ($tau_{ri}$ = '+'{:3.0f}ns)'.format(neuron_instance.dendrites[name].integration_loop_time_constant*1e9))        
+    
+    axs[4].set_ylabel(r'$\Phi^{rr}_{a}/\Phi_0$')
+         
+    axs[5].set_ylabel(r'$I^{ri}$ [$\mu$A]')
+    axs[5].set_xlabel(r'Time [$\mu$s]')
+    
+    if legends == True:
+        for ii in range(len(axs)):
+            axs[ii].legend()
+    
+    xmin = 0
+    if len(neuron_instance.voltage_peaks) > 0:
+        xmax = (neuron_instance.time_vec[neuron_instance.voltage_peaks[-1]]+6*neuron_instance.refractory_time_constant)*1e6
     else:
-        tn = 1
-    axs[1].plot(time_vec*1e6,neuron_instance.synapses[0].coupling_factor*neuron_instance.synapses[0].I_si*1e6, '-', color = colors['green_3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = neuron_instance.synapses[0].unique_label+' ($tau_{si}$ = '+'{:3.0f}ns)'.format(neuron_instance.synapses[0].integration_loop_time_constant*1e9))
-    axs[1].plot(time_vec*1e6,tn*neuron_instance.synapses[1].coupling_factor*neuron_instance.synapses[1].I_si*1e6, '-', color = colors['yellow_3'], linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'], label = neuron_instance.synapses[1].unique_label+' ($tau_{ref}$ = '+'{:4.0f}ns)'.format(neuron_instance.synapses[1].integration_loop_time_constant*1e9))
-    axs[1].set_xlabel(r'Time [$\mu$s]')
-    axs[1].set_ylabel(r'Contribution to $I_{nr}$ [$\mu$A]')
-    axs[1].set_title('Contribution from each synapse')
-    axs[1].legend()
-    # axs[1].grid(b = False)        
-    # axs[1].grid(b = True, which='major', axis='both')
+        xmax = 6*neuron_instance.integration_loop_time_constant*1e6
+    axs[0].set_xlim([xmin,xmax])
     
     plt.show()       
-    fig.savefig('figures/'+save_str+'.png')
+    # fig.savefig('figures/'+save_str+'.png')
+    
+    return
+
+
+def plot_neuronal_response__single_synaptic_pulse__wr_compare(neuron_instance,wr_instance):
+    
+    I_spd__wr = np.asarray(wr_instance['L4#branch'])
+    I_si__wr = np.asarray(wr_instance['L1#branch'])
+    I_ni__wr = np.asarray(wr_instance['L8#branch'])
+    I_ri__wr = np.asarray(wr_instance['L11#branch'])
+    time_vec__wr = np.asarray(wr_instance['time'])
+    
+    legends = True
+    
+    Phi_0 = 1e18*6.62606957e-34/(2*1.60217657e-19)
+    
+    time_vec = neuron_instance.time_vec    
+    fig, axs = plt.subplots(nrows = 6, ncols = 1, sharex = True, sharey = False)   
+    if legends == True:
+        _term = neuron_instance.max_rate*1e-6
+        fig.suptitle('num in burst = {:d}; max rate = {:5.2f}MHz'.format(len(neuron_instance.spike_times),_term))
+    
+    # input synapses     
+    for name_1 in neuron_instance.input_synaptic_connections:
+           
+        axs[0].plot(time_vec*1e6,neuron_instance.synapses[name_1].I_spd2_vec*neuron_instance.synapses[name_1].M_self/Phi_0, 
+                    '-', color = colors['green3'], label = name_1+': $I_{sy}$ = '+'{:5.2f}$\mu$A'.format(neuron_instance.synapses[name_1].bias_currents[0]*1e6))
+        axs[0].plot(time_vec__wr*1e6,1e6*I_spd__wr*neuron_instance.synapses[name_1].M_self/Phi_0,'-.', color = colors['green1'], label = 'wr')
+        x1 = time_vec[0]*1e6
+        x2 = time_vec[-1]*1e6
+        y1 = neuron_instance.synapses['{}'.format(name_1)].influx_list__dend[1]/Phi_0
+        ylims = axs[0].get_ylim()
+        # axs[0].plot([x1,x2],[y1,y1], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = 'th')
+        axs[0].set_ylim(ylims)
+        
+        axs[1].plot(time_vec*1e6,neuron_instance.synapses[name_1].I_di_vec, '-', color = colors['green3'],
+                    label = name_1+': $L_{si}$ = '+'{:5.2f}nH'.format(neuron_instance.synapses[name_1].integration_loop_total_inductance*1e9)+
+                            '; $tau_{si}$ = '+'{:4.0f}ns'.format(neuron_instance.synapses[name_1].integration_loop_time_constant*1e9))
+        axs[1].plot(time_vec__wr*1e6,1e6*I_si__wr,'-.', color = colors['green1'], label = 'wr')
+                
+        for _time in neuron_instance.synapses[name_1].input_spike_times:
+            _time_ind = (np.abs(neuron_instance.time_vec-_time)).argmin()
+            axs[0].plot(time_vec[_time_ind]*1e6,neuron_instance.synapses[name_1].I_spd2_vec[_time_ind], 'o', markersize = pp['nominal_markersize'], color = colors['green5'])  
+            axs[1].plot(time_vec[_time_ind]*1e6,neuron_instance.synapses[name_1].I_di_vec[_time_ind], 'o', markersize = pp['nominal_markersize'], color = colors['green5'])  
+            axs[2].plot(time_vec[_time_ind]*1e6,neuron_instance.influx_vec[_time_ind]/Phi_0, 'o', markersize = pp['nominal_markersize'], color = colors['blue5'])
+                   
+    axs[0].set_ylabel(r'$\Phi^{sr}_a/\Phi_0$')
+     
+    axs[1].set_ylabel(r'$I^{si}$ [$\mu$A]')    
+    
+    # neuron
+    axs[2].plot(time_vec*1e6,neuron_instance.influx_vec/Phi_0, '-', color = colors['blue3'], label = neuron_instance.name+': $n_j$ = '+'{:d}'.format(neuron_instance.num_jjs))
+    M_temp = 1e12*neuron_instance.neuronal_receiving_input_refractory_inductance[1]*np.sqrt(neuron_instance.neuronal_receiving_input_refractory_inductance[0]*neuron_instance.refractory_loop_output_inductance)
+    nr_flux__wr = (1e6*I_si__wr*neuron_instance.synapses[name_1].M_self-1e6*I_ri__wr*M_temp)/Phi_0
+    axs[2].plot(time_vec__wr*1e6,nr_flux__wr, '-', color = colors['blue1'], label = 'wr')
+    
+    y1 = neuron_instance.dendrites['{}__d'.format(neuron_instance.name)].influx_list__dend[1]/Phi_0
+    y2 = -y1
+    ylims = axs[2].get_ylim()
+    # axs[2].plot([x1,x2],[y1,y1], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = 'th')
+    # axs[2].plot([x1,x2],[y2,y2], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = '-th')    
+    axs[3].plot(time_vec*1e6,neuron_instance.I_ni_vec, '-', color = colors['blue3'], label = neuron_instance.name+': $tau_{ni}$ = '+'{:4.0f}ns'.format(neuron_instance.integration_loop_time_constant*1e9))
+    axs[3].plot(time_vec__wr*1e6,I_ni__wr*1e6, '-', color = colors['blue1'], label = 'wr')
+    axs[3].plot(neuron_instance.spike_times*1e6,neuron_instance.output_voltage[neuron_instance.voltage_peaks], 'x', markersize = pp['nominal_markersize'], color = colors['blue5'])
+    
+    axs[2].set_ylabel(r'$\Phi^{nr}_{a}/\Phi_0$')
+    axs[2].set_ylim(ylims)
+    axs[3].set_ylabel(r'$I^{ni}$ [$\mu$A]')
+    
+    # refractory dendrite
+    name = '{}__r'.format(neuron_instance.name)
+    axs[4].plot(time_vec*1e6,neuron_instance.dendrites[name].influx_vec/Phi_0, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name+': $n_j$ = '+'{:d}; '.format(neuron_instance.dendrites[name].num_jjs))
+    ylims = axs[4].get_ylim()
+    M_temp = 1e12*neuron_instance.refractory_receiving_input_inductance[1]*np.sqrt(neuron_instance.refractory_receiving_input_inductance[0]*neuron_instance.integration_loop_output_inductances[1][0])    
+    axs[4].plot(time_vec__wr*1e6,1e6*I_ni__wr*M_temp/Phi_0, '-.', color = colors['red1'], label = 'wr')
+    axs[4].plot(time_vec[neuron_instance.voltage_peaks]*1e6,neuron_instance.dendrites[name].influx_vec[neuron_instance.voltage_peaks]/Phi_0, 'x', markersize = pp['nominal_markersize'], color = colors['red5'])
+    y1 = neuron_instance.dendrites[name].influx_list__dend[1]/Phi_0
+    # axs[4].plot([x1,x2],[y1,y1], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = 'th')
+    # axs[4].set_ylim(ylims)
+    axs[5].plot(time_vec*1e6,neuron_instance.dendrites[name].I_di_vec, '-', color = colors['red3'], markersize = pp['nominal_markersize'], label = name+': $tau_{ri}$ = '+'{:4.0f}ns'.format(neuron_instance.dendrites[name].integration_loop_time_constant*1e9))        
+    axs[5].plot(time_vec[neuron_instance.voltage_peaks]*1e6,neuron_instance.dendrites[name].I_di_vec[neuron_instance.voltage_peaks], 'x', markersize = pp['nominal_markersize'], color = colors['red5'])
+    axs[5].plot(time_vec__wr*1e6,1e6*I_ri__wr, '-.', color = colors['red1'], label = 'wr')                
+    
+    axs[4].set_ylabel(r'$\Phi^{rr}_{a}/\Phi_0$')
+         
+    axs[5].set_ylabel(r'$I^{ri}$ [$\mu$A]')
+    axs[5].set_xlabel(r'Time [$\mu$s]')
+    
+    if legends == True:
+        for ii in range(len(axs)):
+            axs[ii].legend()
+    
+    xmin = 0
+    if len(neuron_instance.voltage_peaks) > 0:
+        xmax = (neuron_instance.time_vec[neuron_instance.voltage_peaks[-1]]+6*neuron_instance.refractory_time_constant)*1e6
+    else:
+        xmax = 6*neuron_instance.integration_loop_time_constant*1e6
+    axs[0].set_xlim([xmin,xmax])
+    
+    plt.show()       
     
     return
 
@@ -2421,20 +2535,23 @@ def plot__syn__wr_cmpr__pulse_train(soen_time,soen_drive,soen_response,wr_time,w
 
     return 
 
-def plot_num_in_burst(I_sy_vec,L_si_vec,tau_si_vec,num_in_burst):
+def plot_num_in_burst(I_sy_vec,L_si_vec,tau_si_vec,num_in_burst,num_jjs,I_nf):
     
     fig = plt.figure()
-    # fig.suptitle('Isi vs Isy; tau_si = inf; L_si = {:7.4f} nH'.format(synapse_list[0].integration_loop_total_inductance*1e9)) 
+    fig.suptitle('n_j = {:d}; I_nf = {:5.2f}uA'.format(num_jjs,I_nf*1e6)) 
     ax = fig.gca()
     
-    num_I_sy = len(I_sy_vec)
     num_L_si = len(L_si_vec)
     num_tau_si = len(tau_si_vec)
-    for ii in range(num_L_si):
-        for jj in range(num_I_sy):
-            ax.plot(tau_si_vec*1e6,num_in_burst[ii,jj,:], '-o', linewidth = pp['nominal_linewidth'], label = 'I_sy = {:5.2f}uA, L_si = {:7.2f}nH'.format(I_sy_vec[jj]*1e6,L_si_vec[ii]*1e9))
+    for jj in range(num_tau_si):
+        for ii in range(num_L_si):
+            ax.plot(np.asarray(I_sy_vec)*1e6,num_in_burst[ii,jj,:], '-o', linewidth = pp['nominal_linewidth'], label = 'tau_si = {:5.2f}ns, L_si = {:7.2f}nH'.format(tau_si_vec[jj]*1e9,L_si_vec[ii]*1e9))
+       
+    if num_jjs == 2:
+        ax.set_xlim([69.5,79.5])
+        
     
-    ax.set_xlabel(r'$\tau_{si}$ [$\mu$s]')
+    ax.set_xlabel(r'$I^{sy}$ [$\mu$A]')
     ax.set_ylabel(r'Num spikes')
     ax.legend()
     
@@ -2442,14 +2559,24 @@ def plot_num_in_burst(I_sy_vec,L_si_vec,tau_si_vec,num_in_burst):
     
     return
 
-def plot_phase_portrait(neuron_instance):
+def plot_phase_portrait(neuron_instance,**kwargs):
+                
     
-    drive_vec = neuron_instance.influx_vec__no_refraction
+    Phi_0 = 1e18*6.62606957e-34/(2*1.60217657e-19)
+    
+    drive_vec = neuron_instance.influx_vec__no_refraction/Phi_0
     ref_dend_name = '{}__r'.format(neuron_instance.name)
-    refraction_vec = neuron_instance.dendrites[ref_dend_name].M*neuron_instance.dendrites[ref_dend_name].I_di_vec
+    refraction_vec = neuron_instance.dendrites[ref_dend_name].M*neuron_instance.dendrites[ref_dend_name].I_di_vec/Phi_0    
     
-    fig = plt.figure()
-    # fig.suptitle('tau_si = {:5.2f} ns; tau_ri = {:5.2f}'.format(synapse_list[0].integration_loop_total_inductance*1e9)) 
+    fig = plt.figure()    
+    _str = ''
+    if 'I_sy' in kwargs:
+        _str = '{}I_sy = {:5.2f}uA'.format(_str,kwargs['I_sy']*1e6)
+    if 'L_si' in kwargs:   
+        _str = '{}; L_si = {:5.2f}nH'.format(_str,kwargs['L_si']*1e9)
+    if 'tau_si' in kwargs:   
+        _str = '{}; tau_si = {:7.2f}us'.format(_str,kwargs['tau_si']*1e6)
+    fig.suptitle(_str) 
     ax = fig.gca()
     
     ax.plot(drive_vec,refraction_vec, color = colors['blue3']) # , '-o', linewidth = pp['nominal_linewidth'], label = 'I_sy = {:5.2f}uA, L_si = {:7.2f}nH'.format(I_sy_vec[jj]*1e6,L_si_vec[ii]*1e9)
@@ -2460,14 +2587,21 @@ def plot_phase_portrait(neuron_instance):
             ax.plot(drive_vec[_time_ind],refraction_vec[_time_ind], 'o', color = colors['green3'])
         
     
-    ax.set_xlabel(r'$\Phi_{+}^{nr}$ [$\mu$A pH]')
-    ax.set_ylabel(r'$\Phi_{ref}^{nr}$ [$\mu$A pH]')
+    ax.set_xlabel(r'$\Phi_{+}^{nr}/\Phi_0$')
+    ax.set_ylabel(r'$\Phi_{ref}^{nr}/\Phi_0$')
     # ax.legend()
     
-    x_min = np.min(drive_vec)
-    x_max = np.max(drive_vec)
+    # x_min = np.min(drive_vec)
+    # x_max = np.max(drive_vec)
+    
+    x_min = neuron_instance.dendrites['{}__d'.format(neuron_instance.name)].influx_list__dend[1]/Phi_0
+    x_max = np.max(drive_vec)    
+    
     x_range = x_max-x_min
+    ax.plot([x_min,x_min],[0,np.max(refraction_vec)])
     ax.set_xlim([x_min-0.05*x_range,x_max+0.05*x_range])
+    
+    
     
     plt.show()
     

@@ -11,7 +11,7 @@ p = physical_constants()
 # plt.close('all')
 
 #%%
-num_jjs = 2
+num_jjs = 4
 
 dt = 0.1e-9
 I_spd = 10e-6
