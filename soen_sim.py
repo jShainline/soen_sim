@@ -539,8 +539,7 @@ class neuron():
             else:
                 self.refractory_time_constant = kwargs['refractory_time_constant']
         else:
-            if self.refractory_temporal_form == 'exponential':
-                self.refractory_time_constant = 50e-9 #default time constant, units of seconds
+            self.refractory_time_constant = 50e-9 #default time constant, units of seconds
             
         if 'refractory_junction_critical_current' in kwargs:
             self.refractory_junction_critical_current = kwargs['refractory_junction_critical_current']

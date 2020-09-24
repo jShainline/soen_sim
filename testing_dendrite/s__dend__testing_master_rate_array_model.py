@@ -62,7 +62,7 @@ for ii in range(len(I_drive_vec)):
             input_1 = input_signal(name = 'input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
                                     time_vec = np.arange(0,tf+dt,dt), exponential_pulse_train = exp_pls_trn_params)            
 
-            dendrite_1 = dendrite('dendrite_under_test', num_jjs = num_jjs,
+            dendrite_1 = dendrite(name = 'dendrite_under_test', num_jjs = num_jjs,
                                     inhibitory_or_excitatory = 'excitatory', circuit_inductances = [0e-12,20e-12,200e-12,77.5e-12], 
                                     input_synaptic_connections = [], input_synaptic_inductances = [[]], 
                                     input_dendritic_connections = [], input_dendritic_inductances = [[]],                      
@@ -71,7 +71,7 @@ for ii in range(len(I_drive_vec)):
                                     integration_loop_self_inductance = L_di, integration_loop_output_inductance = 0e-12,
                                     integration_loop_temporal_form = 'exponential', integration_loop_time_constant = tau_di)
 
-            neuron_1 = neuron('dummy_neuron', input_dendritic_connections = ['dendrite_under_test'],
+            neuron_1 = neuron(name = 'dummy_neuron', input_dendritic_connections = ['dendrite_under_test'],
                               junction_critical_current = 40e-6,
                               circuit_inductances = [0e-12,0e-12,200e-12,77.5e-12],
                               input_dendritic_inductances = [[20e-12,1]], 
@@ -100,7 +100,7 @@ for ii in range(len(I_drive_vec)):
 
 plt.close('all')
 
-dt = 0.874e-9
+dt = 0.1e-9
 tf = 50e-9
 
 num_jjs = 4
@@ -144,7 +144,7 @@ for kk in range(len(tau_di_vec)):
         input_1 = input_signal(name = 'input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
                                 time_vec = np.arange(0,tf+dt,dt), piecewise_linear = pwl_drive)            
 
-        dendrite_1 = dendrite('dendrite_under_test', num_jjs = num_jjs,
+        dendrite_1 = dendrite(name = 'dendrite_under_test', num_jjs = num_jjs,
                                 inhibitory_or_excitatory = 'excitatory', circuit_inductances = [0e-12,20e-12,200e-12,77.5e-12], 
                                 input_synaptic_connections = [], input_synaptic_inductances = [[]], 
                                 input_dendritic_connections = [], input_dendritic_inductances = [[]],                      
@@ -156,7 +156,7 @@ for kk in range(len(tau_di_vec)):
         time_params = dict()
         time_params['dt'] = dt
         time_params['tf'] = tf
-        neuron_1 = neuron('dummy_neuron', input_dendritic_connections = ['dendrite_under_test'], 
+        neuron_1 = neuron(name = 'dummy_neuron', input_dendritic_connections = ['dendrite_under_test'], 
                           circuit_inductances = [0e-12,0e-12,200e-12,77.5e-12],
                           input_dendritic_inductances = [[20e-12,1]], 
                           refractory_loop_circuit_inductances = [0e-12,20e-12,200e-12,77.5e-12],
@@ -184,7 +184,7 @@ for kk in range(len(tau_di_vec)):
 
 # plt.close('all')
 
-dt = 0.8741e-9
+dt = 0.1e-9
 
 num_jjs = 4
 L_di_vec = np.asarray([77.5,775,7750])*1e-9
@@ -217,7 +217,7 @@ for jj in range(len(L_di_vec)):
         input_1 = input_signal(name = 'input_dendritic_drive', input_temporal_form = 'analog_dendritic_drive', output_inductance = 200e-12, 
                                 time_vec = np.arange(0,tf+dt,dt), piecewise_linear = pwl_drive)            
 
-        dendrite_1 = dendrite('dendrite_under_test', num_jjs = num_jjs,
+        dendrite_1 = dendrite(name = 'dendrite_under_test', num_jjs = num_jjs,
                                 inhibitory_or_excitatory = 'excitatory', circuit_inductances = [0e-12,20e-12,200e-12,77.5e-12], 
                                 input_synaptic_connections = [], input_synaptic_inductances = [[]], 
                                 input_dendritic_connections = [], input_dendritic_inductances = [[]],                      
@@ -229,7 +229,7 @@ for jj in range(len(L_di_vec)):
         time_params = dict()
         time_params['dt'] = dt
         time_params['tf'] = tf
-        neuron_1 = neuron('dummy_neuron', input_dendritic_connections = ['dendrite_under_test'], 
+        neuron_1 = neuron(name = 'dummy_neuron', input_dendritic_connections = ['dendrite_under_test'], 
                           circuit_inductances = [0e-12,0e-12,200e-12,77.5e-12],
                           input_dendritic_inductances = [[20e-12,1]], 
                           refractory_loop_circuit_inductances = [0e-12,20e-12,200e-12,77.5e-12],

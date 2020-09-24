@@ -1,0 +1,69 @@
+
+B0 9 16 32 jjSFQ1 area=40
+B1 13 18 33 jjSFQ1 area=40
+B2 9 20 34 jjSFQ1 area=40
+B3 10 0 35 jjSFQ1 area=40
+B4 11 0 36 jjSFQ1 area=40
+B5 13 22 37 jjSFQ1 area=40
+B6 14 0 38 jjSFQ1 area=40
+B7 15 0 39 jjSFQ1 area=40
+B8 24 0 40 jjHys area=40
+B9 27 0 41 jjSFQ1 area=40
+B10 28 0 42 jjSFQ1 area=40
+B11 29 30 43 jjSFQ1 area=40
+B12 29 31 44 jjSFQ1 area=40
+I0 0 9 pwl(0 0 0.09n 0 0.1n 76u)
+I1 0 10 pwl(0 0 0.09n 0 0.1ns 36u)
+I2 0 11 pwl(0 0 0.09n 0 0.1ns 35u)
+I3 0 3 pwl(0 0 0.09n 0 0.1ns 35u)
+I4 0 12 pwl(0 0 0.1ns 0 0.19ns 10u)
+I5 0 13 pwl(0 0 0.09n 0 0.1n Isy )
+I6 0 14 pwl(0 0 0.09n 0 0.1ns 36u)
+I7 0 15 pwl(0 0 0.09n 0 0.1ns 35u)
+I8 0 27 pwl(0 0 0.09n 0 0.1ns 35u)
+I9 0 28 pwl(0 0 0.09n 0 0.1ns 36u)
+I10 0 29 pwl(0 0 0.09n 0 0.1n 76u)
+K1 L14 L13 -1
+K2 L23 L22 1
+K3 L17 L15 1
+K4 L12 L7 1
+K5 L10 L11 1
+L0 9 10 200p
+L1 10 11 77.5p
+L2 11 2 1f
+L3 12 17 100n
+L4 13 14 200p
+L5 14 15 77.5p
+L6 15 19 77.50n
+L7 16 0 20p
+L8 3 4 1f
+L9 12 21 100n
+L10 17 6 250p
+L11 18 0 20p
+L12 19 23 200p
+L13 3 24 400p
+L14 2 7 0p
+L15 20 0 20p
+L16 22 0 20p
+L17 26 25 20p
+L18 27 26 200p
+L19 28 27 77.5p
+L20 29 28 200p
+L21 30 0 20p
+L22 31 0 20p
+L23 0 8 100p
+R0 1 0 1
+R1 0 5 1
+R2 23 0 R=v(1)+ 0.8
+R3 21 0 R=v(5)+1e-6
+R4 25 0 R=v(1)+0.012
+R5 0 6 R=v(1)+4.008
+R6 4 0 R=v(1)+1
+R7 7 8 R=v(1)+0.004
+V0 1 0 pwl(0 1e5 0.2ns 1e5 0.3ns 0)
+V1 5 0 pulse(0 5e3 5ns 0.2ns 0.2ns 0.2ns 50us )
+
+.model jjHys jj(rtype=0, cct=1, vg=2.8m, icrit=1u, cap= 5f, vshunt=0.811mV)
+
+.model jjSFQ1 jj(rtype=0, cct=1, vg=2.8m, icrit=1u, cap= 5f, vshunt=0.25mV)
+
