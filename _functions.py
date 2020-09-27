@@ -11,6 +11,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from util import physical_constants
 from _plotting import plot_wr_comparison, plot_error_mat # plot_dendritic_drive, 
 
+
 #%%
 
 def neuron_time_stepper(neuron_object):
@@ -23,6 +24,8 @@ def neuron_time_stepper(neuron_object):
     current_conversion = 1e6
     inductance_conversion = 1e12
     time_conversion = 1e6
+    resistance_conversion = inductance_conversion/time_conversion
+    voltage_conversion = current_conversion*resistance_conversion
     
     time_vec = n.time_vec
     nt = len(time_vec)
@@ -228,28 +231,55 @@ def neuron_time_stepper(neuron_object):
             
     #initialize neuron
     print('configuring neuron ...')
+    _temp_str_2 = '{:1d}jj_Llft{:05.2f}_Lrgt{:05.2f}_Ide{:05.2f}'.format(n.dendrites['{}__d'.format(n.name)].num_jjs,inductance_conversion*n.dendrites['{}__d'.format(n.name)].L_left,inductance_conversion*n.dendrites['{}__d'.format(n.name)].L_right,current_conversion*n.dendrites['{}__d'.format(n.name)].bias_currents[0])
+    n.dendrites['{}__d'.format(n.name)].I_di_array = I_di_array__dict[_temp_str_2]
+    n.dendrites['{}__d'.format(n.name)].influx_list__dend = influx_list__dend__dict[_temp_str_2]
+    n.dendrites['{}__d'.format(n.name)].rate_array__dend = rate_array__dend__dict[_temp_str_2]
+    
+    n.dendrites['{}__d'.format(n.name)].I_fq = current_conversion*Phi0/n.dendrites['{}__d'.format(n.name)].integration_loop_total_inductance
+    n.dendrites['{}__d'.format(n.name)].I_di_vec = np.zeros([nt])
+    n.dendrites['{}__d'.format(n.name)].I_drive_vec = np.zeros([nt])
+    n.dendrites['{}__d'.format(n.name)].influx_vec = np.zeros([nt])
+    n.dendrites['{}__d'.format(n.name)].tau_di = current_conversion*n.dendrites['{}__d'.format(n.name)].integration_loop_time_constant
+    # n.dendrites['{}__d'.format(n.name)].M = inductance_conversion*n.dendrites[de_name].input_dendritic_inductances[de__de_name][1]*np.sqrt(n.dendrites[de__de_name].integration_loop_output_inductance*n.dendrites[de_name].input_dendritic_inductances[de__de_name][0])
+        
     # n.I_fq = current_conversion*Phi0/n.integration_loop_total_inductance
     # n.I_fq = current_conversion*Phi0/(n.integration_loop_total_inductance+Ljj(n.I_c*1e-6,n.bias_currents[2]))
     n.I_ni_vec = np.zeros([nt])
     n.I_drive_vec = np.zeros([nt])
     n.influx_vec = np.zeros([nt])
     n.influx_vec__no_refraction = np.zeros([nt])
+    n.influx_vec__just_refraction = np.zeros([nt])
     n.tau_ni = current_conversion*n.integration_loop_time_constant
-    n.state = 'quiescent'
+    
+    n.state = 'subthreshold'
+    n.threshold_Lt = n.threshold_circuit_total_inductance # inductance_conversion
+    n.threshold_r = n.threshold_circuit_resistance # *resistance_conversion
+    n.threshold_M = -n.integration_loop_output_inductance[1]*np.sqrt(n.integration_loop_output_inductance[0]*n.threshold_circuit_inductances[0]) # *inductance_conversion
+    n.threshold_Ibias = n.threshold_circuit_bias_current # current_conversion
+    n.threshold_I1 = np.zeros([nt])
+    n.threshold_I2 = np.zeros([nt]) 
+    n.L_nr = n.L_nr # *inductance_conversion
+    # n.threshold_integration = 0
+    n.delta_I__spike = 56/current_conversion # (51.315+3.5)/current_conversion
+    
+    n.refraction_M = n.neuronal_receiving_input_refractory_inductance[1]*np.sqrt(n.neuronal_receiving_input_refractory_inductance[0]*n.threshold_circuit_inductances[2]) # *inductance_conversion
+    
     n.spike_times = []
     
     #load threshold data
-    _temp_str_2 = '{:1d}jj_Llft{:04.1f}_Lrgt{:04.1f}_Lnf65.0'.format(n.num_jjs,inductance_conversion*n.dendrites['{}__d'.format(n.name)].L_left,inductance_conversion*n.dendrites['{}__d'.format(n.name)].L_right)
-    n.I_di_th_array = I_di_th_array__neu__dict[_temp_str_2]
-    n.I_fq1_array = I_fq1_array__neu__dict[_temp_str_2]
-    n.I_fq2_array = I_fq2_array__neu__dict[_temp_str_2]
-    n.influx_array = influx_array__neu__dict[_temp_str_2]
-    n.I_de_vec = I_de_vec__neu__dict[_temp_str_2]
+    # _temp_str_2 = '{:1d}jj_Llft{:04.1f}_Lrgt{:04.1f}_Lnf65.0'.format(n.num_jjs,inductance_conversion*n.dendrites['{}__d'.format(n.name)].L_left,inductance_conversion*n.dendrites['{}__d'.format(n.name)].L_right)
+    # n.I_di_th_array = I_di_th_array__neu__dict[_temp_str_2]
+    # n.I_fq1_array = I_fq1_array__neu__dict[_temp_str_2]
+    # n.I_fq2_array = I_fq2_array__neu__dict[_temp_str_2]
+    # n.influx_array = influx_array__neu__dict[_temp_str_2]
+    # n.I_de_vec = I_de_vec__neu__dict[_temp_str_2]
     
     # step through time
     print('starting time stepping ...')
     # current_to_flux = inductance_conversion*np.sqrt(200e-12*10e-12)
-    for ii in range(nt-1):
+    ii_vec = np.arange(1,nt-1,1)
+    for ii in ii_vec:
         
         _pt = time_vec[ii] # present time 
         # print('ii = {} of {}; t = {}'.format(ii+1,len(range(nt-1)),_pt))
@@ -457,12 +487,14 @@ def neuron_time_stepper(neuron_object):
         # the neuron itself        
                 
         syn_flux = 0
+        syn_flux_2 = 0
         for sy_name in n.input_synaptic_connections:
             if n.synapses[sy_name].inhibitory_or_excitatory == 'inhibitory':
                 _prefactor = -1
             elif n.synapses[sy_name].inhibitory_or_excitatory == 'excitatory':
                 _prefactor = 1
-            syn_flux += _prefactor*n.synapses[sy_name].M*n.synapses[sy_name].I_di_vec[ii+1]            
+            syn_flux += _prefactor*n.synapses[sy_name].M*n.synapses[sy_name].I_di_vec[ii+1] 
+            syn_flux_2 += _prefactor*( n.synapses[sy_name].M/inductance_conversion )*( (n.synapses[sy_name].I_di_vec[ii+1]-n.synapses[sy_name].I_di_vec[ii])/current_conversion )
         dend_flux = 0
         for de_name in n.input_dendritic_connections:
             if n.dendrites[de_name].inhibitory_or_excitatory == 'inhibitory':
@@ -470,38 +502,184 @@ def neuron_time_stepper(neuron_object):
             elif n.dendrites[de_name].inhibitory_or_excitatory == 'excitatory':
                 _prefactor = 1                    
             dend_flux += _prefactor*n.dendrites[de_name].M*n.dendrites[de_name].I_di_vec[ii+1]
-            if de_name == '{}__r'.format(n.name):
-                dend_flux__ref = _prefactor*n.dendrites[de_name].M*n.dendrites[de_name].I_di_vec[ii+1]
+            # if de_name == '{}__r'.format(n.name):
+            #     dend_flux__ref = _prefactor*n.dendrites[de_name].M*n.dendrites[de_name].I_di_vec[ii+1]
+       
+        # n.threshold_Ltt = n.threshold_Lt+Ljj_pH(n.I_c,n.I_ni_vec[ii])
+        # if n.state == 'subthreshold':
+        #     n.V_j = 0
+        # elif n.state == 'spiking':
+        #     n.V_j = voltage_conversion*time_conversion*p['Phi0'] # Phi0 # 
+        #     n.state = 'subthreshold'
+        # n.threshold_I2[ii+1] = ( (1-n.threshold_r*dt/(time_conversion*n.threshold_Ltt))*n.threshold_I2[ii] 
+        #                        + ( n.threshold_M/n.threshold_Ltt )*( n.I_ni_vec[ii] - n.I_ni_vec[ii-1] ) 
+        #                        + ( 1/n.threshold_Ltt )*n.V_j )
+        # n.threshold_I1[ii+1] = n.threshold_Ibias-n.threshold_I2[ii+1]
+        # if n.threshold_I1[ii+1] >= n.I_c:
+        #     n.state = 'spiking'
+        #     n.spike_times.append(_pt)
+        #     print('\n\nspiking; t = {}'.format(_pt))
+                    
+        # n.threshold_Ltt = n.threshold_Lt+Ljj(n.I_c,n.threshold_I1[ii]) # Ljj_pH(n.I_c,n.I_ni_vec[ii])
+        # if n.state == 'subthreshold':
+        #     n.V_j = 0
+        # elif n.state == 'spiking':
+        #     # n.V_j = ( p['Phi0'] 
+        #     #          - ( n.threshold_M/(dt*time_conversion) )*( n.I_ni_vec[ii] - n.I_ni_vec[ii-1] )*1e-6 
+        #     #          - ( n.threshold_circuit_inductances[0]/(dt*time_conversion) )*( n.threshold_I1[ii] - n.threshold_I1[ii-1] )*1e-6 ) # Phi0 # 
+        #     n.V_j = p['Phi0']*0.8 # Phi0 #
+        #     n.state = 'subthreshold'
+        # n.threshold_I2[ii+1] = ( (1-n.threshold_r*(dt/time_conversion)/n.threshold_Ltt)*n.threshold_I2[ii] 
+        #                         + ( n.threshold_M/n.threshold_Ltt )*( n.I_ni_vec[ii] - n.I_ni_vec[ii-1] )*1e-6 
+        #                         + ( 1/n.threshold_Ltt )*n.V_j )
+        # n.threshold_I1[ii+1] = n.threshold_Ibias-n.threshold_I2[ii+1]
+        # if n.threshold_I1[ii+1] >= n.threshold_junction_critical_current:
+        #     n.state = 'spiking'
+        #     n.spike_times.append(_pt)
+        #     print('\n\nspiking; t = {}'.format(_pt))
+        
+        # n.threshold_Ltt = n.threshold_Lt+Ljj(n.I_c,n.threshold_I1[ii]) # Ljj_pH(n.I_c,n.I_ni_vec[ii])
+        # if n.state == 'subthreshold':
+        #     n.threshold_I2[ii+1] = ( (1-n.threshold_r*(dt/time_conversion)/n.threshold_Ltt)*n.threshold_I2[ii] 
+        #                         + ( n.threshold_M/n.threshold_Ltt )*( n.I_ni_vec[ii] - n.I_ni_vec[ii-1] )*1e-6 )
+        # elif n.state == 'spiking':            
+        #     n.threshold_I2[ii+1] = n.delta_I__spike + n.threshold_I2[ii]
+        #     n.state = 'subthreshold'
+        # n.threshold_I1[ii+1] = n.threshold_Ibias-n.threshold_I2[ii+1]
+        # if n.threshold_I1[ii+1] >= n.threshold_junction_critical_current:
+        #     n.state = 'spiking'
+        #     n.spike_times.append(_pt)
+        #     print('\n\nspiking; t = {}'.format(_pt))
+                
+        # print(syn_flux_2)
+        # n.threshold_Ltt = n.threshold_Lt+Ljj(n.I_c,n.I_ni_vec[ii])
+        # if n.state == 'subthreshold':
+        #     n.V_j = 0
+        # elif n.state == 'spiking':
+        #     n.V_j = p['Phi0'] # Phi0 # 
+        #     n.state = 'subthreshold'
+        # n.threshold_I2[ii+1] = ( (1-n.threshold_r*(dt/time_conversion)/n.threshold_Ltt)*n.threshold_I2[ii] 
+        #                         + ( n.threshold_M/n.threshold_Ltt )*( n.I_ni_vec[ii] - n.I_ni_vec[ii-1] )*1e-6
+        #                         + ( (syn_flux_2/n.L_nr)*(n.refraction_M/n.threshold_Ltt) )
+        #                         + ( 1/n.threshold_Ltt )*n.V_j )
+        # n.threshold_I1[ii+1] = n.threshold_Ibias-n.threshold_I2[ii+1]
+        # if n.threshold_I1[ii+1] >= n.threshold_junction_critical_current:
+        #     n.state = 'spiking'
+        #     n.spike_times.append(_pt)
+        #     print('\n\nspiking; t = {}'.format(_pt))
+        
+        n.threshold_Ltt = n.threshold_Lt+Ljj(n.threshold_junction_critical_current,n.threshold_I1[ii])
+        # if ii<200:
+        #     print(n.threshold_Ltt)
+        if n.state == 'subthreshold':
+            # n.V_j = 0
+            n.threshold_I2[ii+1] = ( (1-n.threshold_r*(dt/time_conversion)/n.threshold_Ltt)*n.threshold_I2[ii] 
+                                 - ( (n.synapses[sy_name].M*n.refraction_M/inductance_conversion)/(n.L_nr*n.threshold_Ltt) )*( (n.synapses[sy_name].I_di_vec[ii+1]-n.synapses[sy_name].I_di_vec[ii])/current_conversion )
+                                + ( n.threshold_M/n.threshold_Ltt )*( n.I_ni_vec[ii] - n.I_ni_vec[ii-1] )/current_conversion )
+                                # + ( 1/n.threshold_Ltt )*n.V_j )
+        elif n.state == 'spiking':
+            # n.V_j = p['Phi0'] # Phi0 # 
+            n.threshold_I2[ii+1] = n.delta_I__spike + n.threshold_I2[ii]
+            n.state = 'subthreshold'
+        
+        n.threshold_I1[ii+1] = n.threshold_Ibias-n.threshold_I2[ii+1]
+        if n.threshold_I1[ii+1] >= n.threshold_junction_critical_current:
+            n.state = 'spiking'
+            n.spike_times.append(_pt)
+            # print('\n\nspiking; t = {}'.format(_pt))        
+             
+                                # 
+        
+        #refractory flux
+        ref_flux = -current_conversion*inductance_conversion*n.threshold_I2[ii+1]*n.refraction_M        
         
         # total flux drive to neuron        
-        # n.influx_vec[ii] = syn_flux+dend_flux
-        # n.influx_vec__no_refraction[ii] = n.influx_vec[ii] - dend_flux__ref  
-        n.influx_vec[ii] = syn_flux
-        n.influx_vec__no_refraction[ii] = n.influx_vec[ii]
+        n.influx_vec[ii] = syn_flux + ref_flux # + dend_flux 
+        n.influx_vec__no_refraction[ii] = syn_flux # + dend_flux
+        n.influx_vec__just_refraction[ii] = ref_flux
         
-                
+        ind1 = (np.abs(n.dendrites['{}__d'.format(n.name)].influx_list__dend-n.influx_vec[ii])).argmin() 
+        
+        neuron_interpolation = True
+        if neuron_interpolation == False:
+            
+            # no interpolation 
+            ind2 = (np.abs(n.dendrites['{}__d'.format(n.name)].I_di_array[ind1]-n.dendrites['{}__d'.format(n.name)].I_di_vec[ii])).argmin()
+            rate = n.dendrites['{}__d'.format(n.name)].rate_array__dend[ind1][ind2] 
+            # if rate > 0:
+            #     print('rate = {}'.format(rate))
+            n.dendrites['{}__d'.format(n.name)].I_di_vec[ii+1] = rate*n.dendrites['{}__d'.format(n.name)].I_fq*dt + (1-dt/n.dendrites['{}__d'.format(n.name)].tau_di)*n.dendrites['{}__d'.format(n.name)].I_di_vec[ii]  
+    
+        elif neuron_interpolation == True:
+            
+            # interpolation
+            influx_actual = n.influx_vec[ii]
+            influx_closest = n.dendrites['{}__d'.format(n.name)].influx_list__dend[ind1]
+            if influx_actual > influx_closest:
+                if ind1 < len(n.dendrites['{}__d'.format(n.name)].influx_list__dend)-1:
+                    ind1_p = ind1+1                        
+                else:
+                    ind1_p = ind1
+                ind2 = (np.abs(n.dendrites['{}__d'.format(n.name)].I_di_array[ind1]-n.dendrites['{}__d'.format(n.name)].I_di_vec[ii])).argmin()
+                ind2_p = (np.abs(n.dendrites['{}__d'.format(n.name)].I_di_array[ind1_p]-n.dendrites['{}__d'.format(n.name)].I_di_vec[ii])).argmin()
+                rate1 = n.dendrites['{}__d'.format(n.name)].rate_array__dend[ind1][ind2]
+                rate2 = n.dendrites['{}__d'.format(n.name)].rate_array__dend[ind1_p][ind2_p]
+                influx_next_closest = n.dendrites['{}__d'.format(n.name)].influx_list__dend[ind1_p]
+                x = influx_actual - influx_closest
+                if influx_next_closest != influx_closest:
+                    m = (rate2-rate1)/(influx_next_closest-influx_closest)
+                else:
+                    m = 0
+                rate = m*x+rate1
+            elif influx_actual < influx_closest:
+                if ind1 > 0:
+                    ind1_p = ind1-1
+                else:
+                    ind1_p = ind1
+                ind2 = (np.abs(n.dendrites['{}__d'.format(n.name)].I_di_array[ind1]-n.dendrites['{}__d'.format(n.name)].I_di_vec[ii])).argmin()
+                ind2_p = (np.abs(n.dendrites['{}__d'.format(n.name)].I_di_array[ind1_p]-n.dendrites['{}__d'.format(n.name)].I_di_vec[ii])).argmin()
+                rate1 = n.dendrites['{}__d'.format(n.name)].rate_array__dend[ind1][ind2]
+                rate2 = n.dendrites['{}__d'.format(n.name)].rate_array__dend[ind1_p][ind2_p]
+                influx_next_closest = n.dendrites['{}__d'.format(n.name)].influx_list__dend[ind1_p]
+                x = influx_closest - influx_actual
+                if influx_next_closest != influx_closest:
+                    m = (rate1-rate2)/(influx_closest-influx_next_closest)
+                else:
+                    m = 0
+                rate = -m*x+rate1
+            elif influx_actual == influx_closest:
+                ind2 = (np.abs(n.dendrites['{}__d'.format(n.name)].I_di_array[ind1]-n.dendrites['{}__d'.format(n.name)].I_di_vec[ii])).argmin()
+                rate = n.dendrites['{}__d'.format(n.name)].rate_array__dend[ind1][ind2]
+
+            _gf = rate*n.dendrites['{}__d'.format(n.name)].I_fq*dt                
+                        
+            n.dendrites['{}__d'.format(n.name)].I_di_vec[ii+1] = _gf + (1-dt/n.dendrites['{}__d'.format(n.name)].tau_di)*n.dendrites['{}__d'.format(n.name)].I_di_vec[ii]
+        
+        n.I_ni_vec[ii+1] = n.dendrites['{}__d'.format(n.name)].I_di_vec[ii+1]
+                      
         # ind1 = (np.abs(n.dendrites['{}__d'.format(n.name)].influx_list__dend-n.influx_vec[ii])).argmin()
         # ind2 = (np.abs(n.dendrites['{}__d'.format(n.name)].I_di_array[ind1]-n.I_ni_vec[ii])).argmin()        
         # rate = n.dendrites['{}__d'.format(n.name)].rate_array__dend[ind1][ind2]        
         
-        ind1_ne = ( np.abs( n.I_de_vec - n.bias_currents[0]*current_conversion ) ).argmin()
-        ind2_ne = ( np.abs( n.influx_array[ind1_ne] - n.influx_vec[ii] ) ).argmin()
-        I_di_th = n.I_di_th_array[ind1_ne][ind2_ne]
+        # ind1_ne = ( np.abs( n.I_de_vec - n.bias_currents[0]*current_conversion ) ).argmin()
+        # ind2_ne = ( np.abs( n.influx_array[ind1_ne] - n.influx_vec[ii] ) ).argmin()
+        # I_di_th = n.I_di_th_array[ind1_ne][ind2_ne]
 
-        if n.I_ni_vec[ii] <= I_di_th:
-            if n.I_ni_vec[ii] < 1e-6:
-                _gfn = n.I_fq1_array[ind1_ne][ind2_ne]
-            else:
-                _gfn = n.I_fq2_array[ind1_ne][ind2_ne]
-        else:
-            _gfn = 0
+        # if n.I_ni_vec[ii] <= I_di_th:
+        #     if n.I_ni_vec[ii] < 1e-6:
+        #         _gfn = n.I_fq1_array[ind1_ne][ind2_ne]
+        #     else:
+        #         _gfn = n.I_fq2_array[ind1_ne][ind2_ne]
+        # else:
+        #     _gfn = 0
                             
-        r_ni = n.integration_loop_total_inductance/(n.tau_ni*1e-9)
-        # n.I_ni_vec[ii+1] = _gfn + (1-dt/n.tau_ni)*n.I_ni_vec[ii]
-        L_jj = Ljj(n.I_c*1e-6,n.bias_currents[2]-n.I_ni_vec[ii]*1e-6)
-        tau_ni_eff = 1e9*(n.integration_loop_total_inductance+L_jj)/r_ni
-        n.I_ni_vec[ii+1] = _gfn + (1-dt/tau_ni_eff)*n.I_ni_vec[ii]
-        n.dendrites['{}__d'.format(n.name)].I_di_vec[ii+1] = n.I_ni_vec[ii+1]        
+        # r_ni = n.integration_loop_total_inductance/(n.tau_ni*1e-9)
+        # # n.I_ni_vec[ii+1] = _gfn + (1-dt/n.tau_ni)*n.I_ni_vec[ii]
+        # L_jj = Ljj(n.I_c*1e-6,n.bias_currents[2]-n.I_ni_vec[ii]*1e-6)
+        # tau_ni_eff = 1e9*(n.integration_loop_total_inductance+L_jj)/r_ni
+                
+        # n.I_ni_vec[ii+1] = _gfn + (1-dt/tau_ni_eff)*n.I_ni_vec[ii]
+        # n.dendrites['{}__d'.format(n.name)].I_di_vec[ii+1] = n.I_ni_vec[ii+1]        
 
     print('\ndone running neuron simulation. total time was {:.3}s\n'.format(time.time()-t_init))        
     

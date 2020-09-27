@@ -5,7 +5,7 @@ import pickle
 import copy
 from scipy.signal import find_peaks
 
-from _functions import neuron_time_stepper, dendritic_drive__piecewise_linear, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR
+from _functions import neuron_time_stepper, dendritic_drive__piecewise_linear, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR, Ljj
 from util import physical_constants
 
 class input_signal():
@@ -504,20 +504,16 @@ class neuron():
         else: 
             self.integration_loop_self_inductance = 775e-12 #default value, units of henries
                         
-        if 'integration_loop_output_inductances' in kwargs:
-            if type(kwargs['integration_loop_output_inductances']) == list:
-                self.integration_loop_output_inductances = kwargs['integration_loop_output_inductances']
+        if 'integration_loop_output_inductance' in kwargs:
+            self.integration_loop_output_inductance = kwargs['integration_loop_output_inductance']
         else:
-            self.integration_loop_output_inductances = [[400e-12,1],[200e-12,1]] # defaults; [[inudctor_to_latching_jj, k_to_latching_jj],[inductor_to_refractory_dendrite, k_to_refractory_dendrite]] 
-        ti = 0
-        for ii in range(len(self.integration_loop_output_inductances)):
-            ti += self.integration_loop_output_inductances[ii][0]        
-        self.integration_loop_total_inductance = self.integration_loop_self_inductance+ti
+            self.integration_loop_output_inductance = [400e-12,1] # defaults; [inudctor_to_latching_jj, k_to_latching_jj]        
+        self.integration_loop_total_inductance = self.integration_loop_self_inductance+self.integration_loop_output_inductance[0]        
         
         if 'integration_loop_time_constant' in kwargs:
             self.integration_loop_time_constant = kwargs['integration_loop_time_constant']
         else:
-            self.integration_loop_time_constant = 25e-9 #default time constant units of seconds        
+            self.integration_loop_time_constant = 50e-9 #default time constant units of seconds        
                 
         if 'time_params' in kwargs:
             self.time_params = kwargs['time_params']                 
@@ -649,12 +645,33 @@ class neuron():
             else:
                 raise ValueError('[soens_sim] neuronal_receiving_input_homeostatic_inductance is specified as a pair of real numbers. The first element of the pair is the inductance on the neuronal receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the homeostatic dendrite and the neuronal receiving loop.')
         else:
-            self.neuronal_receiving_input_homeostatic_inductance =  [20e-12,1]            
+            self.neuronal_receiving_input_homeostatic_inductance =  [20e-12,1] 
+          
+        if 'threshold_circuit_inductances' in kwargs:
+            self.threshold_circuit_inductances = kwargs['threshold_circuit_inductances']
+        else:
+            self.threshold_circuit_inductances = [10e-12,0e-12,20e-12] # [inductor receiving M from NI loop, inductor coupling to transmitter, inductor coupling back to NR for refraction]
+        self.threshold_circuit_total_inductance = np.sum(self.threshold_circuit_inductances)
+            
+        if 'threshold_circuit_resistance' in kwargs:
+            self.threshold_circuit_resistance = kwargs['threshold_circuit_resistance']
+        else:
+            self.threshold_circuit_resistance = 8e-5
+        
+        if 'threshold_circuit_bias_current' in kwargs:
+            self.threshold_circuit_bias_current = kwargs['threshold_circuit_bias_current']
+        else:
+            self.threshold_circuit_bias_current = 35e-6
+            
+        if 'threshold_junction_critical_current' in kwargs:
+            self.threshold_junction_critical_current = kwargs['threshold_junction_critical_current']
+        else:
+            self.threshold_junction_critical_current = 40e-6    
         
         # make neuron cell body as dendrite
         temp_list_1 = self.input_dendritic_connections
-        temp_str = '{}__r'.format(self.name)
-        temp_list_1.append(temp_str)
+        # temp_str = '{}__r'.format(self.name)
+        # temp_list_1.append(temp_str)
         temp_list_2 = self.input_dendritic_inductances
         temp_list_2.append(self.neuronal_receiving_input_refractory_inductance)
         # print('self.circuit_inductances = {}'.format(self.circuit_inductances))
@@ -671,21 +688,21 @@ class neuron():
                                    junction_critical_current = self.junction_critical_current, 
                                    bias_currents = self.bias_currents,
                                    integration_loop_self_inductance = self.integration_loop_self_inductance,
-                                   integration_loop_output_inductance = self.integration_loop_output_inductances[1][0],
+                                   integration_loop_output_inductance = self.integration_loop_output_inductance[0],
                                    integration_loop_time_constant = self.integration_loop_time_constant)                
                  
         # make refractory dendrite
-        refractory_loop = dendrite(name = '{}__r'.format(self.name),
-                                  num_jjs = self.refractory_dendrite_num_jjs,
-                                  inhibitory_or_excitatory = 'inhibitory',
-                                  circuit_inductances = self.refractory_loop_circuit_inductances,
-                                  junction_critical_current = self.refractory_junction_critical_current,
-                                  input_dendritic_connections = ['{}__d'.format(self.name)],
-                                  input_dendritic_inductances = [self.refractory_receiving_input_inductance], # [self.integration_loop_output_inductances[1]],
-                                  bias_currents = self.refractory_bias_currents,
-                                  integration_loop_time_constant = self.refractory_time_constant,
-                                  integration_loop_self_inductance = self.refractory_loop_self_inductance,
-                                  integration_loop_output_inductance = self.refractory_loop_output_inductance)                     
+        # refractory_loop = dendrite(name = '{}__r'.format(self.name),
+        #                           num_jjs = self.refractory_dendrite_num_jjs,
+        #                           inhibitory_or_excitatory = 'inhibitory',
+        #                           circuit_inductances = self.refractory_loop_circuit_inductances,
+        #                           junction_critical_current = self.refractory_junction_critical_current,
+        #                           input_dendritic_connections = ['{}__d'.format(self.name)],
+        #                           input_dendritic_inductances = [self.refractory_receiving_input_inductance], # [self.integration_loop_output_inductances[1]],
+        #                           bias_currents = self.refractory_bias_currents,
+        #                           integration_loop_time_constant = self.refractory_time_constant,
+        #                           integration_loop_self_inductance = self.refractory_loop_self_inductance,
+        #                           integration_loop_output_inductance = self.refractory_loop_output_inductance)                     
                 
         # print('neuron created')
         neuron.neurons[self.name] = self
@@ -810,8 +827,11 @@ class neuron():
                              
             if print_progress == True:
                 print('5: self.dendrites[name_dendrite].L_left = {}'.format(self.dendrites[name_dendrite].L_left))
-                print('5: self.dendrites[name_dendrite].L_right = {}'.format(self.dendrites[name_dendrite].L_right))
+                print('5: self.dendrites[name_dendrite].L_right = {}'.format(self.dendrites[name_dendrite].L_right)) 
                 
+        self.dendrites['{}__d'.format(self.name)].L_right = self.circuit_inductances[1] + self.neuronal_receiving_input_refractory_inductance[0]
+        self.L_nr = self.dendrites['{}__d'.format(self.name)].L_right+self.dendrites['{}__d'.format(self.name)].L_left+2*Ljj(self.junction_critical_current,0)
+            
         return self
     
     def construct_dendritic_drives(self):
@@ -856,9 +876,11 @@ class neuron():
         self = neuron_time_stepper(self)
         
         # calculate spike times
-        self.output_voltage = self.I_ni_vec # self.integration_loop_output_inductances[0][0]*np.diff(self.I_ni_vec)        
-        self.voltage_peaks, _ = find_peaks(self.output_voltage, distance = 10e-9/dt, height = 10) # , height = min_peak_height, ) # , distance = 10e-9/dt
-        self.spike_times = self.time_vec[self.voltage_peaks]
+        self.output_voltage = self.I_ni_vec # self.integration_loop_output_inductances[0][0]*np.diff(self.I_ni_vec)
+        self.voltage_peaks = self.spike_times
+        # self.voltage_peaks, _ = find_peaks(self.output_voltage, distance = 10e-9/dt, height = 10) # , height = min_peak_height, ) # , distance = 10e-9/dt
+        # self.spike_times = self.time_vec[self.voltage_peaks]
+        self.spike_times = np.asarray(self.spike_times)
         self.interspike_intervals = np.diff(self.spike_times)
         if len(self.interspike_intervals) > 0:
             self.max_rate = 1/np.min(self.interspike_intervals)

@@ -21,7 +21,7 @@ rate = WRSpice.WRSpice(tempCirFile = 'ne__4jj__single_pulse__alt_readout__no_rd_
 rate.pathWRSSpice = '/raid/home/local/xictools/wrspice.current/bin/wrspice'  # for running on grumpy
 # rate.pathWRSSpice='C:/usr/local/xictools/wrspice/bin/wrspice.bat' # for local computer
 
-rate.save = 'L8#branch L3#branch L6#branch L13#branch' # list all vectors you want to save
+rate.save = 'L8#branch L3#branch L6#branch L13#branch L14#branch v(12) v(33)' # list all vectors you want to save
 rate.pathCir = ''
 
 L_si = 77.5e-9

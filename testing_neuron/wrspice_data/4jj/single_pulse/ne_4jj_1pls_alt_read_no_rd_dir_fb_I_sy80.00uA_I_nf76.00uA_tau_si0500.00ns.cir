@@ -1,0 +1,58 @@
+
+B0 6 14 25 jjSFQ1 area=40
+B1 9 16 26 jjSFQ1 area=40
+B2 6 20 27 jjSFQ1 area=40
+B3 7 0 28 jjSFQ1 area=40
+B4 8 0 29 jjSFQ1 area=40
+B5 9 22 30 jjSFQ1 area=40
+B6 10 0 31 jjSFQ1 area=40
+B7 11 0 32 jjSFQ1 area=40
+B8 24 0 33 jjSFQ2 area=40
+I0 0 5 pwl(0 0 0.1ns 0 0.19ns 10u)
+ I1 0 6 pwl(0 0 0.09n 0 0.1n 80.00u )
+I2 0 7 pwl(0 0 0.09n 0 0.1ns 36u)
+I3 0 8 pwl(0 0 0.09n 0 0.1ns 35u)
+ I4 0 9 pwl(0 0 0.09n 0 0.1n 76.00u )
+I5 0 10 pwl(0 0 0.09n 0 0.1ns 36u)
+I6 0 11 pwl(0 0 0.09n 0 0.1ns 35u)
+I7 0 12 pwl(0 0 0.09n 0 0.1n 35u)
+K1 L10 L11 1
+K2 L8 L9 1
+K3 L17 L16 1
+K4 L12 L13 -1
+L0 5 13 100n
+L1 6 7 200p
+L2 7 8 77.5p
+L3 8 15 77.5n
+L4 9 10 200p
+L5 10 11 77.5p
+L6 11 17 7.75n
+L7 5 19 100n
+L8 13 3 250p
+L9 14 0 20p
+L10 15 21 100p
+L11 16 0 20p
+L12 17 23 400p
+L13 12 24 10p
+L14 18 4 1f
+L15 20 0 20p
+L16 22 0 20p
+L17 4 0 20p
+R0 1 0 1
+R1 12 18 R=v(1)+8e-4
+R2 0 2 1
+ R3 21 0 R=v(1)+1.5500e-01 
+R4 23 0 R=v(1)+0.1632
+R5 19 0 R=v(2)+1e-6
+R6 0 3 R=v(1)+4.005
+V0 1 0 pwl(0 1e5 0.2ns 1e5 0.3ns 0)
+V1 2 0 pwl(0 0 4.999n 0 5n 5e3 5.2n 5e3 5.201n 0)
+
+.model jjSFQ2 jj(rtype=0, cct=1, vg=2.8m, icrit=1u, cap= 0f, vshunt=0.25mV)
+.model jjSFQ1 jj(rtype=0, cct=1, vg=2.8m, icrit=1u, cap= 5f, vshunt=0.25mV)
+.control
+set maxdata=2560000
+tran 10p 1u
+write ./ne_4jj_1pls_alt_read_no_rd_dir_fb_I_sy80.00uA_I_nf76.00uA_tau_si0500.00ns.dat L8#branch L3#branch L6#branch L13#branch L14#branch
+quit
+.endc
