@@ -1,12 +1,12 @@
 import numpy as np
-from pylab import *
+# from pylab import *
 import time
 import pickle
 import copy
-from scipy.signal import find_peaks
+# from scipy.signal import find_peaks
 
-from _functions import neuron_time_stepper, dendritic_drive__piecewise_linear, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR, Ljj
-from util import physical_constants
+from _functions import neuron_time_stepper, dendritic_drive__piecewise_linear, dendritic_drive__square_pulse_train, dendritic_drive__exp_pls_train__LR, Ljj_pH
+# from util import physical_constants
 
 class input_signal():
     
@@ -67,12 +67,12 @@ class input_signal():
             if 'output_inductance' in kwargs:
                 self.output_inductance = kwargs['output_inductance']
             else: 
-                self.output_inductance = 200e-12
+                self.output_inductance = 200 # pH
             if 'time_vec' in kwargs:
                 self.time_vec = kwargs['time_vec']
             else:
-                dt = 5e-9
-                tf = 20e-9
+                dt = 5 # ns
+                tf = 20 # ns
                 self.time_vec = np.arange(0,tf+dt,dt)
             if 'piecewise_linear' in kwargs:
                 self.piecewise_linear = kwargs['piecewise_linear']
@@ -114,7 +114,7 @@ class synapse():
             else:
                 raise ValueError('[soens_sim] synaptic_circuit_inductors must be a list of length three')
         else:
-            self.synaptic_circuit_inductors = [100e-9,100e-9,400e-12] # three inductors with units of henries
+            self.synaptic_circuit_inductors = [100e3,100e3,400] # three inductors with units of picohenries
         
         if 'synaptic_circuit_resistors' in kwargs:
             if type(kwargs['synaptic_circuit_resistors']) == list:
@@ -124,17 +124,17 @@ class synapse():
             else:
                 raise ValueError('[soens_sim] synaptic_circuit_resistors must be a list of length two')
         else:
-            self.synaptic_circuit_resistors = [5e3,5] # three resistors with units of ohms
+            self.synaptic_circuit_resistors = [5e6,5e3] # three resistors with units of mOhms (pH/ns)
         
         if 'synaptic_hotspot_duration' in kwargs:
             self.synaptic_hotspot_duration = kwargs['synaptic_hotspot_duration']
         else:
-            self.synaptic_hotspot_duration = 200e-12 # real number with units of seconds
+            self.synaptic_hotspot_duration = 0.2 # real number with units of nanoeconds
         
         if 'synaptic_spd_current' in kwargs:
             self.synaptic_spd_current = kwargs['synaptic_spd_current']
         else:
-            self.synaptic_spd_current = 10e-6 # real number with units of amps   
+            self.synaptic_spd_current = 10 # real number with units of microamps   
         # end synaptic receiver spd circuit specification
         
         # input signals                
@@ -174,31 +174,31 @@ class synapse():
             if type(kwargs['synaptic_dendrite_circuit_inductances']) == list:
                 self.synaptic_dendrite_circuit_inductances = kwargs['synaptic_dendrite_circuit_inductances']            
         else:
-            self.synaptic_dendrite_circuit_inductances = [20e-12, 20e-12, 200e-12, 77.5e-12]            
+            self.synaptic_dendrite_circuit_inductances = [20, 20, 200, 77.5]            
         
         if 'synaptic_dendrite_input_synaptic_inductance' in kwargs:
             self.synaptic_dendrite_input_synaptic_inductance = kwargs['synaptic_dendrite_input_synaptic_inductance']
         else:
-            self.synaptic_dendrite_input_synaptic_inductance =  [20e-12,0.5] # [inductance (units of henries), mutual inductance efficiency (k)]
+            self.synaptic_dendrite_input_synaptic_inductance =  [20,0.5] # [inductance (units of picohenries), mutual inductance efficiency (k)]
             
         if 'junction_critical_current' in kwargs:
             self.junction_critical_current =  kwargs['junction_critical_current']
         else:
-            self.junction_critical_current =  40e-6 #default Ic = 40 uA
+            self.junction_critical_current =  40 #default Ic = 40 uA
             
         if 'bias_currents' in kwargs:
             self.bias_currents = kwargs['bias_currents']
         else:
-            self.bias_currents = [72e-6, 36e-6, 35e-6] #[bias to DR loop (J_th), bias to JTL, bias to DI loop]        
+            self.bias_currents = [72, 36, 35] #[bias to DR loop (J_th), bias to JTL, bias to DI loop]        
             
         if 'integration_loop_self_inductance' in kwargs:
             # if type(kwargs['integration_loop_self_inductance']) == int or type(kwargs['integration_loop_self_inductance']) == float:
             if kwargs['integration_loop_self_inductance'] < 0:
-                raise ValueError('[soens_sim] Integration loop self inductance associated with dendritic integration loop must be a real number between zero and infinity (units of henries)')
+                raise ValueError('[soens_sim] Integration loop self inductance associated with dendritic integration loop must be a real number between zero and infinity (units of picohenries)')
             else:
                  self.integration_loop_self_inductance = kwargs['integration_loop_self_inductance']
         else: 
-            self.integration_loop_self_inductance = 77.5e-9 #default value, units of henries
+            self.integration_loop_self_inductance = 77.5e3 #default value, units of picohenries
                         
         if 'integration_loop_output_inductance' in kwargs:
             if type(kwargs['integration_loop_output_inductance']) != list:
@@ -208,13 +208,13 @@ class synapse():
                 self.integration_loop_output_inductance = kwargs['integration_loop_output_inductance']
                 ti = sum(self.integration_loop_output_inductance)
         else: 
-            self.integration_loop_output_inductance = 200e-12 #default value, units of henries
+            self.integration_loop_output_inductance = 200 #default value, units of pH
         self.integration_loop_total_inductance = self.integration_loop_self_inductance+ti
         
         if 'integration_loop_time_constant' in kwargs:
             self.integration_loop_time_constant = kwargs['integration_loop_time_constant']
         else:
-            self.integration_loop_time_constant = 250e-9 #default time constant units of seconds
+            self.integration_loop_time_constant = 250 #default time constant units of ns
         # end synaptic dendrite specification   
         
         # make synaptic dendrite
@@ -306,7 +306,7 @@ class dendrite():
                     self.input_synaptic_inductances[self.input_synaptic_connections[ii]] = kwargs['input_synaptic_inductances'][ii]
                 # self.input_synaptic_inductances = kwargs['input_synaptic_inductances']
             else:
-                raise ValueError('[soens_sim] Input synaptic inductances to dendrites are specified as a list of pairs of real numbers with one pair per synaptic connection. The first element of the pair is the inductance on the dendritic receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the synapse and the dendritic receiving loop.')
+                raise ValueError('[soens_sim] Input synaptic inductances to dendrites are specified as a list of pairs of real numbers with one pair per synaptic connection. The first element of the pair is the inductance on the dendritic receiving loop side with units of picohenries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the synapse and the dendritic receiving loop.')
         else:
             self.input_synaptic_inductances =  [[]]
                         
@@ -323,7 +323,7 @@ class dendrite():
                     self.input_dendritic_inductances[self.input_dendritic_connections[ii]] = kwargs['input_dendritic_inductances'][ii]
                 # self.input_dendritic_inductances = kwargs['input_dendritic_inductances']
             else:
-                raise ValueError('[soens_sim] Input dendritic inductances to dendrites are specified as a list of pairs of real numbers with one pair per dendritic connection. The first element of the pair is the inductance on the dendritic receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the input dendrite and the dendritic receiving loop.')
+                raise ValueError('[soens_sim] Input dendritic inductances to dendrites are specified as a list of pairs of real numbers with one pair per dendritic connection. The first element of the pair is the inductance on the dendritic receiving loop side with units of picohenries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the input dendrite and the dendritic receiving loop.')
         else:
             self.input_dendritic_inductances =  []
                                     
@@ -339,7 +339,7 @@ class dendrite():
                     self.input_direct_inductances[self.input_direct_connections[ii]] = kwargs['input_direct_inductances'][ii]
                 # self.input_direct_inductances = kwargs['input_direct_inductances']
             else:
-                raise ValueError('[soens_sim] Input direct inductances to dendrites are specified as a list of pairs of real numbers with one pair per direct connection. The first element of the pair is the inductance on the dendritic receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the input direct signal and the dendritic receiving loop.')
+                raise ValueError('[soens_sim] Input direct inductances to dendrites are specified as a list of pairs of real numbers with one pair per direct connection. The first element of the pair is the inductance on the dendritic receiving loop side with units of picohenries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the input direct signal and the dendritic receiving loop.')
         else:
             self.input_direct_inductances =  []
                     
@@ -347,29 +347,29 @@ class dendrite():
             if type(kwargs['circuit_inductances']) == list and len(kwargs['circuit_inductances']) == 4:
                 self.circuit_inductances = kwargs['circuit_inductances']
             else:
-                raise ValueError('[soens_sim] circuit_inductances is a list of four real numbers greater than zero with units of henries. The first element is the self inductance of the left branch of the DR loop, excluding the JJ and any mutual inductor inputs. The second element is the right branch of the DR loop, excluding the JJ and any mutual inductor inputs. The third element is the inductor to the right of the DR loop that goes to the JTL. The fourth element is the inductor in the JTL. All other contributions to DR loop inductance (JJs and MIs) will be handled separately, as will the inductance of the DI loop.')
+                raise ValueError('[soens_sim] circuit_inductances is a list of four real numbers greater than zero with units of picohenries. The first element is the self inductance of the left branch of the DR loop, excluding the JJ and any mutual inductor inputs. The second element is the right branch of the DR loop, excluding the JJ and any mutual inductor inputs. The third element is the inductor to the right of the DR loop that goes to the JTL. The fourth element is the inductor in the JTL. All other contributions to DR loop inductance (JJs and MIs) will be handled separately, as will the inductance of the DI loop.')
         else:
-            self.circuit_inductances = [20e-12, 20e-12, 200e-12, 77.5e-12]            
+            self.circuit_inductances = [20, 20, 200, 77.5]            
 
         if 'junction_critical_current' in kwargs:
             self.junction_critical_current =  kwargs['junction_critical_current']
         else:
-            self.junction_critical_current =  40e-6 #default Ic = 40 uA
-        self.I_c = self.junction_critical_current*1e6
+            self.junction_critical_current =  40 #default Ic = 40 uA
+        self.I_c = self.junction_critical_current
             
         if 'bias_currents' in kwargs:
             self.bias_currents = kwargs['bias_currents']
         else:
-            self.bias_currents = [72e-6, 29e-6, 35e-6] #[bias to DR loop (J_th), bias to JTL, bias to DI loop]        
+            self.bias_currents = [72, 29, 35] #[bias to DR loop (J_th), bias to JTL, bias to DI loop]        
             
         if 'integration_loop_self_inductance' in kwargs:
             # if type(kwargs['integration_loop_self_inductance']) == int or type(kwargs['integration_loop_self_inductance']) == float:
             if kwargs['integration_loop_self_inductance'] < 0:
-                raise ValueError('[soens_sim] Integration loop self inductance associated with dendritic integration loop must be a real number between zero and infinity (units of henries)')
+                raise ValueError('[soens_sim] Integration loop self inductance associated with dendritic integration loop must be a real number between zero and infinity (units of picohenries)')
             else:
                  self.integration_loop_self_inductance = kwargs['integration_loop_self_inductance']
         else: 
-            self.integration_loop_self_inductance = 10e-9 #default value, units of henries
+            self.integration_loop_self_inductance = 10e3 #default value, units of pH
                         
         if 'integration_loop_output_inductance' in kwargs:
             if type(kwargs['integration_loop_output_inductance']) != list:
@@ -379,13 +379,13 @@ class dendrite():
                 self.integration_loop_output_inductance = kwargs['integration_loop_output_inductance']
                 ti = sum(self.integration_loop_output_inductance)
         else: 
-            self.integration_loop_output_inductance = 200e-12 #default value, units of henries
+            self.integration_loop_output_inductance = 200 #default value, units of pH
         self.integration_loop_total_inductance = self.integration_loop_self_inductance+ti
         
         if 'integration_loop_time_constant' in kwargs:
             self.integration_loop_time_constant = kwargs['integration_loop_time_constant']
         else:
-            self.integration_loop_time_constant = 250e-9 #default time constant units of seconds
+            self.integration_loop_time_constant = 250 #default time constant units of ns
  
         dendrite.dendrites[self.name] = self
             
@@ -440,9 +440,9 @@ class neuron():
             if type(kwargs['circuit_inductances']) == list and len(kwargs['circuit_inductances']) == 4:
                 self.circuit_inductances = kwargs['circuit_inductances']
             else:
-                raise ValueError('[soens_sim] circuit_inductances is a list of four real numbers greater than zero with units of henries. The first element is the self inductance of the left branch of the DR loop, excluding the JJ and any mutual inductor inputs. The second element is the right branch of the DR loop, excluding the JJ and any mutual inductor inputs. The third element is the inductor to the right of the DR loop that goes to the JTL. The fourth element is the inductor in the JTL. All other contributions to DR loop inductance (JJs and MIs) will be handled separately, as will the inductance of the DI loop.')
+                raise ValueError('[soens_sim] circuit_inductances is a list of four real numbers greater than zero with units of picohenries. The first element is the self inductance of the left branch of the DR loop, excluding the JJ and any mutual inductor inputs. The second element is the right branch of the DR loop, excluding the JJ and any mutual inductor inputs. The third element is the inductor to the right of the DR loop that goes to the JTL. The fourth element is the inductor in the JTL. All other contributions to DR loop inductance (JJs and MIs) will be handled separately, as will the inductance of the DI loop.')
         else:
-            self.circuit_inductances = [20e-12, 20e-12, 200e-12, 77.5e-12]
+            self.circuit_inductances = [20, 20, 200, 77.5]
         
         if 'input_direct_connections' in kwargs:
             self.input_direct_connections = kwargs['input_direct_connections']            
@@ -453,7 +453,7 @@ class neuron():
             if type(kwargs['input_direct_inductances']) == list:
                     self.input_direct_inductances = kwargs['input_direct_inductances']
             else:
-                raise ValueError('[soens_sim] Input direct inductances to neurons are specified as a list of pairs of real numbers with one pair per direct connection. The first element of the pair is the inductance on the neuronal receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the direct connection and the neuronal receiving loop.')
+                raise ValueError('[soens_sim] Input direct inductances to neurons are specified as a list of pairs of real numbers with one pair per direct connection. The first element of the pair is the inductance on the neuronal receiving loop side with units of picohenries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the direct connection and the neuronal receiving loop.')
         else:
             self.input_direct_inductances =  [[]]
             
@@ -466,7 +466,7 @@ class neuron():
             if type(kwargs['input_synaptic_inductances']) == list:
                     self.input_synaptic_inductances = kwargs['input_synaptic_inductances']
             else:
-                raise ValueError('[soens_sim] Input synaptic inductances to neurons are specified as a list of pairs of real numbers with one pair per synaptic connection. The first element of the pair is the inductance on the neuronal receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the synapse and the neuronal receiving loop.')
+                raise ValueError('[soens_sim] Input synaptic inductances to neurons are specified as a list of pairs of real numbers with one pair per synaptic connection. The first element of the pair is the inductance on the neuronal receiving loop side with units of picohenries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the synapse and the neuronal receiving loop.')
         else:
             self.input_synaptic_inductances =  [[]]
             
@@ -479,48 +479,48 @@ class neuron():
             if type(kwargs['input_dendritic_inductances']) == list:
                     self.input_dendritic_inductances = kwargs['input_dendritic_inductances']
             else:
-                raise ValueError('[soens_sim] Input dendritic inductances to neurons are specified as a list of pairs of real numbers with one pair per dendritic connection. The first element of the pair is the inductance on the neuronal receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the dendritic and the neuronal receiving loop.')
+                raise ValueError('[soens_sim] Input dendritic inductances to neurons are specified as a list of pairs of real numbers with one pair per dendritic connection. The first element of the pair is the inductance on the neuronal receiving loop side with units of picohenries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the dendritic and the neuronal receiving loop.')
         else:
             self.input_dendritic_inductances =  []
             
         if 'junction_critical_current' in kwargs:
             self.junction_critical_current = kwargs['junction_critical_current']
         else:
-            self.junction_critical_current = 40e-6 #default Ic = 40 uA
-        self.I_c = self.junction_critical_current*1e6
+            self.junction_critical_current = 40 #default Ic = 40 uA
+        self.I_c = self.junction_critical_current
                     
         if 'bias_currents' in kwargs:
             _Ib = kwargs['bias_currents']
         else:
-            _Ib = [74e-6, 36e-6, 35e-6] #[bias to NR loop (J_th), bias to JTL, bias to NI loop]
+            _Ib = [74, 36, 35] #[bias to NR loop (J_th), bias to JTL, bias to NI loop]
         self.bias_currents =  _Ib
         
         if 'integration_loop_self_inductance' in kwargs:
             # if type(kwargs['integration_loop_self_inductance']) == int or type(kwargs['integration_loop_self_inductance']) == float:
             if kwargs['integration_loop_self_inductance'] < 0:
-                raise ValueError('[soens_sim] Integration loop self inductance associated with neuronal integration loop must be a real number between zero and infinity (units of henries)')
+                raise ValueError('[soens_sim] Integration loop self inductance associated with neuronal integration loop must be a real number between zero and infinity (units of picohenries)')
             else:
                  self.integration_loop_self_inductance = kwargs['integration_loop_self_inductance']
         else: 
-            self.integration_loop_self_inductance = 775e-12 #default value, units of henries
+            self.integration_loop_self_inductance = 775 #default value, units of picohenries
                         
         if 'integration_loop_output_inductance' in kwargs:
             self.integration_loop_output_inductance = kwargs['integration_loop_output_inductance']
         else:
-            self.integration_loop_output_inductance = [400e-12,1] # defaults; [inudctor_to_latching_jj, k_to_latching_jj]        
+            self.integration_loop_output_inductance = [400,1] # defaults; [inudctor_to_latching_jj, k_to_latching_jj]        
         self.integration_loop_total_inductance = self.integration_loop_self_inductance+self.integration_loop_output_inductance[0]        
         
         if 'integration_loop_time_constant' in kwargs:
             self.integration_loop_time_constant = kwargs['integration_loop_time_constant']
         else:
-            self.integration_loop_time_constant = 50e-9 #default time constant units of seconds        
+            self.integration_loop_time_constant = 50 #default time constant units of ns
                 
         if 'time_params' in kwargs:
             self.time_params = kwargs['time_params']                 
         else:
             time_params = dict()
-            time_params['dt'] = 0.1e-9
-            time_params['tf'] = 1e-6
+            time_params['dt'] = 0.1
+            time_params['tf'] = 1e3
             self.time_params = time_params
             
         if 'refractory_dendrite_num_jjs' in kwargs:
@@ -535,138 +535,138 @@ class neuron():
             else:
                 self.refractory_time_constant = kwargs['refractory_time_constant']
         else:
-            self.refractory_time_constant = 50e-9 #default time constant, units of seconds
+            self.refractory_time_constant = 50 #default time constant, units of ns
             
         if 'refractory_junction_critical_current' in kwargs:
             self.refractory_junction_critical_current = kwargs['refractory_junction_critical_current']
         else:
-            self.refractory_junction_critical_current = 40e-6 #default J_th Ic = 40 uA        
+            self.refractory_junction_critical_current = 40 #default J_th Ic = 40 uA        
         
         if 'refractory_loop_circuit_inductances' in kwargs:
             if type(kwargs['refractory_loop_circuit_inductances']) == list and len(kwargs['refractory_loop_circuit_inductances']) == 4:
                 self.refractory_loop_circuit_inductances = kwargs['refractory_loop_circuit_inductances']
             else:
-                raise ValueError('[soens_sim] refractory_loop_circuit_inductances is a list of four real numbers greater than zero with units of henries. The first element is the self inductance of the left branch of the DR loop, excluding the JJ and any mutual inductor inputs. The second element is the right branch of the DR loop, excluding the JJ and any mutual inductor inputs. The third element is the inductor to the right of the DR loop that goes to the JTL. The fourth element is the inductor in the JTL. All other contributions to DR loop inductance (JJs and MIs) will be handled separately, as will the inductance of the DI loop.')
+                raise ValueError('[soens_sim] refractory_loop_circuit_inductances is a list of four real numbers greater than zero with units of picohenries. The first element is the self inductance of the left branch of the DR loop, excluding the JJ and any mutual inductor inputs. The second element is the right branch of the DR loop, excluding the JJ and any mutual inductor inputs. The third element is the inductor to the right of the DR loop that goes to the JTL. The fourth element is the inductor in the JTL. All other contributions to DR loop inductance (JJs and MIs) will be handled separately, as will the inductance of the DI loop.')
         else:
-            self.refractory_loop_circuit_inductances = [20e-12, 20e-12, 200e-12, 77.5e-12]
+            self.refractory_loop_circuit_inductances = [20, 20, 200, 77.5]
             
         if 'refractory_loop_self_inductance' in kwargs:
             # if type(kwargs['refractory_loop_self_inductance']) == int or type(kwargs['refractory_loop_self_inductance']) == float:
             if kwargs['refractory_loop_self_inductance'] < 0:
-                raise ValueError('[soens_sim] Refractory loop self inductance associated with refractory suppression loop must be a real number between zero and infinity (units of henries)')
+                raise ValueError('[soens_sim] Refractory loop self inductance associated with refractory suppression loop must be a real number between zero and infinity (units of picohenries)')
             else:
                  self.refractory_loop_self_inductance = kwargs['refractory_loop_self_inductance']
         else: 
-            self.refractory_loop_self_inductance = 1e-9 #default value, units of henries
+            self.refractory_loop_self_inductance = 1e3 #default value, units of picohenries
                         
         if 'refractory_loop_output_inductance' in kwargs:
             # if type(kwargs['refractory_loop_output_inductance']) == int or type(kwargs['refractory_loop_output_inductance']) == float:
             if kwargs['refractory_loop_output_inductance'] < 0:
-                raise ValueError('[soens_sim] Refractory loop output inductance associated with coupling between refractory suppression loop and neuron must be a real number between zero and infinity (units of henries)')
+                raise ValueError('[soens_sim] Refractory loop output inductance associated with coupling between refractory suppression loop and neuron must be a real number between zero and infinity (units of picohenries)')
             else:
                  self.refractory_loop_output_inductance = kwargs['refractory_loop_output_inductance']
         else: 
-            self.refractory_loop_output_inductance = 200e-12 #default value, units of henries 
+            self.refractory_loop_output_inductance = 200 #default value, units of picohenries 
             
         if 'refractory_bias_currents' in kwargs:
             _Ib = kwargs['refractory_bias_currents']
         else:
-            _Ib = [74e-6, 36e-6, 35e-6] #[bias to NR loop (J_th), bias to JTL, bias to NI loop]
+            _Ib = [74, 36, 35] #[bias to NR loop (J_th), bias to JTL, bias to NI loop]
         self.refractory_bias_currents =  _Ib
         
         if 'refractory_receiving_input_inductance' in kwargs:
             if type(kwargs['refractory_receiving_input_inductance']) == list:
                     self.refractory_receiving_input_inductance = kwargs['refractory_receiving_input_inductance']
             else:
-                raise ValueError('[soens_sim] refractory_receiving_input_inductance is specified as a pair of real numbers. The first element of the pair is the inductance on the refractory receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the refractory dendrite and the neuronal integration loop.')
+                raise ValueError('[soens_sim] refractory_receiving_input_inductance is specified as a pair of real numbers. The first element of the pair is the inductance on the refractory receiving loop side with units of picohenries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the refractory dendrite and the neuronal integration loop.')
         else:
-            self.refractory_receiving_input_inductance =  [20e-12,1]
+            self.refractory_receiving_input_inductance =  [20,1]
             
         if 'neuronal_receiving_input_refractory_inductance' in kwargs:
             if type(kwargs['neuronal_receiving_input_refractory_inductance']) == list:
                     self.neuronal_receiving_input_refractory_inductance = kwargs['neuronal_receiving_input_refractory_inductance']
             else:
-                raise ValueError('[soens_sim] neuronal_receiving_input_refractory_inductance is specified as a pair of real numbers. The first element of the pair is the inductance on the neuronal receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the refractory dendrite and the neuronal receiving loop.')
+                raise ValueError('[soens_sim] neuronal_receiving_input_refractory_inductance is specified as a pair of real numbers. The first element of the pair is the inductance on the neuronal receiving loop side with units of picohenries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the refractory dendrite and the neuronal receiving loop.')
         else:
-            self.neuronal_receiving_input_refractory_inductance =  [20e-12,1]
+            self.neuronal_receiving_input_refractory_inductance =  [20,1]
                 
         if 'homeostatic_time_constant' in kwargs:
             self.homeostatic_time_constant = kwargs['homeostatic_time_constant']
         else:
-            self.homeostatic_time_constant = 50e-9 #default time constant, units of seconds
+            self.homeostatic_time_constant = 50 #default time constant, units of ns
             
         if 'homeostatic_junction_critical_current' in kwargs:
             _Ic = kwargs['homeostatic_junction_critical_current']
         else:
-            _Ic = 40e-6 #default J_th Ic = 40 uA
+            _Ic = 40 #default J_th Ic = 40 uA
         self.homeostatic_junction_critical_current = _Ic
         
         if 'homeostatic_loop_circuit_inductances' in kwargs:
             if type(kwargs['homeostatic_loop_circuit_inductances']) == list and len(kwargs['homeostatic_loop_circuit_inductances']) == 4:
                 self.homeostatic_loop_circuit_inductances = kwargs['homeostatic_loop_circuit_inductances']
             else:
-                raise ValueError('[soens_sim] homeostatic_loop_circuit_inductances is a list of four real numbers greater than zero with units of henries. The first element is the self inductance of the left branch of the DR loop, excluding the JJ and any mutual inductor inputs. The second element is the right branch of the DR loop, excluding the JJ and any mutual inductor inputs. The third element is the inductor to the right of the DR loop that goes to the JTL. The fourth element is the inductor in the JTL. All other contributions to DR loop inductance (JJs and MIs) will be handled separately, as will the inductance of the DI loop.')
+                raise ValueError('[soens_sim] homeostatic_loop_circuit_inductances is a list of four real numbers greater than zero with units of picohenries. The first element is the self inductance of the left branch of the DR loop, excluding the JJ and any mutual inductor inputs. The second element is the right branch of the DR loop, excluding the JJ and any mutual inductor inputs. The third element is the inductor to the right of the DR loop that goes to the JTL. The fourth element is the inductor in the JTL. All other contributions to DR loop inductance (JJs and MIs) will be handled separately, as will the inductance of the DI loop.')
         else:
-            self.homeostatic_loop_circuit_inductances = [20e-12, 20e-12, 200e-12, 77.5e-12]
+            self.homeostatic_loop_circuit_inductances = [20, 20, 200, 77.5]
             
         if 'homeostatic_loop_self_inductance' in kwargs:
             if kwargs['homeostatic_loop_self_inductance'] < 0:
-                raise ValueError('[soens_sim] Homeostatic loop self inductance associated with homeostasis must be a real number between zero and infinity (units of henries)')
+                raise ValueError('[soens_sim] Homeostatic loop self inductance associated with homeostasis must be a real number between zero and infinity (units of picohenries)')
             else:
                  self.homeostatic_loop_self_inductance = kwargs['homeostatic_loop_self_inductance']
         else: 
-            self.homeostatic_loop_self_inductance = 1e-9 #default value, units of henries
+            self.homeostatic_loop_self_inductance = 1e3 #default value, units of picohenries
                         
         if 'homeostatic_loop_output_inductance' in kwargs:
             if kwargs['refractory_loop_output_inductance'] < 0:
-                raise ValueError('[soens_sim] Homeostatic loop output inductance associated with coupling between homeostatic loop and neuron must be a real number between zero and infinity (units of henries)')
+                raise ValueError('[soens_sim] Homeostatic loop output inductance associated with coupling between homeostatic loop and neuron must be a real number between zero and infinity (units of picohenries)')
             else:
                  self.homeostatic_loop_output_inductance = kwargs['homeostatic_loop_output_inductance']
         else: 
-            self.homeostatic_loop_output_inductance = 200e-12 #default value, units of henries 
+            self.homeostatic_loop_output_inductance = 200 #default value, units of picohenries 
             
         if 'homeostatic_bias_currents' in kwargs:
             _Ib = kwargs['homeostatic_bias_currents']
         else:
-            _Ib = [74e-6, 36e-6, 35e-6] #[bias to NR loop (J_th), bias to JTL, bias to NI loop]
+            _Ib = [74, 36, 35] #[bias to NR loop (J_th), bias to JTL, bias to NI loop] # units of uA
         self.homeostatic_bias_currents =  _Ib
         
         if 'homeostatic_receiving_input_inductance' in kwargs:
             if type(kwargs['homeostatic_receiving_input_inductance']) == list:
                     self.homeostatic_receiving_input_inductance = kwargs['homeostatic_receiving_input_inductance']
             else:
-                raise ValueError('[soens_sim] homeostatic_receiving_input_inductance is specified as a pair of real numbers. The first element of the pair is the inductance on the homeostatic receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the homeostatic dendrite and the neuronal integration loop.')
+                raise ValueError('[soens_sim] homeostatic_receiving_input_inductance is specified as a pair of real numbers. The first element of the pair is the inductance on the homeostatic receiving loop side with units of picohenries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the homeostatic dendrite and the neuronal integration loop.')
         else:
-            self.homeostatic_receiving_input_inductance =  [20e-12,1]
+            self.homeostatic_receiving_input_inductance =  [20,1]
             
         if 'neuronal_receiving_input_homeostatic_inductance' in kwargs:
             if type(kwargs['neuronal_receiving_input_homeostatic_inductance']) == list:
                     self.neuronal_receiving_input_homeostatic_inductance = kwargs['neuronal_receiving_input_homeostatic_inductance']
             else:
-                raise ValueError('[soens_sim] neuronal_receiving_input_homeostatic_inductance is specified as a pair of real numbers. The first element of the pair is the inductance on the neuronal receiving loop side with units of henries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the homeostatic dendrite and the neuronal receiving loop.')
+                raise ValueError('[soens_sim] neuronal_receiving_input_homeostatic_inductance is specified as a pair of real numbers. The first element of the pair is the inductance on the neuronal receiving loop side with units of picohenries. The second element of the pair is the mutual inductance coupling factor k (M = k*sqrt(L1*L2)) between the homeostatic dendrite and the neuronal receiving loop.')
         else:
-            self.neuronal_receiving_input_homeostatic_inductance =  [20e-12,1] 
+            self.neuronal_receiving_input_homeostatic_inductance =  [20,1] 
           
         if 'threshold_circuit_inductances' in kwargs:
             self.threshold_circuit_inductances = kwargs['threshold_circuit_inductances']
         else:
-            self.threshold_circuit_inductances = [10e-12,0e-12,20e-12] # [inductor receiving M from NI loop, inductor coupling to transmitter, inductor coupling back to NR for refraction]
+            self.threshold_circuit_inductances = [10,0,20] # [inductor receiving M from NI loop, inductor coupling to transmitter, inductor coupling back to NR for refraction]
         self.threshold_circuit_total_inductance = np.sum(self.threshold_circuit_inductances)
             
         if 'threshold_circuit_resistance' in kwargs:
             self.threshold_circuit_resistance = kwargs['threshold_circuit_resistance']
         else:
-            self.threshold_circuit_resistance = 8e-5
+            self.threshold_circuit_resistance = 0.8 # units of mOhms to match with pH and ns
         
         if 'threshold_circuit_bias_current' in kwargs:
             self.threshold_circuit_bias_current = kwargs['threshold_circuit_bias_current']
         else:
-            self.threshold_circuit_bias_current = 35e-6
+            self.threshold_circuit_bias_current = 35 # uA
             
         if 'threshold_junction_critical_current' in kwargs:
             self.threshold_junction_critical_current = kwargs['threshold_junction_critical_current']
         else:
-            self.threshold_junction_critical_current = 40e-6    
+            self.threshold_junction_critical_current = 40 # uA    
         
         # make neuron cell body as dendrite
         temp_list_1 = self.input_dendritic_connections
@@ -830,7 +830,7 @@ class neuron():
                 print('5: self.dendrites[name_dendrite].L_right = {}'.format(self.dendrites[name_dendrite].L_right)) 
                 
         self.dendrites['{}__d'.format(self.name)].L_right = self.circuit_inductances[1] + self.neuronal_receiving_input_refractory_inductance[0]
-        self.L_nr = self.dendrites['{}__d'.format(self.name)].L_right+self.dendrites['{}__d'.format(self.name)].L_left+2*Ljj(self.junction_critical_current,0)
+        self.L_nr = self.dendrites['{}__d'.format(self.name)].L_right+self.dendrites['{}__d'.format(self.name)].L_left+2*Ljj_pH(self.junction_critical_current,0)
             
         return self
     

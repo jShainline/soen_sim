@@ -1,4 +1,8 @@
 import numpy as np
+from util import color_dictionary, physical_constants
+colors = color_dictionary()
+
+p = physical_constants()
 
 #%%
 C = 1e-12
@@ -22,3 +26,12 @@ I1 = 45e-6
 I2 = 20e-6
 M2 = M1*I1/I2
 print(M2)
+
+#%%
+
+M = np.sqrt(200*20)
+a = p['Phi0__pH_ns']
+N = 500
+
+dI = a/(M*N)
+print(dI)

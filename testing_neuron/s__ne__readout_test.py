@@ -12,36 +12,37 @@ p = physical_constants()
 #circuit on pg 24 of green lab notebook started 20200514
 
 #%% 
-time_conversion = 1 # 1e6 # work in us
-inductance_conversion = 1 # 1e12 # work in pH
-current_conversion = 1 # 1e6 # work in uA
-voltage_conversion = inductance_conversion*current_conversion/time_conversion
+# time_conversion = 1 # 1e6 # work in us
+# inductance_conversion = 1 # 1e12 # work in pH
+# current_conversion = 1 # 1e6 # work in uA
+# voltage_conversion = inductance_conversion*current_conversion/time_conversion
 
 #%% time
 
-t0 = 0*time_conversion
-tf = 100e-9*time_conversion
-dt = 100e-12*time_conversion
+t0 = 0
+tf = 100 # ns
+dt = 100e-3 # ns
 
 time_vec = np.arange(t0,tf+dt,dt)
 
 #%% drive
-I_bias = 35e-6*current_conversion
-L_drive = 200e-12*inductance_conversion
-L1 = 20e-12*inductance_conversion
-L2 = 20e-12*inductance_conversion
-r = 1e-3*(inductance_conversion/time_conversion)
+I_bias = 35 # uA
+L_drive = 200 # pH
+L1 = 20 # pH
+L2 = 20 # pH
+r = 1 # pH ns
 
 # pwl = [[0,0],[1e-9,0],[101e-9,20e-6],[102e-9,0]]
-pwl = [[0,0],[1e-9*time_conversion,0],[2e-9*time_conversion,20e-6*current_conversion],[7e-9*time_conversion,20e-6*current_conversion],[8e-9*time_conversion,0]]
+pwl = [[0,0],[1,0],[2,20],[7,20],[8,0]]
 I_drive = dendritic_drive__piecewise_linear(time_vec,pwl)
 M = -np.sqrt(L_drive*L1)
 Lt = L1+L2
 
 #%% jj
-Ic = 40e-6*current_conversion
-rj = 6.25*(inductance_conversion/time_conversion)
+Ic = 40 # uA
+rj = 6.25e3 # mOhm
 
+Phi0 = 1e18*p['Phi0'] # uA pH
 
 #%% step through time
 I1 = np.zeros([len(time_vec)])
@@ -64,7 +65,7 @@ for ii in range(len(time_vec)-1):
         V_j = 0
     elif state == 'spiking':
         # print('spiking')
-        V_j = voltage_conversion*time_conversion*p['Phi0']
+        V_j = Phi0
         state = 'subthreshold'
     I2[ii+1] = (1-r*dt/Ltt)*I2[ii] + ( M/Ltt )*( I_drive[ii+1] - I_drive[ii] ) + ( 1/Ltt )*V_j
     I1[ii+1] = I_bias-I2[ii+1]
@@ -86,21 +87,21 @@ I_drive_wr = data_dict['L1#branch']
 fig, axs = plt.subplots(nrows = 3, ncols = 1, sharex = True, sharey = False)   
 # fig.suptitle('Synapse saturation vs Isy; tau_si = inf; L_si = {:7.4f} nH'.format(synapse_list[0].integration_loop_total_inductance*1e9)) 
 
-axs[0].plot(time_vec_wr*1e6,I_drive_wr*1e6, '-', color = colors['red3'], label = 'wr _ drive')
-axs[0].plot(time_vec*1e6,I_drive*1e6, '-.', color = colors['blue3'], label = 'model _ drive')
+axs[0].plot(time_vec_wr*1e9,I_drive_wr*1e6, '-', color = colors['red3'], label = 'wr _ drive')
+axs[0].plot(time_vec,I_drive, '-.', color = colors['blue3'], label = 'model _ drive')
 axs[0].set_ylabel(r'$I_{drive}$ [$\mu$A]')
 axs[0].legend()
 
-axs[1].plot(time_vec_wr*1e6,I1_wr*1e6, '-', color = colors['red3'], label = 'wr _ I1')
-axs[1].plot(time_vec*1e6,I1*1e6, '-.', color = colors['blue3'], label = 'model _ I1')
+axs[1].plot(time_vec_wr*1e9,I1_wr*1e6, '-', color = colors['red3'], label = 'wr _ I1')
+axs[1].plot(time_vec,I1, '-.', color = colors['blue3'], label = 'model _ I1')
 axs[1].set_ylabel(r'$I_{1}$ [$\mu$A]')
 axs[1].legend()
 
-axs[2].plot(time_vec_wr*1e6,I2_wr*1e6, '-', color = colors['red3'], label = 'wr _ I2')
-axs[2].plot(time_vec*1e6,I2*1e6, '-.', color = colors['blue3'], label = 'model _ I2')
+axs[2].plot(time_vec_wr*1e9,I2_wr*1e6, '-', color = colors['red3'], label = 'wr _ I2')
+axs[2].plot(time_vec,I2, '-.', color = colors['blue3'], label = 'model _ I2')
 axs[2].set_xlabel(r'Time [ns]')
 axs[2].set_ylabel(r'$I_{2}$ [$\mu$A]')
 axs[2].legend()
-axs[2].set_xlim([t0*1e6,tf*1e6])
+axs[2].set_xlim([t0,tf])
 
 plt.show()

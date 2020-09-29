@@ -85,7 +85,8 @@ def physical_constants():
          eV = 1.60217657e-19,#joules per eV
          Ry = 9.10938291e-31*1.60217657e-19**4/(8*8.854187817e-12**2*(6.62606957e-34/2/np.pi)**3*299792458),#13.3*eV;#Rydberg in joules
          a0 = 4*np.pi*8.854187817e-12*(6.62606957e-34/2/np.pi)**2/(9.10938291e-31*1.60217657e-19**2),#estimate of Bohr radius
-         Phi0 = 6.62606957e-34/(2*1.60217657e-19)#flux quantum
+         Phi0 = 6.62606957e-34/(2*1.60217657e-19),#flux quantum
+         Phi0__pH_ns = 6.62606957e3/(2*1.60217657)
          )
 
     return p 
