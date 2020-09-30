@@ -251,15 +251,17 @@ def neuron_time_stepper(neuron_object):
     n.tau_ni = n.integration_loop_time_constant
     
     n.state = 'subthreshold'
+    n.state_next = 'subthreshold'
     n.threshold_Lt = n.threshold_circuit_total_inductance # inductance_conversion
     n.threshold_r = n.threshold_circuit_resistance # *resistance_conversion
     n.threshold_M = -n.integration_loop_output_inductance[1]*np.sqrt(n.integration_loop_output_inductance[0]*n.threshold_circuit_inductances[0]) # *inductance_conversion
     n.threshold_Ibias = n.threshold_circuit_bias_current # current_conversion
     n.threshold_I1 = np.zeros([nt])
     n.threshold_I2 = np.zeros([nt]) 
-    n.L_nr = n.L_nr # *inductance_conversion
+    # n.L_nr = n.L_nr # *inductance_conversion
     # n.threshold_integration = 0
     n.delta_I__spike = 56 # (51.315+3.5)
+    n.spike_latch_time = 0.44
     
     n.refraction_M = n.neuronal_receiving_input_refractory_inductance[1]*np.sqrt(n.neuronal_receiving_input_refractory_inductance[0]*n.threshold_circuit_inductances[2]) # *inductance_conversion
     
@@ -276,6 +278,14 @@ def neuron_time_stepper(neuron_object):
     # step through time
     print('starting time stepping ...')
     # current_to_flux = inductance_conversion*np.sqrt(200e-12*10e-12)
+    
+    Inr1_prev = 0
+    Inr2_prev = 0
+    Idr1_prev = 0
+    Idr2_prev = 0
+    Ij2_prev = 0
+    Ij3_prev = 0
+    
     ii_vec = np.arange(1,nt-1,1)
     for ii in ii_vec:
         
@@ -570,23 +580,63 @@ def neuron_time_stepper(neuron_object):
         if run_neuron == True:
         
             n.threshold_Ltt = n.threshold_Lt+Ljj_pH(n.threshold_junction_critical_current,n.threshold_I1[ii])
+            n.L_nr = n.L_nr_0+Ljj_pH(n.I_c,Inr1_prev)+Ljj_pH(n.I_c,Inr2_prev)
+
+            # Idr1_next, Idr2_next, Ij2_next, Ij3_next, I1, I2, I3 = dendrite_current_splitting(Ic,If,Ib,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
+            
+            Ic = n.I_c
+            If = n.synapses[sy_name].I_di_vec[ii+1]
+            Ib = n.bias_currents
+            M = n.synapses[sy_name].M
+            Lm2 = n.dendrites['{}__d'.format(n.name)].L_left
+            Ldr1 = n.circuit_inductances[0]
+            Ldr2 = n.refractory_receiving_input_inductance[0]
+            L1 = n.circuit_inductances[2]
+            L2 = n.circuit_inductances[3]
+            L3 = n.integration_loop_total_inductance
+
+            Inr1_prev, Inr2_prev, a, b, c, d, e = dendrite_current_splitting(Ic,If,Ib,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
+            
             # if ii<200:
             #     print(n.threshold_Ltt)
+            tn1 = n.dendrites['{}__d'.format(n.name)].L_right+Ljj_pH(n.junction_critical_current,Inr2_prev)
+            tn2 = n.circuit_inductances[2]
+            alt_branch_factor = tn2/(tn1+tn2)
+            
+            # print(n.state)
             if n.state == 'subthreshold':
                 # n.V_j = 0
                 n.threshold_I2[ii+1] = ( (1-n.threshold_r*dt/n.threshold_Ltt)*n.threshold_I2[ii] 
-                                     - ( n.synapses[sy_name].M*n.refraction_M/(n.L_nr*n.threshold_Ltt) )*( n.synapses[sy_name].I_di_vec[ii+1]-n.synapses[sy_name].I_di_vec[ii] )
+                                     - alt_branch_factor*( n.synapses[sy_name].M*n.refraction_M/(n.L_nr*n.threshold_Ltt) )*( n.synapses[sy_name].I_di_vec[ii+1]-n.synapses[sy_name].I_di_vec[ii] )
                                     + ( n.threshold_M/n.threshold_Ltt )*( n.I_ni_vec[ii] - n.I_ni_vec[ii-1] ) )
-                                    # + ( 1/n.threshold_Ltt )*n.V_j )
+                                    
+                n.threshold_I1[ii+1] = n.threshold_Ibias-n.threshold_I2[ii+1]
+                if n.threshold_I1[ii+1] >= n.threshold_junction_critical_current:
+                    # print('into pre')
+                    n.state_next = 'prespiking'
+                    n.spike_onset_time = _pt
+                    
             elif n.state == 'spiking':
+                # print('spiking')
                 # n.V_j = p['Phi0'] # Phi0 # 
                 n.threshold_I2[ii+1] = n.delta_I__spike + n.threshold_I2[ii]
-                n.state = 'subthreshold'
+                # n.threshold_I1[ii+1] = n.threshold_Ibias-n.threshold_I2[ii+1]
+                n.state_next = 'subthreshold'
+                n.spike_times.append(_pt)                                    # + ( 1/n.threshold_Ltt )*n.V_j )
+                                    
+            elif n.state == 'prespiking':
+                # print('prespiking; _pt = {}; ot = {}'.format(_pt,(n.spike_onset_time+n.spike_latch_time)))
+                n.threshold_I1[ii+1] = n.threshold_I1[ii] # n.threshold_junction_critical_current-0.01
+                n.threshold_I2[ii+1] = n.threshold_I2[ii]
+                if _pt >= (n.spike_onset_time+n.spike_latch_time):
+                    # print('out of pre')
+                    n.state_next = 'spiking'   
+
+            n.state = n.state_next                                                 
+
+            # time.sleep(0.01)
+                
             
-            n.threshold_I1[ii+1] = n.threshold_Ibias-n.threshold_I2[ii+1]
-            if n.threshold_I1[ii+1] >= n.threshold_junction_critical_current:
-                n.state = 'spiking'
-                n.spike_times.append(_pt)
                 # print('\n\nspiking; t = {}'.format(_pt))                
             
             #refractory flux

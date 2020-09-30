@@ -1111,12 +1111,12 @@ def plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_co
         I_ni__wr = np.asarray(wr_instance['L8#branch'])
         I_ri__wr = np.asarray(wr_instance['L11#branch'])
     if neuron_instance.num_jjs == 4:
-        I_spd__wr = np.asarray(wr_instance['L8#branch'])
-        I_si__wr = np.asarray(wr_instance['L3#branch'])
-        I_ni__wr = np.asarray(wr_instance['L6#branch'])
-        I_threshold_1 = np.asarray(wr_instance['L13#branch'])
-        I_threshold_2 = np.asarray(wr_instance['L14#branch'])
-    time_vec__wr = np.asarray(wr_instance['time'])
+        I_spd__wr = 1e6*np.asarray(wr_instance['L8#branch'])
+        I_si__wr = 1e6*np.asarray(wr_instance['L3#branch'])
+        I_ni__wr = 1e6*np.asarray(wr_instance['L6#branch'])
+        I_threshold_1 = 1e6*np.asarray(wr_instance['L13#branch'])
+        I_threshold_2 = 1e6*np.asarray(wr_instance['L14#branch'])
+    time_vec__wr = 1e9*np.asarray(wr_instance['time'])
     
     legends = True
     
@@ -1135,13 +1135,13 @@ def plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_co
             _time_ind = (np.abs(neuron_instance.time_vec-_time)).argmin() 
             axs.plot(time_vec[_time_ind],neuron_instance.influx_vec[_time_ind]/Phi_0, 'o', markersize = pp['nominal_markersize'], color = colors['blue5'])   
     
-    nr_flux__wr = 1e6*(I_si__wr*neuron_instance.synapses[name_1].M - I_threshold_2*neuron_instance.refraction_M)/Phi_0
-    axs.plot(time_vec__wr*1e9,nr_flux__wr, '-', color = colors['red3'], label = 'wr; $M^{ni|si} = $'+'{:5.2f}pH'.format(neuron_instance.synapses[name_1].M))
-    # axs.plot(time_vec__wr*1e6,1e6*I_si__wr*neuron_instance.synapses[name_1].M/Phi_0, '-', color = colors['red2'], label = 'wr; no ref')
-    # axs.plot(time_vec__wr*1e6,1e18*I_threshold_2*neuron_instance.refraction_M/Phi_0, '-', color = colors['red4'], label = 'wr; just ref')
-    axs.plot(time_vec,neuron_instance.influx_vec/Phi_0, '-', color = colors['blue3'], label = neuron_instance.name+'; $n_j$ = {:d};'.format(neuron_instance.num_jjs)+' $I_{ne}$ = '+'{:5.2f}uA'.format(neuron_instance.bias_currents[0]*1e6))
-    # axs.plot(time_vec*1e6,neuron_instance.influx_vec__no_refraction/Phi_0, '-', color = colors['blue2'], label = neuron_instance.name+'; no ref')
-    # axs.plot(time_vec*1e6,neuron_instance.influx_vec__just_refraction/Phi_0, '-', color = colors['blue4'], label = neuron_instance.name+'; just ref')
+    nr_flux__wr = (I_si__wr*neuron_instance.synapses[name_1].M - I_threshold_2*neuron_instance.refraction_M)/Phi_0
+    axs.plot(time_vec__wr,I_si__wr*neuron_instance.synapses[name_1].M/Phi_0, '-', color = colors['red2'], label = 'wr; no ref')
+    axs.plot(time_vec,neuron_instance.influx_vec__no_refraction/Phi_0, '-', color = colors['blue2'], label = neuron_instance.name+'; no ref')
+    axs.plot(time_vec__wr,-I_threshold_2*neuron_instance.refraction_M/Phi_0, '-', color = colors['red4'], label = 'wr; just ref')
+    axs.plot(time_vec,neuron_instance.influx_vec__just_refraction/Phi_0, '-', color = colors['blue4'], label = neuron_instance.name+'; just ref')
+    axs.plot(time_vec__wr,nr_flux__wr, '-', color = colors['red3'], label = 'wr; $M^{ni|si} = $'+'{:5.2f}pH'.format(neuron_instance.synapses[name_1].M))
+    axs.plot(time_vec,neuron_instance.influx_vec/Phi_0, '-', color = colors['blue3'], label = neuron_instance.name+'; $n_j$ = {:d};'.format(neuron_instance.num_jjs)+' $I_{ne}$ = '+'{:5.2f}uA'.format(neuron_instance.bias_currents[0]))
     
     x1 = time_vec[0]
     x2 = time_vec[-1]
@@ -1232,6 +1232,184 @@ def plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_co
     
     return
 
+def plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_three(neuron_instance,wr_instance):
+    
+    if neuron_instance.num_jjs == 2:
+        I_spd__wr = np.asarray(wr_instance['L4#branch'])
+        I_si__wr = np.asarray(wr_instance['L1#branch'])
+        I_ni__wr = np.asarray(wr_instance['L8#branch'])
+        I_ri__wr = np.asarray(wr_instance['L11#branch'])
+    if neuron_instance.num_jjs == 4:
+        I_spd__wr = 1e6*np.asarray(wr_instance['L8#branch'])
+        I_si__wr = 1e6*np.asarray(wr_instance['L3#branch'])
+        I_ni__wr = 1e6*np.asarray(wr_instance['L6#branch'])
+        I_threshold_1 = 1e6*np.asarray(wr_instance['L13#branch'])
+        I_threshold_2 = 1e6*np.asarray(wr_instance['L14#branch'])
+    time_vec__wr = 1e9*np.asarray(wr_instance['time'])
+    
+    legends = True
+    
+    Phi_0 = 6.62606957e3/(2*1.60217657)
+    
+    time_vec = neuron_instance.time_vec    
+    fig, axs = plt.subplots(nrows = 3, ncols = 1, sharex = True, sharey = False)   
+    if legends == True:
+        _term = neuron_instance.max_rate*1e3        
+        fig.suptitle('$n_j$ = {:d}; num in burst = {:d}; max rate = {:5.2f}MHz'.format(neuron_instance.num_jjs,len(neuron_instance.spike_times),_term))
+    
+    # input synapses     
+    for name_1 in neuron_instance.input_synaptic_connections:
+                          
+        for _time in neuron_instance.synapses[name_1].input_spike_times:
+            _time_ind = (np.abs(neuron_instance.time_vec-_time)).argmin() 
+            axs[0].plot(time_vec[_time_ind],neuron_instance.influx_vec[_time_ind]/Phi_0, 'o', markersize = pp['nominal_markersize'], color = colors['blue5'])  
+    
+    # neuron
+    nr_flux__wr = (I_si__wr*neuron_instance.synapses[name_1].M - I_threshold_2*neuron_instance.refraction_M)/Phi_0
+    axs[0].plot(time_vec__wr,nr_flux__wr, '-', color = colors['red3'], label = 'wr; $M^{ni|si} = $'+'{:5.2f}pH'.format(neuron_instance.synapses[name_1].M))
+    # axs[0].plot(time_vec__wr,I_si__wr*neuron_instance.synapses[name_1].M/Phi_0, '-', color = colors['red2'], label = 'wr; no ref')
+    # axs[0].plot(time_vec__wr,I_threshold_2*neuron_instance.refraction_M/Phi_0, '-', color = colors['red4'], label = 'wr; just ref')
+    axs[0].plot(time_vec,neuron_instance.influx_vec/Phi_0, '-', color = colors['blue3'], label = neuron_instance.name+'; Isy = {:5.2f}$\mu$A'.format(neuron_instance.synapses[name_1].bias_currents[0])+' $I_{ne}$ = '+'{:5.2f}uA'.format(neuron_instance.bias_currents[0]))
+    # axs[0].plot(time_vec,neuron_instance.influx_vec__no_refraction/Phi_0, '-', color = colors['blue2'], label = neuron_instance.name+'; no ref')
+    # axs[0].plot(time_vec,neuron_instance.influx_vec__just_refraction/Phi_0, '-', color = colors['blue4'], label = neuron_instance.name+'; just ref')
+    
+    x1 = time_vec[0]
+    x2 = time_vec[-1]
+    y1 = neuron_instance.dendrites['{}__d'.format(neuron_instance.name)].influx_list__dend[1]/Phi_0
+    ylims = axs[0].get_ylim()
+    axs[0].plot([x1,x2],[y1,y1], ':', color = colors['redgrey5'], linewidth = pp['fine_linewidth'], label = 'ne__d thresh')
+    axs[0].set_ylim(ylims)
+    
+    y1 = neuron_instance.dendrites['{}__d'.format(neuron_instance.name)].influx_list__dend[1]/Phi_0
+    y2 = -y1
+    ylims = axs[0].get_ylim()
+    # axs[2].plot([x1,x2],[y1,y1], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = 'th')
+    # axs[2].plot([x1,x2],[y2,y2], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = '-th')   
+    axs[1].plot(time_vec__wr,I_ni__wr, '-', color = colors['red3'], label = 'wr')
+    axs[1].plot(time_vec,neuron_instance.I_ni_vec, '-', color = colors['yellow3'], label = neuron_instance.name+'; $tau_{ni}$ = '+'{:4.0f}ns'.format(neuron_instance.integration_loop_time_constant))    
+    # axs[3].plot(neuron_instance.spike_times*1e6,neuron_instance.output_voltage[neuron_instance.spike_times], 'x', markersize = pp['nominal_markersize'], color = colors['blue5'])
+    
+    axs[0].set_ylabel(r'$\Phi^{nr}_{a}/\Phi_0$')
+    axs[0].set_ylim(ylims)
+    axs[1].set_ylabel(r'$I^{ni}$ [$\mu$A]')
+    
+    axs[2].plot(time_vec__wr,I_threshold_2, '-', color = colors['yellow3'], label = 'wr: $I_{th2}$')
+    axs[2].plot(time_vec__wr,I_threshold_1, '-', color = colors['yellow1'], label = 'wr: $I_{th1}$')
+    axs[2].plot(time_vec,neuron_instance.threshold_I2, '-', color = colors['green3'], label = neuron_instance.name+': threshold I2')
+    axs[2].plot(time_vec,neuron_instance.threshold_I1, '-', color = colors['green1'], label = neuron_instance.name+': threshold I1')
+    axs[2].plot([time_vec[0],time_vec[-1]],neuron_instance.threshold_junction_critical_current*np.ones([2,1]), ':', color = colors['greengrey3'], linewidth = pp['fine_linewidth'], label = 'threshold')
+    axs[2].set_ylabel(r'$I^{th}$ [$\mu$A]')
+    
+    axs[2].set_xlabel(r'Time [ns]')
+    
+    if legends == True:
+        for ii in range(len(axs)):
+            axs[ii].legend()
+    
+    # xmin = 0
+    # if len(neuron_instance.voltage_peaks) > 0:
+    #     xmax = (neuron_instance.time_vec[neuron_instance.voltage_peaks[-1]]+6*neuron_instance.refractory_time_constant)*1e6
+    # else:
+    #     xmax = 6*neuron_instance.integration_loop_time_constant*1e6
+    # axs[0].set_xlim([xmin,xmax])
+    
+    plt.show()       
+    
+    return
+
+
+
+def plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_four(neuron_instance,wr_instance):
+    
+    if neuron_instance.num_jjs == 2:
+        I_spd__wr = np.asarray(wr_instance['L4#branch'])
+        I_si__wr = np.asarray(wr_instance['L1#branch'])
+        I_ni__wr = np.asarray(wr_instance['L8#branch'])
+        I_ri__wr = np.asarray(wr_instance['L11#branch'])
+    if neuron_instance.num_jjs == 4:
+        I_spd__wr = 1e6*np.asarray(wr_instance['L8#branch'])
+        I_si__wr = 1e6*np.asarray(wr_instance['L3#branch'])
+        I_ni__wr = 1e6*np.asarray(wr_instance['L6#branch'])
+        I_threshold_1 = 1e6*np.asarray(wr_instance['L13#branch'])
+        I_threshold_2 = 1e6*np.asarray(wr_instance['L14#branch'])
+    time_vec__wr = 1e9*np.asarray(wr_instance['time'])
+    
+    legends = True
+    
+    Phi_0 = 6.62606957e3/(2*1.60217657)
+    
+    time_vec = neuron_instance.time_vec    
+    fig, axs = plt.subplots(nrows = 4, ncols = 1, sharex = True, sharey = False)   
+    if legends == True:
+        _term = neuron_instance.max_rate*1e3        
+        fig.suptitle('$n_j$ = {:d}; num in burst = {:d}; max rate = {:5.2f}MHz'.format(neuron_instance.num_jjs,len(neuron_instance.spike_times),_term))
+    
+    # input synapses     
+    for name_1 in neuron_instance.input_synaptic_connections:
+                          
+        for _time in neuron_instance.synapses[name_1].input_spike_times:
+            _time_ind = (np.abs(neuron_instance.time_vec-_time)).argmin() 
+            axs[0].plot(time_vec[_time_ind],neuron_instance.influx_vec[_time_ind]/Phi_0, 'o', markersize = pp['nominal_markersize'], color = colors['blue5'])  
+    
+    # neuron
+    axs[0].plot(time_vec,neuron_instance.influx_vec/Phi_0, '-', color = colors['blue3'], label = neuron_instance.name+'; Isy = {:5.2f}$\mu$A'.format(neuron_instance.synapses[name_1].bias_currents[0])+' $I_{ne}$ = '+'{:5.2f}uA'.format(neuron_instance.bias_currents[0]))
+    axs[0].plot(time_vec,neuron_instance.influx_vec__no_refraction/Phi_0, '-', color = colors['blue2'], label = neuron_instance.name+'; no ref')
+    axs[0].plot(time_vec,neuron_instance.influx_vec__just_refraction/Phi_0, '-', color = colors['blue4'], label = neuron_instance.name+'; just ref')
+    nr_flux__wr = (I_si__wr*neuron_instance.synapses[name_1].M + I_threshold_2*neuron_instance.refraction_M)/Phi_0
+    axs[0].plot(time_vec__wr,nr_flux__wr, '-', color = colors['red3'], label = 'wr; $M^{ni|si} = $'+'{:5.2f}pH'.format(neuron_instance.synapses[name_1].M))
+    axs[0].plot(time_vec__wr,I_si__wr*neuron_instance.synapses[name_1].M/Phi_0, '-', color = colors['red2'], label = 'wr; no ref')
+    axs[0].plot(time_vec__wr,I_threshold_2*neuron_instance.refraction_M/Phi_0, '-', color = colors['red4'], label = 'wr; just ref')
+    
+    x1 = time_vec[0]
+    x2 = time_vec[-1]
+    y1 = neuron_instance.dendrites['{}__d'.format(neuron_instance.name)].influx_list__dend[1]/Phi_0
+    ylims = axs[0].get_ylim()
+    axs[0].plot([x1,x2],[y1,y1], ':', color = colors['redgrey5'], linewidth = pp['fine_linewidth'], label = 'ne__d thresh')
+    axs[0].set_ylim(ylims)
+    
+    y1 = neuron_instance.dendrites['{}__d'.format(neuron_instance.name)].influx_list__dend[1]/Phi_0
+    y2 = -y1
+    ylims = axs[0].get_ylim()
+    # axs[2].plot([x1,x2],[y1,y1], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = 'th')
+    # axs[2].plot([x1,x2],[y2,y2], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = '-th')    
+    axs[1].plot(time_vec,neuron_instance.I_ni_vec, '-', color = colors['blue3'], label = neuron_instance.name+'; $tau_{ni}$ = '+'{:4.0f}ns'.format(neuron_instance.integration_loop_time_constant))
+    axs[1].plot(time_vec__wr,I_ni__wr, '-', color = colors['blue1'], label = 'wr')
+    # axs[3].plot(neuron_instance.spike_times*1e6,neuron_instance.output_voltage[neuron_instance.spike_times], 'x', markersize = pp['nominal_markersize'], color = colors['blue5'])
+    
+    axs[0].set_ylabel(r'$\Phi^{nr}_{a}/\Phi_0$')
+    axs[0].set_ylim(ylims)
+    axs[1].set_ylabel(r'$I^{ni}$ [$\mu$A]')
+    
+    axs[2].plot(time_vec,neuron_instance.I_ni_vec*neuron_instance.threshold_M/Phi_0, '-', color = colors['yellow3'], label = neuron_instance.name+'; $M^{th}$ = '+'{:5.2f}pH'.format(neuron_instance.threshold_M))
+    nt_flux__wr = (I_ni__wr*neuron_instance.threshold_M)/Phi_0
+    axs[2].plot(time_vec__wr,nt_flux__wr, '-', color = colors['yellow1'], label = 'wr')
+    axs[2].set_ylabel(r'$\Phi^{th}_a/\Phi_0$')
+    
+    axs[3].plot(time_vec,neuron_instance.threshold_I2, '-', color = colors['green3'], label = neuron_instance.name+': threshold I2')
+    axs[3].plot(time_vec,neuron_instance.threshold_I1, '-', color = colors['green1'], label = neuron_instance.name+': threshold I1')
+    axs[3].plot(time_vec__wr,I_threshold_2, '-', color = colors['yellow3'], label = 'wr: $I_{th2}$')
+    axs[3].plot(time_vec__wr,I_threshold_1, '-', color = colors['yellow1'], label = 'wr: $I_{th1}$')
+    axs[3].plot([time_vec[0],time_vec[-1]],neuron_instance.threshold_junction_critical_current*np.ones([2,1]), ':', color = colors['greengrey3'], linewidth = pp['fine_linewidth'], label = 'threshold')
+    axs[3].set_ylabel(r'$I^{th}$ [$\mu$A]')
+    
+    axs[3].set_xlabel(r'Time [ns]')
+    
+    if legends == True:
+        for ii in range(len(axs)):
+            axs[ii].legend()
+    
+    # xmin = 0
+    # if len(neuron_instance.voltage_peaks) > 0:
+    #     xmax = (neuron_instance.time_vec[neuron_instance.voltage_peaks[-1]]+6*neuron_instance.refractory_time_constant)*1e6
+    # else:
+    #     xmax = 6*neuron_instance.integration_loop_time_constant*1e6
+    # axs[0].set_xlim([xmin,xmax])
+    
+    plt.show()       
+    
+    return
+
+
 
 def plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare(neuron_instance,wr_instance):
     
@@ -1287,12 +1465,12 @@ def plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_co
     
     # neuron
     axs[2].plot(time_vec,neuron_instance.influx_vec/Phi_0, '-', color = colors['blue3'], label = neuron_instance.name+'; $n_j$ = {:d};'.format(neuron_instance.num_jjs)+' $I_{ne}$ = '+'{:5.2f}uA'.format(neuron_instance.bias_currents[0]))
-    axs[2].plot(time_vec,neuron_instance.influx_vec__no_refraction/Phi_0, ':', color = colors['blue2'], label = neuron_instance.name+'; no ref')
-    axs[2].plot(time_vec,neuron_instance.influx_vec__just_refraction/Phi_0, '-.', color = colors['blue4'], label = neuron_instance.name+'; just ref')
+    axs[2].plot(time_vec,neuron_instance.influx_vec__no_refraction/Phi_0, '-', color = colors['blue2'], label = neuron_instance.name+'; no ref')
+    axs[2].plot(time_vec,neuron_instance.influx_vec__just_refraction/Phi_0, '-', color = colors['blue4'], label = neuron_instance.name+'; just ref')
     nr_flux__wr = (I_si__wr*neuron_instance.synapses[name_1].M + I_threshold_2*neuron_instance.refraction_M)/Phi_0
     axs[2].plot(time_vec__wr,nr_flux__wr, '-', color = colors['red3'], label = 'wr; $M^{ni|si} = $'+'{:5.2f}pH'.format(neuron_instance.synapses[name_1].M))
-    axs[2].plot(time_vec__wr,I_si__wr*neuron_instance.synapses[name_1].M/Phi_0, ':', color = colors['red2'], label = 'wr; no ref')
-    axs[2].plot(time_vec__wr,I_threshold_2*neuron_instance.refraction_M/Phi_0, '-.', color = colors['red4'], label = 'wr; just ref')
+    axs[2].plot(time_vec__wr,I_si__wr*neuron_instance.synapses[name_1].M/Phi_0, '-', color = colors['red2'], label = 'wr; no ref')
+    axs[2].plot(time_vec__wr,I_threshold_2*neuron_instance.refraction_M/Phi_0, '-', color = colors['red4'], label = 'wr; just ref')
     
     x1 = time_vec[0]
     x2 = time_vec[-1]
@@ -1306,7 +1484,7 @@ def plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_co
     ylims = axs[2].get_ylim()
     # axs[2].plot([x1,x2],[y1,y1], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = 'th')
     # axs[2].plot([x1,x2],[y2,y2], '-.', color = colors['red1'], linewidth = pp['fine_linewidth'], label = '-th')    
-    axs[3].plot(time_vec,neuron_instance.I_ni_vec, '-', color = colors['blue3'], label = neuron_instance.name+'; $tau_{ni}$ = '+'{:4.0f}ns'.format(neuron_instance.integration_loop_time_constant*1e9))
+    axs[3].plot(time_vec,neuron_instance.I_ni_vec, '-', color = colors['blue3'], label = neuron_instance.name+'; $tau_{ni}$ = '+'{:4.0f}ns'.format(neuron_instance.integration_loop_time_constant))
     axs[3].plot(time_vec__wr,I_ni__wr, '-', color = colors['blue1'], label = 'wr')
     # axs[3].plot(neuron_instance.spike_times*1e6,neuron_instance.output_voltage[neuron_instance.spike_times], 'x', markersize = pp['nominal_markersize'], color = colors['blue5'])
     
@@ -1326,7 +1504,7 @@ def plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_co
     axs[5].plot([time_vec[0],time_vec[-1]],neuron_instance.threshold_junction_critical_current*np.ones([2,1]), ':', color = colors['greengrey3'], linewidth = pp['fine_linewidth'], label = 'threshold')
     axs[5].set_ylabel(r'$I^{th}$ [$\mu$A]')
     
-    axs[5].set_xlabel(r'Time [$\mu$s]')
+    axs[5].set_xlabel(r'Time [ns]')
     
     if legends == True:
         for ii in range(len(axs)):
@@ -2829,15 +3007,15 @@ def plot__syn__wr_cmpr__single_pulse(soen_time,soen_drive,soen_response,wr_time,
     fig, ax = plt.subplots(nrows = 5, ncols = 1, sharex = True, sharey = False)
     fig.suptitle('num_jjs = {}'.format(num_jjs))
     
-    ax[0].plot(np.asarray(wr_time[-1][-1][:])*1e9,np.asarray(wr_drive)*1e6, '-', color = colors['red3'], label = 'WR drive')
+    ax[0].plot(np.asarray(wr_time[-1][-1][:]),np.asarray(wr_drive), '-', color = colors['red3'], label = 'WR drive')
     ax[0].plot(soen_time[-1][-1][:],soen_drive, '-', color = colors['blue3'], label = 'soen drive, err = {:4.2e}'.format(chi_drive))
     ax[0].set_ylabel(r'$I_{spd2}$ [$\mu$A]')
     color_roots = ['blue','red','yellow','green','bluegrey']
     for ii in range(len(L_di_vec)):
         for jj in range(len(tau_di_vec)):
             
-            ax[ii+1].plot(np.asarray(wr_time[ii][jj][:])*1e9,np.asarray(wr_response[ii][jj][:])*1e6, '-', color = colors['{}{:d}'.format(color_roots[jj],5)], label = 'WR')
-            ax[ii+1].plot(soen_time[ii][jj][:]*1e9,soen_response[ii][jj][:], '-', color = colors['{}{:d}'.format(color_roots[jj],3)], label = 'soen: tau = {:4.0f}ns; err = {:4.2e}'.format(tau_di_vec[jj]*1e9,chi_signal[ii][jj]))
+            ax[ii+1].plot(np.asarray(wr_time[ii][jj][:]),np.asarray(wr_response[ii][jj][:]), '-', color = colors['{}{:d}'.format(color_roots[jj],5)], label = 'WR')
+            ax[ii+1].plot(soen_time[ii][jj][:],soen_response[ii][jj][:], '-', color = colors['{}{:d}'.format(color_roots[jj],3)], label = 'soen: tau = {:4.0f}ns; err = {:4.2e}'.format(tau_di_vec[jj],chi_signal[ii][jj]))
             ax[ii+1].set_ylabel(r'$I^{di}$ [$\mu$A]')
             ax[ii+1].legend()
                  

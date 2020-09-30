@@ -1,37 +1,38 @@
 import numpy as np
 from util import color_dictionary, physical_constants
+from _functions import dendrite_current_splitting
 colors = color_dictionary()
 
 p = physical_constants()
 
 #%%
-C = 1e-12
-tau1 = 1e-9
-tau2 = 20e-12
 
-L = tau1*tau2/C
-R = 2*np.sqrt(L/C)
+# dendrite_current_splitting(Ic,Iflux,Ib,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
 
-print('L = {:f}nH\nR = {:f}ohm'.format(L*1e9,R))
+Ic = 40
+If = 0
+Ib = [77,36,35]
 
-#%%
-R = 0.1592
-tau1 = 20e-12
-C = tau1/R
-print(C)
+Lm1 = 130
+Lm2 = 20
+M = np.sqrt(Lm1*Lm2)
+Ldr1 = 0
+Ldr2 = 20
 
-#%%
-M1 = np.sqrt(20e-12*20e-12)
-I1 = 45e-6
-I2 = 20e-6
-M2 = M1*I1/I2
-print(M2)
+L1 = 200
+L2 = 77.5
+L3 = 77.5e-3
 
-#%%
+Idr1_prev = Ib[0]/2
+Idr2_prev = Ib[0]/2
+Ij2_prev = Ib[1]
+Ij3_prev = Ib[2] 
 
-M = np.sqrt(200*20)
-a = p['Phi0__pH_ns']
-N = 500
-
-dI = a/(M*N)
-print(dI)
+for ii in range(5):
+    Idr1_next, Idr2_next, Ij2_next, Ij3_next, I1, I2, I3 = dendrite_current_splitting(Ic,If,Ib,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
+    Idr1_prev = Idr1_next
+    Idr2_prev = Idr2_next
+    Ij2_prev = Ij2_next
+    Ij3_prev = Ij3_next
+    
+print('Idr1 = {}'.format(Idr1_next))    

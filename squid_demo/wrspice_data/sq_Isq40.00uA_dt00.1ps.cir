@@ -1,0 +1,22 @@
+
+B0 3 4 7 jjbetac area=40
+B1 3 5 8 jjbetac area=40
+   I0 0 2 pwl(0 0  101.000n  0u  201.000n  41.5u  201.001n  41.5u)
+ I1 0 3 pwl(0 0 0.09n 0 0.1n 40u )
+   I2 0 6 pwl(0 0  0.999n  0   1.000n  41.4u  101.000n  0)
+K1 L3 L2 1
+K2 L0 L1 1
+L0 2 0 200p
+L1 4 0 12.5p
+L2 5 0 12.5p
+L3 6 0 200p
+R0 1 0 1
+V0 1 0 pwl(0 1e5 0.2ns 1e5 0.3ns 0)
+
+.model jjbetac jj(rtype=0, cct=1, vg=2.8m, icrit=1u, cap= 5f, vshunt=0.141mV)
+.control
+set maxdata=2560000
+tran  0.1p 202n
+write ./sq_Isq40.00uA_dt00.1ps.dat L0#branch L3#branch v(3)
+quit
+.endc

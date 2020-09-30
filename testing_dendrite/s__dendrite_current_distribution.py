@@ -7,7 +7,6 @@ from scipy.signal import find_peaks
 # from soen_sim import input_signal, synapse, dendrite, neuron
 from _plotting import plot_error_mat, plot_fq_peaks, plot_fq_peaks__dt_vs_bias, plot_wr_data__currents_and_voltages
 from _functions import Ljj, dendrite_current_splitting, read_wr_data
-from _functions__more import dendrite_model__parameter_sweep
 from util import physical_constants
 p = physical_constants()
 

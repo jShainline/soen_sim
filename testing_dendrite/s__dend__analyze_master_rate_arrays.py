@@ -13,6 +13,9 @@ colors = color_dictionary()
 plt.close('all')
 
 #%%
+Phi0 = p['Phi0__pH_ns']
+
+#%%
 
 num_jjs_list = [4] # [2,4]
 L_left = 20
@@ -22,11 +25,16 @@ do__3d_rate_arrays = False
 do__squid_response = False
 do__threshold = False
 do__squid_threshold_composite = True
+do__functional_range = True
 do__saturation = False
 
 if do__threshold == True:
     fig_th = plt.figure()
     fig_th.suptitle('DR loop flux threshold')
+if do__functional_range == True:
+    fig_range, axs_range = plt.subplots(nrows = 2, ncols = 1, sharex = False, sharey = False)     
+    fig_range.suptitle('DR functional range')
+     
 for num_jjs in num_jjs_list:
 
     if num_jjs == 2:       
@@ -83,8 +91,15 @@ for num_jjs in num_jjs_list:
             # influx_list__2 = copy.deepcopy(influx_list)
             # influx_list__2.insert(0,influx_list__2[0])
             # influx_list__2.insert(0,0)
-            rate_vec__temp = np.concatenate((np.flipud(rate_vec__temp),rate_vec__temp))
-            influx_list__2 = np.concatenate((-np.flipud(np.asarray(influx_list)),np.asarray(influx_list)))
+            tn = 0
+            if num_jjs == 4:
+                if I_de > 84:
+                    tn = 1
+            # if num_jjs == 2:
+            #     if I_de > 82:
+            #         tn = 1
+            rate_vec__temp = np.concatenate((np.flipud(rate_vec__temp[tn:]),rate_vec__temp[tn:]))
+            influx_list__2 = np.concatenate((-np.flipud(np.asarray(influx_list[tn:])),np.asarray(influx_list[tn:])))
             # rate_vec__temp = np.concatenate((np.flipud(rate_vec__temp),rate_vec__temp))
             # influx_list__2 = np.concatenate((np.flipud(np.asarray(influx_list)),-np.asarray(influx_list)))
             
@@ -95,7 +110,7 @@ for num_jjs in num_jjs_list:
                 axs_comp[0].plot(influx_list__2/p['Phi0__pH_ns'],np.asarray(rate_vec__temp), '-', label = 'Ide = {:2.0f}uA'.format(I_de))
         
         # Phi_th versus I_de    
-        if do__threshold == True or do__squid_threshold_composite == True:
+        if do__threshold == True or do__squid_threshold_composite == True or do__functional_range == True:
             Phi_th_vec[ii] = influx_list[1]
             
         # I_di_sat versus applied flux
@@ -129,7 +144,7 @@ for num_jjs in num_jjs_list:
         
         if do__threshold == True:
             ax_th = fig_th.gca()
-            ax_th.plot(np.asarray(Phi_th_vec__two_sided)/p['Phi0__pH_ns'],I_de_vec__two_sided, '-o', label = 'num_jjs = {:d}'.format(num_jjs)) # , label = legend_text
+            ax_th.plot(np.asarray(Phi_th_vec__two_sided)/Phi0,I_de_vec__two_sided, '-o', label = 'num_jjs = {:d}'.format(num_jjs)) # , label = legend_text
             ax_th.set_ylabel(r'$I^{de}$ [$\mu$A]')
             ax_th.set_xlabel(r'$\Phi^{dr}_{th}/\Phi_0$')
             # ax_th.legend()
@@ -148,7 +163,7 @@ for num_jjs in num_jjs_list:
     if do__squid_threshold_composite == True:        
         axs_comp[0].set_ylabel(r'$R_{fq}$ [fluxons per ns]')
         
-        axs_comp[1].plot(np.asarray(Phi_th_vec__two_sided)/p['Phi0__pH_ns'],I_de_vec__two_sided, '-o', color = colors['blue3'], label = '$\Phi^{dr}_{th}$') # , label = legend_text  
+        axs_comp[1].plot(np.asarray(Phi_th_vec__two_sided)/Phi0,I_de_vec__two_sided, '-o', color = colors['blue3'], label = '$\Phi^{dr}_{th}$') # , label = legend_text  
         axs_comp[1].legend()
         axs_comp[1].set_ylabel(r'$I^{de}$ [$\mu$A]')        
         
@@ -162,6 +177,36 @@ for num_jjs in num_jjs_list:
         if num_jjs == 4:
             axs_comp[0].set_ylim([0,65])
             axs_comp[1].set_ylim([55,86])
+        
+        plt.show()
+            
+    if do__functional_range == True:   
+        area_list = []
+        I_de_list = []
+        kk_last = 0
+        for kk in range(len(I_de_vec)):
+            Phi_ex_vec = [Phi_th_vec[kk]/Phi0,1/2,1/2,Phi_th_vec[kk]/Phi0,Phi_th_vec[kk]/Phi0]
+            Phi_ih_vec = [1/2-Phi_th_vec[kk]/Phi0,1/2-Phi_th_vec[kk]/Phi0,2*Phi_th_vec[kk]/Phi0,2*Phi_th_vec[kk]/Phi0,1/2-Phi_th_vec[kk]/Phi0]
+            if 1/2-Phi_th_vec[kk]/Phi0 < 2*Phi_th_vec[kk]/Phi0:
+                area_list.append( (1/2-Phi_th_vec[kk]/Phi0)*(2*Phi_th_vec[kk]/Phi0-(1/2-Phi_th_vec[kk]/Phi0)) )
+                I_de_list.append(I_de_vec[kk])
+                axs_range[0].plot(Phi_ex_vec,Phi_ih_vec,'-', label = 'Ide = {:5.2f}'.format(I_de_vec[kk]))
+                kk_last = kk 
+                Phi_ex_vec__use = Phi_ex_vec
+        tn = 1/2-Phi_th_vec[kk_last]/Phi0 + (2*Phi_th_vec[kk_last]/Phi0-(1/2-Phi_th_vec[kk_last]/Phi0))/2
+        axs_range[0].plot([np.min(Phi_ex_vec__use),np.max(Phi_ex_vec__use)],[tn,tn],':', color = colors['greengrey3'], label = 'op = {:06.4f}'.format(tn))
+        axs_range[0].margins(0.05,0.05)
+            
+        # ax_range.set_xlim([0,1/2])
+        axs_range[0].set_xlabel('$\Phi_{ex}/\Phi_0$')
+        # ax_range.set_ylim([0,1/2])        
+        axs_range[0].set_ylabel('$\Phi_{ih}/\Phi_0$')
+        axs_range[0].legend()
+        
+        axs_range[1].plot(I_de_list,area_list,'o-', color = colors['blue3'], label = 'max at Ide = {:5.2f}uA'.format( I_de_list[(np.asarray(area_list)).argmax()] ))
+        axs_range[1].set_xlabel('$I_{de}$ [$\mu$A]')
+        axs_range[1].set_ylabel('$\Delta \Phi^{ex} \Delta \Phi^{ih}/\Phi_0^2$')
+        axs_range[1].legend()
             
         plt.show()
         

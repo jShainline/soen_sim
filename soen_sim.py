@@ -830,7 +830,7 @@ class neuron():
                 print('5: self.dendrites[name_dendrite].L_right = {}'.format(self.dendrites[name_dendrite].L_right)) 
                 
         self.dendrites['{}__d'.format(self.name)].L_right = self.circuit_inductances[1] + self.neuronal_receiving_input_refractory_inductance[0]
-        self.L_nr = self.dendrites['{}__d'.format(self.name)].L_right+self.dendrites['{}__d'.format(self.name)].L_left+2*Ljj_pH(self.junction_critical_current,0)
+        self.L_nr_0 = self.dendrites['{}__d'.format(self.name)].L_right+self.dendrites['{}__d'.format(self.name)].L_left
             
         return self
     

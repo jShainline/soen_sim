@@ -13,7 +13,7 @@ plt.close('all')
 
 #%%
 
-I_sq_vec = np.arange(45,85,5) # uA
+I_sq_vec = np.arange(40,85,10) # uA
 M = np.sqrt(200*12.5) # pH
 Phi0 = p['Phi0__pH_ns']
 
@@ -32,7 +32,7 @@ directory_name = 'wrspice_data/'
 for jj in range(len(I_sq_vec)):
     
     print('jj = {} of {}'.format(jj+1,len(I_sq_vec)))
-    file_name = 'sq_Isq{:5.2f}uA_dt01.0ps'.format(I_sq_vec[jj])
+    file_name = 'sq_Isq{:5.2f}uA_dt00.1ps'.format(I_sq_vec[jj])
     data_dict = read_wr_data('{}{}.dat'.format(directory_name,file_name))
     V_fq_str = 'v(3)'
     I_drive_1_str = 'L0#branch'
@@ -94,7 +94,7 @@ for jj in range(len(I_sq_vec)):
     
     
 #%%    
-ind1 = 6
+ind1 = 3
 fig, axs = plt.subplots(nrows = 1, ncols = 1, sharex = True, sharey = False)   
 
 axs.plot(np.asarray(time_vec__array[ind1]),np.asarray(V_fq__array[ind1])*1e-3, '-', color = colors['blue3'], label = '$V_{sq}$ [$\mu$V]')
@@ -117,7 +117,7 @@ axs.set_ylim([-10,200])
 plt.show()
 
 #%%    
-ind1 = 6
+ind1 = 3
 fig, axs = plt.subplots(nrows = 1, ncols = 1, sharex = False, sharey = False)   
 
 t1 = 16000

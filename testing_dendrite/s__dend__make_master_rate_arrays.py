@@ -15,7 +15,7 @@ plt.close('all')
 
 #%% set case
 
-num_jjs = 2 # 2 or 4
+num_jjs = 4 # 2 or 4
 
 
 #%% options
@@ -46,7 +46,7 @@ I_de_list = np.arange(I_de_0,I_de_f+dI_de,dI_de)
 num_I_de = len(I_de_list)
 
 # current for flux bias
-Phi_vec = np.linspace(0,1e18*p['Phi0']/2,50) # units of uA pH
+Phi_vec = np.linspace(0,p['Phi0__pH_ns']/2,50) # units of uA pH
 M = np.sqrt(200*20)
 I_drive_vec = Phi_vec/M # units of uA
 resolution = 10e-3 # units of uA
