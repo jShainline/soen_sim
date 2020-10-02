@@ -260,12 +260,13 @@ def neuron_time_stepper(neuron_object):
     n.threshold_I2 = np.zeros([nt]) 
     # n.L_nr = n.L_nr # *inductance_conversion
     # n.threshold_integration = 0
-    n.delta_I__spike = 56 # (51.315+3.5)
-    n.spike_latch_time = 0.44
+    n.delta_I__spike = 53.5 # (51.315+3.5)
+    n.spike_latch_time = 0.43
     
     n.refraction_M = n.neuronal_receiving_input_refractory_inductance[1]*np.sqrt(n.neuronal_receiving_input_refractory_inductance[0]*n.threshold_circuit_inductances[2]) # *inductance_conversion
     
     n.spike_times = []
+    n.spike_time_indices = []
     
     #load threshold data
     # _temp_str_2 = '{:1d}jj_Llft{:04.1f}_Lrgt{:04.1f}_Lnf65.0'.format(n.num_jjs,inductance_conversion*n.dendrites['{}__d'.format(n.name)].L_left,inductance_conversion*n.dendrites['{}__d'.format(n.name)].L_right)
@@ -308,7 +309,7 @@ def neuron_time_stepper(neuron_object):
             # pause(2)
     
             if len(spike_times) > 0:
-                                  
+                               
                 # find most recent spike time 
                 n.synapses[sy_name].st_ind = (np.abs(spike_times[:] - _pt)).argmin()
                 if n.synapses[sy_name].st_ind == 0 and spike_times[n.synapses[sy_name].st_ind] > _pt: # first spike has not arrived
@@ -580,26 +581,27 @@ def neuron_time_stepper(neuron_object):
         if run_neuron == True:
         
             n.threshold_Ltt = n.threshold_Lt+Ljj_pH(n.threshold_junction_critical_current,n.threshold_I1[ii])
-            n.L_nr = n.L_nr_0+Ljj_pH(n.I_c,Inr1_prev)+Ljj_pH(n.I_c,Inr2_prev)
-
-            # Idr1_next, Idr2_next, Ij2_next, Ij3_next, I1, I2, I3 = dendrite_current_splitting(Ic,If,Ib,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
+            n.L_nr = n.L_nr_0+Ljj_pH(n.I_c,n.I_c)+Ljj_pH(n.I_c,n.I_c)
             
-            Ic = n.I_c
-            If = n.synapses[sy_name].I_di_vec[ii+1]
-            Ib = n.bias_currents
-            M = n.synapses[sy_name].M
-            Lm2 = n.dendrites['{}__d'.format(n.name)].L_left
-            Ldr1 = n.circuit_inductances[0]
-            Ldr2 = n.refractory_receiving_input_inductance[0]
-            L1 = n.circuit_inductances[2]
-            L2 = n.circuit_inductances[3]
-            L3 = n.integration_loop_total_inductance
+            # n.L_nr = n.L_nr_0+Ljj_pH(n.I_c,Inr1_prev)+Ljj_pH(n.I_c,Inr2_prev)
+            
+            # Ic = n.I_c
+            # If = n.synapses[sy_name].I_di_vec[ii+1]
+            # Ib = n.bias_currents
+            # M = n.synapses[sy_name].M
+            # Lm2 = n.dendrites['{}__d'.format(n.name)].L_left
+            # Ldr1 = n.circuit_inductances[0]
+            # Ldr2 = n.refractory_receiving_input_inductance[0]
+            # L1 = n.circuit_inductances[2]
+            # L2 = n.circuit_inductances[3]
+            # L3 = n.integration_loop_total_inductance
 
-            Inr1_prev, Inr2_prev, a, b, c, d, e = dendrite_current_splitting(Ic,If,Ib,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
+            # Inr1_prev, Inr2_prev, a, b, c, d, e = dendrite_current_splitting(Ic,If,Ib,M,Lm2,Ldr1,Ldr2,L1,L2,L3,Idr1_prev,Idr2_prev,Ij2_prev,Ij3_prev)
             
             # if ii<200:
             #     print(n.threshold_Ltt)
-            tn1 = n.dendrites['{}__d'.format(n.name)].L_right+Ljj_pH(n.junction_critical_current,Inr2_prev)
+            # tn1 = n.dendrites['{}__d'.format(n.name)].L_right+Ljj_pH(n.junction_critical_current,Inr2_prev)
+            tn1 = n.dendrites['{}__d'.format(n.name)].L_right+Ljj_pH(n.junction_critical_current,n.junction_critical_current)
             tn2 = n.circuit_inductances[2]
             alt_branch_factor = tn2/(tn1+tn2)
             
@@ -622,7 +624,8 @@ def neuron_time_stepper(neuron_object):
                 n.threshold_I2[ii+1] = n.delta_I__spike + n.threshold_I2[ii]
                 # n.threshold_I1[ii+1] = n.threshold_Ibias-n.threshold_I2[ii+1]
                 n.state_next = 'subthreshold'
-                n.spike_times.append(_pt)                                    # + ( 1/n.threshold_Ltt )*n.V_j )
+                n.spike_times.append(_pt+dt)                                    # + ( 1/n.threshold_Ltt )*n.V_j )
+                n.spike_time_indices.append(ii+1)  
                                     
             elif n.state == 'prespiking':
                 # print('prespiking; _pt = {}; ot = {}'.format(_pt,(n.spike_onset_time+n.spike_latch_time)))
@@ -1021,6 +1024,35 @@ def chi_squared_error(target_data,actual_data):
     return error
 
 
+def chi_squared_error__ISI(target_data,actual_data):
+    
+    print('calculating chi^2 ISI ...')
+    
+    
+    tn = np.min([len(target_data),len(actual_data)])
+    if tn > 1:
+        
+        Dt_ISI__wr = np.diff(target_data)
+        Dt_ISI__soen = np.diff(actual_data)
+        error = 0
+        norm = 0
+    
+        for ii in range(tn-1):        
+            error += np.abs( Dt_ISI__wr[ii]-Dt_ISI__soen[ii] )**2
+            norm += np.abs( Dt_ISI__wr[ii] )**2
+       
+        error = error/norm
+        
+    elif tn == 1:
+        
+        error = np.abs( target_data[0]-actual_data[0] )**2/50**2 # denominator is refractory time constant in ns
+    
+    
+    print('done calculating chi^2 ISI.')
+    
+    return error
+
+
 def read_wr_data(file_path):
     
     print('reading wr data file ...')
@@ -1267,3 +1299,23 @@ def low_pass_filter(y,t,r,L1,L2,C,M,dIdrive_dt):
     dydt = [ (L2/L1)*I4+(r/L1)*I2-M*dIdrive_dt, I4, -(r/L2)*I4-(1/(L2*C))*(I2+I1)]
     
     return dydt
+
+def nTron(I_gate,I_on,I_off,r_gate,r_channel,state):
+    
+    if I_gate >= I_on:
+        state = 'on'
+    elif I_gate < I_on and I_gate >= I_off:
+        if state == 'on':
+            state = 'latched'
+    elif I_gate < I_off:
+        if state == 'on' or state == 'latched':
+            state = 'off'
+    
+    if state == 'on' or state == 'latched':
+        r1 = r_gate
+        r2 = r_channel
+    elif state == 'off':
+        r1 = 0
+        r2 = 0
+            
+    return r1, r2

@@ -1,9 +1,10 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from scipy.signal import find_peaks
 
 # from soen_sim import input_signal, synapse, dendrite, neuron
-from _plotting import plot_neuronal_response__single_synaptic_pulse, plot_num_in_burst, plot_phase_portrait, plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare, plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_two, plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_one, plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_four, plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_three
-from _functions import read_wr_data
+from _plotting import plot_num_in_burst, plot_phase_portrait, plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare, plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_two, plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_one, plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_four, plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_three
+from _functions import read_wr_data, chi_squared_error__ISI
 from soen_sim import input_signal, synapse, neuron
 
 plt.close('all')
@@ -12,8 +13,8 @@ plt.close('all')
 dt = 0.1 # ns
 spike_times = [5] # ns
   
-I_sy_vec = np.asarray([72]) # np.asarray([72,76,80])*1e-6 # [80e-6] # 
-I_ne_vec = np.asarray([72]) # np.asarray([72,76,80])
+I_sy_vec = np.asarray([72,76,80]) # np.asarray([72,76,80])*1e-6 # [80e-6] # 
+I_ne_vec = np.asarray([73]) # np.asarray([72,73,84])
 tau_si_vec = np.asarray([500,1000,2000]) # np.asarray([500,1000,2000]) # [1e-6] # 
 
 num_jjs__syn = 4
@@ -25,8 +26,6 @@ L_msi = 130 # pH
 L_ni = 7.75e3 # pH # 10e-9 # 
 L_mni = 400 # pH
 tau_nf = 50 # ns
-
-tf = 1e3 # ns
 
 k__nr_nf = 1
 
@@ -48,11 +47,15 @@ for ii in range(len(I_ne_vec)):
             tau_si = tau_si_vec[kk]            
             # r_si = (L_si+L_jj)/(tau_si*1e-9)
     
-            print('ii = {} of {}; jj = {} of {}; kk = {} of {};'.format(ii+1,len(I_ne_vec),jj+1,len(I_sy_vec),kk+1,len(tau_si_vec)))
+            print('\n\nii = {} of {}; jj = {} of {}; kk = {} of {};'.format(ii+1,len(I_ne_vec),jj+1,len(I_sy_vec),kk+1,len(tau_si_vec)))
             
             file_name = file_format.format(I_sy,I_ne,tau_si,k__nr_nf)
-            data_dict = read_wr_data('{}{}'.format(directory_name,file_name))            
-            
+            data_dict = read_wr_data('{}{}'.format(directory_name,file_name))   
+            time_vec__wr = 1e9*data_dict['time']
+            dt__wr = time_vec__wr[1]-time_vec__wr[0]
+            I_nf__wr = 1e6*data_dict['L14#branch']
+            I_nf_peaks__wr, _ = find_peaks(I_nf__wr, height = 30, distance = 30/dt__wr)
+                        
             input_1 = input_signal(name = 'in', 
                                     input_temporal_form = 'single_spike', # 'single_spike' or 'constant_rate' or 'arbitrary_spike_train'
                                     spike_times = spike_times)            
@@ -87,14 +90,20 @@ for ii in range(len(I_ne_vec)):
                               threshold_circuit_resistance = 0.8, # mOhm
                               threshold_circuit_bias_current = 35, # uA
                               threshold_junction_critical_current = 40, # uA
-                              time_params = dict([['dt',dt],['tf',tf]])) 
+                              time_params = dict([['dt',dt],['tf',time_vec__wr[-1]]])) 
                           
             ne.run_sim()
-            # plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare(ne,data_dict) 
-            # plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_four(ne,data_dict)
-            plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_three(ne,data_dict) 
-            # plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_two(ne,data_dict) 
-            # plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_one(ne,data_dict) 
             
-            # actual_data = np.vstack((input_1.time_vec[:],neuron_1.dendrites['dendrite_under_test'].I_di_vec[:]))    
-            # error__signal = chi_squared_error(target_data,actual_data)
+               
+            error = chi_squared_error__ISI(time_vec__wr[I_nf_peaks__wr],ne.spike_times)
+            
+            # plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare(ne,data_dict,error) 
+            # plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_four(ne,data_dict,error)
+            plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_three(ne,data_dict,error,I_nf_peaks__wr) 
+            # plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_two(ne,data_dict,error) 
+            # plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_compare__just_one(ne,data_dict,error) 
+            
+            # plot_phase_portrait(ne, I_sy = I_sy, L_si = L_si, tau_si = tau_si, I_ne = I_ne)
+                
+
+            

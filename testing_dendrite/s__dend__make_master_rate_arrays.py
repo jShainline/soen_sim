@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.signal import find_peaks
 from scipy.signal import savgol_filter
+import pickle
 
 # from soen_sim import input_signal, synapse, dendrite, neuron
 from _plotting import plot_dend_time_traces, plot_dend_rate_array__norm_to_phi0
@@ -28,22 +29,15 @@ method = 'j_di_phase' # 'j_di_rate' # 'I_di' # 'j_di_phase' # 'j_di_phase__no_do
 
 #%% inputs
 
-if num_jjs == 2:
+_temp_str_1 = 'wrspice_data/{:d}jj/'.format(num_jjs)
+_temp_str_2 = 'dend_{:d}jj_cnst_drv_seek_dur_Llft20pHLrgt20pH_Ide{:05.2f}uA_Idrive{:08.5f}uA_Ldi0077.5nH_Ijtl36.00uA_Isc35.00uA.dat'.format(num_jjs)
 
-    # dendritic firing junction bias current
-    dI_de = 1
-    I_de_0 = 52
-    I_de_f = 80
+with open('{}{}.soen'.format(_temp_str_1,_temp_str_2), 'rb') as data_file:         
+    data_array_imported = pickle.load(data_file)
 
-elif num_jjs == 4:
-    
-    # dendritic firing junction bias current
-    dI_de = 1
-    I_de_0 = 56
-    I_de_f = 90
-    
-I_de_list = np.arange(I_de_0,I_de_f+dI_de,dI_de)
+I_de_list = data_array_imported['I_de_list']
 num_I_de = len(I_de_list)
+I_drive_array = data_array_imported['I_drive__array']
 
 # current for flux bias
 Phi_vec = np.linspace(0,p['Phi0__pH_ns']/2,50) # units of uA pH
@@ -52,40 +46,13 @@ I_drive_vec = Phi_vec/M # units of uA
 resolution = 10e-3 # units of uA
 I_drive_vec_round = np.round((Phi_vec/M)/resolution)*resolution
 I_drive_vector = np.round(I_drive_vec_round,3) # units of uA
-
-# establish flux drive array
-SpikeStart = np.loadtxt('wrspice_data/{:d}jj/SpikeStart__{:d}jj.dat'.format(num_jjs,num_jjs))
-# print(SpikeStart)
-
-I_drive_array=[]
-for iIde in np.arange(len(I_de_list)):
-    temp_I_drive=[]
-    I_drive=np.round(SpikeStart[iIde],3)
-    temp_I_drive.append(I_drive)
-    
-    index=(np.abs(I_drive_vector-I_drive)).argmin()
-
-    if I_drive>I_drive_vector[index]:
-        index=index+1
-        
-    while (I_drive+0.1)< I_drive_vector[index]:
-        I_drive=I_drive+0.1
-        temp_I_drive.append(round(I_drive,3))
-    while I_drive< I_drive_vector[-1]:
-        I_drive=I_drive_vector[index]
-        temp_I_drive.append(round(I_drive,3))
-        index=index+1
-
-    I_drive_array.append(temp_I_drive)
-# print(I_drive_array)
-I_drive_array = [I_drive_array]
     
 # inductances
 L_left_list = [20] # np.arange(17,23+dL,dL) # pH
 L_right_list = [20] # np.flip(np.arange(17,23+dL,dL)) # pH
 num_L = len(L_right_list)
 
-DI_loop_inductance = 775e3
+DI_loop_inductance = 77.5e3 # 775e3 # was 775e3 for Saeed's data set; may still need to reduce downsample by an order of magnitude
 
 #%%
 

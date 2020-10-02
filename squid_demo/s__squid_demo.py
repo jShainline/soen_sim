@@ -66,22 +66,21 @@ for jj in range(len(I_sq_vec)):
     # polynomial_order = 3
     # V_fq_avg = savgol_filter(V_fq_avg, window_size, polynomial_order) # polynomial order 3
     
-    # time_vec_avg = np.insert(time_vec_avg,0,time_vec[V_fq_peaks_1[0]])
-    # flux_drive_avg = np.insert(flux_drive_avg,0,flux_drive[V_fq_peaks_1[0]])
-    # V_fq_avg = np.insert(V_fq_avg,0,0)
+    time_vec_avg = np.insert(time_vec_avg,0,time_vec[V_fq_peaks_1[0]])
+    flux_drive_avg = np.insert(flux_drive_avg,0,flux_drive[V_fq_peaks_1[0]])
+    V_fq_avg = np.insert(V_fq_avg,0,0)
+        
+    time_vec_avg = np.insert(time_vec_avg,0,time_vec[0])
+    flux_drive_avg = np.insert(flux_drive_avg,0,flux_drive_avg[0])
+    V_fq_avg = np.insert(V_fq_avg,0,0)
     
+    time_vec_avg = np.append(time_vec_avg,time_vec[V_fq_peaks_1[-1]])
+    flux_drive_avg = np.append(flux_drive_avg,flux_drive[V_fq_peaks_1[-1]])
+    V_fq_avg = np.append(V_fq_avg,0)
     
-    # time_vec_avg = np.insert(time_vec_avg,0,time_vec[0])
-    # flux_drive_avg = np.insert(I_drive_avg,0,I_drive[0])
-    # V_fq_avg = np.insert(V_fq_avg,0,0)
-    
-    # time_vec_avg = np.append(time_vec_avg,time_vec[V_fq_peaks_1[-1]])
-    # I_drive_avg = np.append(I_drive_avg,I_drive[V_fq_peaks_1[-1]])
-    # V_fq_avg = np.append(V_fq_avg,0)
-    
-    # time_vec_avg = np.append(time_vec_avg,time_vec[-1])
-    # I_drive_avg = np.append(I_drive_avg,I_drive[-1])
-    # V_fq_avg = np.append(V_fq_avg,0)    
+    time_vec_avg = np.append(time_vec_avg,time_vec[-1])
+    flux_drive_avg = np.append(flux_drive_avg,flux_drive[-1])
+    V_fq_avg = np.append(V_fq_avg,0)    
     
     time_vec__array.append(time_vec)
     time_vec_avg__array.append(time_vec_avg)

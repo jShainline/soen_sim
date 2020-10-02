@@ -12,7 +12,7 @@ import WRSpice
 # VERY IMPORTTANT Leave a blank line in the start and end of the  cir file
 
 #%%
-I_nf_vec = [72] # [76] # 
+I_nf_vec = [73,74] # [76] # 
 I_sy_vec = [72,76,80] # [76] # 
 tau_si_vec = [500,1000,2000] # [1000] # 
 knrnf_vec = [1]

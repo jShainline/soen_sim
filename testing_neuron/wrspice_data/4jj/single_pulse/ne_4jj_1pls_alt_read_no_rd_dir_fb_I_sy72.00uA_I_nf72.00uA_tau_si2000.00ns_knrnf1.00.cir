@@ -52,7 +52,7 @@ V1 2 0 pwl(0 0 4.999n 0 5n 5e3 5.2n 5e3 5.201n 0)
 .model jjSFQ1 jj(rtype=0, cct=1, vg=2.8m, icrit=1u, cap= 5f, vshunt=0.25mV)
 .control
 set maxdata=2560000
-tran 10p 1u
+tran 10p 2u
 write ./ne_4jj_1pls_alt_read_no_rd_dir_fb_I_sy72.00uA_I_nf72.00uA_tau_si2000.00ns_knrnf1.00.dat L8#branch L3#branch L6#branch L13#branch L14#branch v(12) v(33)
 quit
 .endc

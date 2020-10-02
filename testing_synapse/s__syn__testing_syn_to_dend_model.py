@@ -13,20 +13,20 @@ p = physical_constants()
 #%%
 num_jjs = 4
 
-dt = 0.1
+dt = 1 # 0.1
 I_spd = 10
 
 #%% single pulse
 
-spike_times = []
+spike_times = [5]
 
 if num_jjs == 2:
     I_de_vec = np.asarray([70])
 elif num_jjs == 4:
     I_de_vec = np.asarray([70])
     
-L_di_vec = np.asarray([7.75,77.5,775,7750]) # 
-tau_di_vec = np.asarray([10,50,250,1250]) # 10,25,50,250,1250
+L_di_vec = np.asarray([7.75]) # np.asarray([7.75,77.5,775,7750]) 
+tau_di_vec = np.asarray([10]) # np.asarray([10,50,250,1250]) # available: 10,25,50,250,1250
 
 soen_response__sp = []
 soen_time__sp = []
@@ -56,20 +56,20 @@ for ii in range(len(I_de_vec)):
                 I_di_str = 'L3#branch'
                 I_drive_str = 'L0#branch'
             target_data = np.vstack((1e9*data_dict['time'],1e6*data_dict[I_di_str]))
-            tf = np.round(1e9*data_dict['time'][-1])
+            tf = np.round(1e9*data_dict['time'][-1],0)
             target_data__drive = np.vstack((1e9*data_dict['time'],1e6*data_dict[I_drive_str]))
 
             # setup soen sim for exp pulse seq
-            input_1 = input_signal(name = 'input_synaptic_drive', 
+            input_1 = input_signal(name = 'in', 
                                    input_temporal_form = 'single_spike', # 'single_spike' or 'constant_rate' or 'arbitrary_spike_train'
                                    spike_times = spike_times)            
         
-            synapse_1 = synapse(name = 'synapse_under_test',
+            sy = synapse(name = 'sy',
                                 synaptic_circuit_inductors = [100,100,400],
                                 synaptic_circuit_resistors = [5e6,4.008e3],
                                 synaptic_hotspot_duration = 0.2,
                                 synaptic_spd_current = 10,
-                                input_direct_connections = ['input_synaptic_drive'],
+                                input_direct_connections = ['in'],
                                 num_jjs = num_jjs,
                                 inhibitory_or_excitatory = 'excitatory',
                                 synaptic_dendrite_circuit_inductances = [0,20,200,77.5],
@@ -80,8 +80,8 @@ for ii in range(len(I_de_vec)):
                                 integration_loop_output_inductance = 0,
                                 integration_loop_time_constant = tau_di)
        
-            neuron_1 = neuron('dummy_neuron',
-                              input_synaptic_connections = ['synapse_under_test'],
+            ne = neuron('ne',
+                              input_synaptic_connections = ['sy'],
                               input_synaptic_inductances = [[20,1]],
                               junction_critical_current = 40,
                               circuit_inductances = [0,0,200,77.5],                              
@@ -96,25 +96,25 @@ for ii in range(len(I_de_vec)):
                               integration_loop_time_constant = 25,
                               time_params = dict([['dt',dt],['tf',tf]]))           
             
-            neuron_1.run_sim()
+            ne.run_sim()
                                     
-            actual_data__drive = np.vstack((neuron_1.time_vec[:],neuron_1.synapses['synapse_under_test'].I_spd2_vec[:])) 
+            actual_data__drive = np.vstack((ne.time_vec[:],ne.synapses['sy'].I_spd2_vec[:])) 
             if ii == 0 and jj == 0 and kk == 0:
                 error__drive = chi_squared_error(target_data__drive,actual_data__drive)
                 chi_drive__sp = error__drive                               
             
-            actual_data = np.vstack((neuron_1.time_vec[:],neuron_1.synapses['synapse_under_test'].I_di_vec[:]))    
+            actual_data = np.vstack((ne.time_vec[:],ne.synapses['sy'].I_di_vec[:]))    
             error__signal = chi_squared_error(target_data,actual_data)
             chi_signal__sp[jj,kk] = error__signal
             
-            soen_response__sp[jj].append(neuron_1.synapses['synapse_under_test'].I_di_vec[:])
-            soen_time__sp[jj].append(neuron_1.time_vec[:])
+            soen_response__sp[jj].append(ne.synapses['sy'].I_di_vec[:])
+            soen_time__sp[jj].append(ne.time_vec[:])
             wr_response__sp[jj].append(1e6*data_dict[I_di_str])
             wr_time__sp[jj].append(1e9*data_dict['time'])
             
-            # plot_wr_comparison__synapse(file_name,spike_times,target_data__drive,actual_data__drive,target_data,actual_data,file_name,error__drive,error__signal)
+            plot_wr_comparison__synapse(file_name,spike_times,target_data__drive,actual_data__drive,target_data,actual_data,file_name,error__drive,error__signal)
             
-plot__syn__wr_cmpr__single_pulse(soen_time__sp,neuron_1.synapses['synapse_under_test'].I_spd2_vec[:],soen_response__sp,wr_time__sp,data_dict[I_drive_str],wr_response__sp,L_di_vec,tau_di_vec,chi_drive__sp,chi_signal__sp,num_jjs)
+# plot__syn__wr_cmpr__single_pulse(soen_time__sp,ne.synapses['synapse_under_test'].I_spd2_vec[:],soen_response__sp,wr_time__sp,1e6*data_dict[I_drive_str],wr_response__sp,L_di_vec,tau_di_vec,chi_drive__sp,chi_signal__sp,num_jjs)
             
 #%% pls seq
 
@@ -164,7 +164,7 @@ for ii in range(len(I_de_vec)):
                                    input_temporal_form = 'single_spike', # 'single_spike' or 'constant_rate' or 'arbitrary_spike_train'
                                    spike_times = spike_times)            
         
-            synapse_1 = synapse(name = 'synapse_under_test',
+            sy = synapse(name = 'synapse_under_test',
                                 synaptic_circuit_inductors = [100e-9,100e-9,200e-12],
                                 synaptic_circuit_resistors = [5e3,4.008],
                                 synaptic_hotspot_duration = 200e-12,
@@ -180,7 +180,7 @@ for ii in range(len(I_de_vec)):
                                 integration_loop_output_inductance = 0e-12,
                                 integration_loop_time_constant = tau_di)
        
-            neuron_1 = neuron('dummy_neuron',
+            ne = neuron('dummy_neuron',
                               input_synaptic_connections = ['synapse_under_test'],
                               input_synaptic_inductances = [[20e-12,1]],
                               junction_critical_current = 40e-6,
@@ -196,25 +196,25 @@ for ii in range(len(I_de_vec)):
                               integration_loop_time_constant = 25e-9,
                               time_params = dict([['dt',dt],['tf',tf]]))           
             
-            neuron_1.run_sim()
+            ne.run_sim()
                                     
-            actual_data__drive = np.vstack((neuron_1.time_vec[:],1e-6*neuron_1.synapses['synapse_under_test'].I_spd2_vec[:])) 
+            actual_data__drive = np.vstack((ne.time_vec[:],1e-6*ne.synapses['synapse_under_test'].I_spd2_vec[:])) 
             if ii == 0 and jj == 0 and kk == 0:
                 error__drive = chi_squared_error(target_data__drive,actual_data__drive)
                 chi_drive__ps = error__drive
                                             
-            actual_data = np.vstack((neuron_1.time_vec[:],1e-6*neuron_1.synapses['synapse_under_test'].I_di_vec[:]))    
+            actual_data = np.vstack((ne.time_vec[:],1e-6*ne.synapses['synapse_under_test'].I_di_vec[:]))    
             error__signal = chi_squared_error(target_data,actual_data)
             chi_signal__ps[ii,jj] = error__signal
             
-            soen_response__ps[ii].append(neuron_1.synapses['synapse_under_test'].I_di_vec[:])
-            soen_time__ps[ii].append(neuron_1.time_vec[:])
+            soen_response__ps[ii].append(ne.synapses['synapse_under_test'].I_di_vec[:])
+            soen_time__ps[ii].append(ne.time_vec[:])
             wr_response__ps[ii].append(data_dict[I_di_str])
             wr_time__ps[ii].append(data_dict['time'])
             
             # plot_wr_comparison__synapse(file_name,spike_times,target_data__drive,actual_data__drive,target_data,actual_data,file_name,error__drive,error__signal)
             
-plot__syn__wr_cmpr__pulse_train(soen_time__ps,neuron_1.synapses['synapse_under_test'].I_spd2_vec[:],soen_response__ps,wr_time__ps,data_dict[I_drive_str],wr_response__ps,L_di_vec,I_de_vec,chi_drive__ps,chi_signal__ps,num_jjs)
+plot__syn__wr_cmpr__pulse_train(soen_time__ps,ne.synapses['synapse_under_test'].I_spd2_vec[:],soen_response__ps,wr_time__ps,data_dict[I_drive_str],wr_response__ps,L_di_vec,I_de_vec,chi_drive__ps,chi_signal__ps,num_jjs)
             
 
 #%% n_fq vs I_de
@@ -275,7 +275,7 @@ for ii in range(len(M_vec)):
                                input_temporal_form = 'single_spike', # 'single_spike' or 'constant_rate' or 'arbitrary_spike_train'
                                spike_times = spike_times)            
     
-        synapse_1 = synapse(name = 'synapse_under_test',
+        sy = synapse(name = 'synapse_under_test',
                             synaptic_circuit_inductors = [100e-9,100e-9,M],
                             synaptic_circuit_resistors = [5e3,4.008],
                             synaptic_hotspot_duration = 200e-12,
@@ -291,7 +291,7 @@ for ii in range(len(M_vec)):
                             integration_loop_output_inductance = 0e-12,
                             integration_loop_time_constant = tau_di)
    
-        neuron_1 = neuron('dummy_neuron',
+        ne = neuron('dummy_neuron',
                           input_synaptic_connections = ['synapse_under_test'],
                           input_synaptic_inductances = [[20e-12,1]],
                           junction_critical_current = 40e-6,
@@ -307,15 +307,15 @@ for ii in range(len(M_vec)):
                           integration_loop_time_constant = 25e-9,
                           time_params = dict([['dt',dt],['tf',tf]]))           
         
-        neuron_1.run_sim()
-        I_di = 1e-6*neuron_1.synapses['synapse_under_test'].I_di_vec[-1]
+        ne.run_sim()
+        I_di = 1e-6*ne.synapses['synapse_under_test'].I_di_vec[-1]
         n_fq_soen = I_di/(p['Phi0']/L_di)
         n_fq_soen_array[ii].append(n_fq_soen)
         
-        # actual_data__drive = np.vstack((neuron_1.time_vec[:],1e-6*neuron_1.synapses['synapse_under_test'].I_spd2_vec[:])) 
+        # actual_data__drive = np.vstack((ne.time_vec[:],1e-6*ne.synapses['synapse_under_test'].I_spd2_vec[:])) 
         # error__drive = chi_squared_error(target_data__drive,actual_data__drive)
                                         
-        # actual_data = np.vstack((neuron_1.time_vec[:],1e-6*neuron_1.synapses['synapse_under_test'].I_di_vec[:]))    
+        # actual_data = np.vstack((ne.time_vec[:],1e-6*ne.synapses['synapse_under_test'].I_di_vec[:]))    
         # error__signal = chi_squared_error(target_data,actual_data)
         
         # plot_wr_comparison__synapse(file_name,spike_times,target_data__drive,actual_data__drive,target_data,actual_data,file_name,error__drive,error__signal)
