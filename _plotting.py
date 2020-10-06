@@ -1295,14 +1295,21 @@ def plot_neuronal_response__single_synaptic_pulse__no_rd__direct_feedback__wr_co
     
     axs[2].plot(time_vec__wr,I_threshold_2, '-', color = colors['yellow4'], label = 'wr: $I_{th2}$')
     axs[2].plot(time_vec__wr,I_threshold_1, '-', color = colors['yellow3'], label = 'wr: $I_{th1}$')
-    axs[2].plot(time_vec__wr[I_nf_peaks__wr],I_threshold_2[I_nf_peaks__wr], 'x', color = colors['yellow3'], label = 'wr: spikes')    
-    axs[2].plot(time_vec,neuron_instance.threshold_I2, '-', color = colors['green4'], label = neuron_instance.name+': threshold I2')
-    axs[2].plot(time_vec,neuron_instance.threshold_I1, '-', color = colors['green3'], label = neuron_instance.name+': threshold I1')
-    axs[2].plot(time_vec[neuron_instance.spike_time_indices],neuron_instance.threshold_I2[neuron_instance.spike_time_indices], 'x', color = colors['green3'], label = neuron_instance.name+': spikes')    
-    axs[2].plot([time_vec[0],time_vec[-1]],neuron_instance.threshold_junction_critical_current*np.ones([2,1]), ':', color = colors['greengrey3'], linewidth = pp['fine_linewidth'], label = 'threshold')
+    axs[2].plot(time_vec__wr[I_nf_peaks__wr],I_threshold_2[I_nf_peaks__wr], 'x', color = colors['yellow3'], label = 'wr: spikes') 
+    if neuron_instance.threshold_circuit == 'JJ':   
+        axs[2].plot(time_vec,neuron_instance.threshold_I2, '-', color = colors['green4'], label = neuron_instance.name+': threshold I2')
+        axs[2].plot(time_vec,neuron_instance.threshold_I1, '-', color = colors['green3'], label = neuron_instance.name+': threshold I1')  
+        axs[2].plot(time_vec[neuron_instance.spike_time_indices],neuron_instance.threshold_I2[neuron_instance.spike_time_indices], 'x', color = colors['green3'], label = neuron_instance.name+': spikes') 
+        axs[2].plot([time_vec[0],time_vec[-1]],neuron_instance.threshold_junction_critical_current*np.ones([2,1]), ':', color = colors['greengrey3'], linewidth = pp['fine_linewidth'], label = 'threshold')
+        time_cnst_approx = neuron_instance.threshold_Ltt/neuron_instance.threshold_circuit_resistance
+    elif neuron_instance.threshold_circuit == 'hTron':    
+        axs[2].plot(time_vec,neuron_instance.threshold_I_3, '-', color = colors['green4'], label = neuron_instance.name+': threshold I3')
+        axs[2].plot(time_vec,neuron_instance.threshold_I_1, '-', color = colors['green3'], label = neuron_instance.name+': threshold I1')    
+        axs[2].plot(time_vec[neuron_instance.spike_time_indices],neuron_instance.threshold_I_3[neuron_instance.spike_time_indices], 'x', color = colors['green3'], label = neuron_instance.name+': spikes')   
+        axs[2].plot([time_vec[0],time_vec[-1]],neuron_instance.threshold_circuit_hTron_current_thresholds[0]*np.ones([2,1]), ':', color = colors['greengrey3'], linewidth = pp['fine_linewidth'], label = 'threshold')
+        time_cnst_approx = neuron_instance.threshold_circuit_time_constants[1]
     axs[2].set_ylabel(r'$I^{th}$ [$\mu$A]')
-    
-    time_cnst_approx = neuron_instance.threshold_Ltt/neuron_instance.threshold_circuit_resistance
+        
     axs[2].set_xlim([0,np.min([neuron_instance.spike_times[-1]+4*time_cnst_approx,neuron_instance.time_vec[-1]])])
     
     axs[2].set_xlabel(r'Time [ns]')
@@ -1778,9 +1785,9 @@ def plot_wr_comparison__synapse__n_fq_vs_I_de(M_vec,I_de_array,n_fq_1_array,n_fq
     # color_list_2 = ['yellow1','yellow3']
     color_list_3 = ['blue3','green3']
     for ii in range(len(M_vec)):
-        ax.plot(I_de_array[ii]*1e6,n_fq_1_array[ii], '-s', color = colors[color_list_1[ii]], label = 'M = {:5.2f}pH; WR'.format(np.sqrt(M_vec[ii]*20e-12)*1e12))
+        ax.plot(I_de_array[ii],n_fq_1_array[ii], '-s', color = colors[color_list_1[ii]], label = 'M = {:5.2f}pH; WR'.format(np.sqrt(M_vec[ii]*20)))
         # ax.plot(I_de_array[ii]*1e6,n_fq_2_array[ii], '-o', color = colors[color_list_2[ii]], label = 'M = {}pH; WR: n_fq_2'.format(np.sqrt(M_vec[ii]*20e-12)*1e12))
-        ax.plot(I_de_array[ii]*1e6,n_fq_soen_array[ii], '-o', color = colors[color_list_3[ii]], label = 'M = {:5.2f}pH; soen'.format(np.sqrt(M_vec[ii]*20e-12)*1e12))
+        ax.plot(I_de_array[ii],n_fq_soen_array[ii], '-o', color = colors[color_list_3[ii]], label = 'M = {:5.2f}pH; soen'.format(np.sqrt(M_vec[ii]*202)))
 
     ax.legend()
     ax.set_xlabel('$I_{de}$ [$\mu$A]')
@@ -1792,8 +1799,8 @@ def plot_wr_comparison__synapse__n_fq_vs_I_de(M_vec,I_de_array,n_fq_1_array,n_fq
         ax.set_ylim([0,3000])
         ax.set_xlim([60,85])
         
-    ax.set_ylim([0,4000])
-    ax.set_xlim([55,85])
+    # ax.set_ylim([0,4000])
+    # ax.set_xlim([55,85])
 
     plt.show()
 
@@ -2885,13 +2892,13 @@ def plot_dend_rate_array__norm_to_phi0(**kwargs):
     fig = plt.figure()
     if 'file_name' in kwargs:
         str0 = kwargs['file_name']
-        # fig.suptitle(str0)
+        fig.suptitle(str0)
     else:        
         if 'L_left' in kwargs:
             str1 = 'L_left = {:5.2f}pH'.format(kwargs['L_left'])
         if 'I_de' in kwargs:
             str2 = 'I_de = {:5.2f}uA'.format(kwargs['I_de'])
-        # fig.suptitle('{}; {}'.format(str1,str2))
+        fig.suptitle('{}; {}'.format(str1,str2))
     
     # plt.rcParams['grid.linewidth'] = 0.25
     ax = fig.add_subplot(111, projection='3d')
@@ -3013,14 +3020,14 @@ def plot__syn__wr_cmpr__single_pulse(soen_time,soen_drive,soen_response,wr_time,
     fig.suptitle('num_jjs = {}'.format(num_jjs))
     
     ax[0].plot(np.asarray(wr_time[-1][-1][:]),np.asarray(wr_drive), '-', color = colors['red3'], label = 'WR drive')
-    ax[0].plot(soen_time[-1][-1][:],soen_drive, '-', color = colors['blue3'], label = 'soen drive, err = {:4.2e}'.format(chi_drive))
+    ax[0].plot(soen_time[-1][-1][:],soen_drive, '-.', color = colors['blue3'], label = 'soen drive, err = {:4.2e}'.format(chi_drive))
     ax[0].set_ylabel(r'$I_{spd2}$ [$\mu$A]')
     color_roots = ['blue','red','yellow','green','bluegrey']
     for ii in range(len(L_di_vec)):
         for jj in range(len(tau_di_vec)):
             
-            ax[ii+1].plot(np.asarray(wr_time[ii][jj][:]),np.asarray(wr_response[ii][jj][:]), '-', color = colors['{}{:d}'.format(color_roots[jj],5)], label = 'WR')
-            ax[ii+1].plot(soen_time[ii][jj][:],soen_response[ii][jj][:], '-', color = colors['{}{:d}'.format(color_roots[jj],3)], label = 'soen: tau = {:4.0f}ns; err = {:4.2e}'.format(tau_di_vec[jj],chi_signal[ii][jj]))
+            ax[ii+1].plot(np.asarray(wr_time[ii][jj][:]),np.asarray(wr_response[ii][jj][:]), '-', color = colors['{}{:d}'.format(color_roots[jj],1)], label = 'WR')
+            ax[ii+1].plot(soen_time[ii][jj][:],soen_response[ii][jj][:], '-.', color = colors['{}{:d}'.format(color_roots[jj],3)], label = 'soen: tau = {:4.0f}ns; err = {:4.2e}'.format(tau_di_vec[jj],chi_signal[ii][jj]))
             ax[ii+1].set_ylabel(r'$I^{di}$ [$\mu$A]')
             ax[ii+1].legend()
                  
@@ -3037,14 +3044,14 @@ def plot__syn__wr_cmpr__pulse_train(soen_time,soen_drive,soen_response,wr_time,w
     fig.suptitle('num_jjs = {}'.format(num_jjs))
     
     ax[0].plot(np.asarray(wr_time[-1][-1][:]),np.asarray(wr_drive), '-', color = colors['yellow3'], label = 'WR drive')
-    ax[0].plot(soen_time[-1][-1][:],soen_drive, '-', color = colors['blue3'], label = 'soen drive, err = {:4.2e}'.format(chi_drive))
+    ax[0].plot(soen_time[-1][-1][:],soen_drive, '-.', color = colors['blue3'], label = 'soen drive, err = {:4.2e}'.format(chi_drive))
     ax[0].set_ylabel(r'$I_{spd2}$ [$\mu$A]')
     # color_roots = ['blue','red','yellow','green','bluegrey']
     for jj in range(len(I_de_vec)):
         for ii in range(len(L_di_vec)):        
             
-            ax[jj*2+ii+1].plot(np.asarray(wr_time[jj][ii][:])*1e9,np.asarray(wr_response[jj][ii][:])*1e6, '-', color = colors['red3'], label = 'WR')
-            ax[jj*2+ii+1].plot(soen_time[jj][ii][:]*1e9,soen_response[jj][ii][:], '-', color = colors['blue3'], label = 'soen: Ide = {:4.0f}uA; err = {:4.2e}'.format(I_de_vec[jj]*1e6,chi_signal[jj][ii]))
+            ax[jj*2+ii+1].plot(np.asarray(wr_time[jj][ii][:]),np.asarray(wr_response[jj][ii][:]), '-', color = colors['red3'], label = 'WR')
+            ax[jj*2+ii+1].plot(soen_time[jj][ii][:],soen_response[jj][ii][:], '-.', color = colors['blue3'], label = 'soen: Ide = {:4.0f}uA; err = {:4.2e}'.format(I_de_vec[jj],chi_signal[jj][ii]))
             ax[jj*2+ii+1].set_ylabel(r'$I^{di}$ [$\mu$A]')
             ax[jj*2+ii+1].legend()
                  

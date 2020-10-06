@@ -647,27 +647,73 @@ class neuron():
         else:
             self.neuronal_receiving_input_homeostatic_inductance =  [20,1] 
           
-        if 'threshold_circuit_inductances' in kwargs:
-            self.threshold_circuit_inductances = kwargs['threshold_circuit_inductances']
+        if 'threshold_circuit' in kwargs:
+            self.threshold_circuit = kwargs['threshold_circuit']
         else:
-            self.threshold_circuit_inductances = [10,0,20] # [inductor receiving M from NI loop, inductor coupling to transmitter, inductor coupling back to NR for refraction]
-        self.threshold_circuit_total_inductance = np.sum(self.threshold_circuit_inductances)
+            self.threshold_circuit = 'JJ'
             
-        if 'threshold_circuit_resistance' in kwargs:
-            self.threshold_circuit_resistance = kwargs['threshold_circuit_resistance']
-        else:
-            self.threshold_circuit_resistance = 0.8 # units of mOhms to match with pH and ns
-        
-        if 'threshold_circuit_bias_current' in kwargs:
-            self.threshold_circuit_bias_current = kwargs['threshold_circuit_bias_current']
-        else:
-            self.threshold_circuit_bias_current = 35 # uA
+        if self.threshold_circuit == 'JJ':
+                        
+            if 'threshold_circuit_inductances' in kwargs:
+                self.threshold_circuit_inductances = kwargs['threshold_circuit_inductances']
+            else:
+                self.threshold_circuit_inductances = [10,0,20] # [inductor receiving M from NI loop, inductor coupling to transmitter, inductor coupling back to NR for refraction]
+            self.threshold_circuit_total_inductance = np.sum(self.threshold_circuit_inductances)
+                
+            if 'threshold_circuit_resistance' in kwargs:
+                self.threshold_circuit_resistance = kwargs['threshold_circuit_resistance']
+            else:
+                self.threshold_circuit_resistance = 0.8 # units of mOhms to match with pH and ns
             
-        if 'threshold_junction_critical_current' in kwargs:
-            self.threshold_junction_critical_current = kwargs['threshold_junction_critical_current']
-        else:
-            self.threshold_junction_critical_current = 40 # uA    
-        
+            if 'threshold_circuit_bias_current' in kwargs:
+                self.threshold_circuit_bias_current = kwargs['threshold_circuit_bias_current']
+            else:
+                self.threshold_circuit_bias_current = 35 # uA
+                
+            if 'threshold_junction_critical_current' in kwargs:
+                self.threshold_junction_critical_current = kwargs['threshold_junction_critical_current']
+            else:
+                self.threshold_junction_critical_current = 40 # uA 
+           
+        elif self.threshold_circuit == 'hTron':
+            
+            if 'threshold_circuit_inductances' in kwargs:
+                self.threshold_circuit_inductances = kwargs['threshold_circuit_inductances']
+            else:
+                self.threshold_circuit_inductances = [200,200,10,100e3], # pH # see pg 34-35 of green lab notebook started 20200514
+                
+            if 'threshold_circuit_time_constants' in kwargs:
+                self.threshold_circuit_time_constants = kwargs['threshold_circuit_time_constants']
+            else:
+                self.threshold_circuit_time_constants = [20,20], # ns
+                
+            if 'threshold_circuit_bias_current' in kwargs:
+                self.threshold_circuit_bias_current = kwargs['threshold_circuit_bias_current']
+            else:
+                self.threshold_circuit_bias_current = 20, # uA
+                
+            if 'threshold_circuit_hTron_resistances' in kwargs:
+                self.threshold_circuit_hTron_resistances = kwargs['threshold_circuit_hTron_resistances']
+            else:
+                self.threshold_circuit_hTron_resistances = [100e3,5e6], # [gate,channel] # mohm    
+                
+            if 'threshold_circuit_hTron_current_thresholds' in kwargs:
+                self.threshold_circuit_hTron_current_thresholds = kwargs['threshold_circuit_hTron_current_thresholds']
+            else:
+                self.threshold_circuit_hTron_current_thresholds = [3,0.3,16,4] # [I_gate_on,I_gate_off,I_channel_on,I_channel_off] # uA
+              
+            self.La = self.threshold_circuit_inductances[0] + self.threshold_circuit_inductances[1]
+            self.Lb = self.threshold_circuit_inductances[2] + self.threshold_circuit_inductances[3] + self.threshold_circuit_inductances[4]
+            self.r1 = self.La/self.threshold_circuit_time_constants[0]
+            self.r4 = self.Lb/self.threshold_circuit_time_constants[1]
+            self.r_gate = self.threshold_circuit_hTron_resistances[0]
+            self.r_channel = self.threshold_circuit_hTron_resistances[1]
+            self.threshold_I_gate_on = self.threshold_circuit_hTron_current_thresholds[0]
+            self.threshold_I_gate_off = self.threshold_circuit_hTron_current_thresholds[1]
+            self.threshold_I_channel_on = self.threshold_circuit_hTron_current_thresholds[2]
+            self.threshold_I_channel_off = self.threshold_circuit_hTron_current_thresholds[3]
+            self.threshold_Ib = self.threshold_circuit_bias_current
+                    
         # make neuron cell body as dendrite
         temp_list_1 = self.input_dendritic_connections
         # temp_str = '{}__r'.format(self.name)
