@@ -1244,3 +1244,7 @@ def nTron(I_gate,I_on,I_off,r_gate,r_channel,state):
         r2 = 0
             
     return r1, r2
+
+def ind_in_par(L1,L2):
+    
+    return (L1*L2/(L1+L2))
