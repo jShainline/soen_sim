@@ -8,7 +8,7 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from mpl_toolkits.mplot3d import Axes3D
 
-from util import physical_constants
+from _util import physical_constants
 from _plotting import plot_wr_comparison, plot_error_mat # plot_dendritic_drive, 
 
 

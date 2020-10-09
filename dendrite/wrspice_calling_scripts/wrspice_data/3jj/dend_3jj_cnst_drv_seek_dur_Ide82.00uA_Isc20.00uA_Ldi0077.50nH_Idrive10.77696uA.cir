@@ -1,0 +1,26 @@
+
+B0 3 5 8 jjSFQ1 area=40
+B1 3 7 9 jjSFQ1 area=40
+B2 4 0 10 jjSFQ1 area=40
+ I0 0 2 pwl(0 0 0.999n 0 1n 10.7770u )
+ I1 0 3 pwl(0 0 0.09n 0 0.1n 82.0000u )
+ I2 0 4 pwl(0 0 0.09n 0 0.1ns 20.0000u )
+K1 L2 L3 1
+L0 3 4 77.5p
+ L1 4 6 77.5000n 
+L2 2 0 200p
+L3 5 0 20p
+L4 7 0 20p
+R0 1 0 1
+R1 6 0 R=v(1)+1e-6
+V0 1 0 pwl(0 1e5 0.2ns 1e5 0.3ns 0)
+.model jjSFQ1 jj(rtype=0, cct=1, vg=2.8m, icrit=1u, cap= 5f, vshunt=0.25mV)
+.save @I0[c]
+.save @I1[c]
+.save @I2[c]
+.control
+set maxdata=2560000
+tran 10p 500n
+write ./dend_3jj_cnst_drv_seek_dur_Ide82.00uA_Isc20.00uA_Ldi0077.50nH_Idrive10.77696uA.dat v(4)
+quit
+.endc

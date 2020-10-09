@@ -10,7 +10,7 @@ import matplotlib.gridspec as gridspec
 import pandas as pd
 import pickle
 
-from util import color_dictionary, physical_constants
+from _util import color_dictionary, physical_constants
 colors = color_dictionary()
 
 # from _functions import syn_1jj_rate_fit
