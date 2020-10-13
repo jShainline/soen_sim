@@ -1,0 +1,31 @@
+
+B0 2 9 12 jjSFQ1 area=40
+B1 2 10 13 jjSFQ1 area=40
+B2 3 0 14 jjSFQ1 area=40
+B3 4 0 15 jjSFQ1 area=40
+ I0 0 6 pwl(0 0 0.4ns 0 0.5ns -9.338604u )
+ I1 0 1 pwl(0 0 0.2ns 0 0.3ns 134.00u )
+ I2 0 11 pwl(0 0 0.6ns 0 0.7ns  9.378730u )
+K1 L0 L4 -1
+K2 L8 L9 1
+L0 6 0 77.5p
+L1 1 2 1n
+L2 1 3 2.9n
+L3 1 4 2.3n
+L4 3 2 77.5p
+L5 4 3 77.5p
+L6 7 4 77.5n
+L7 7 8 200p
+L8 11 0 400p
+L9 9 0 12.5p
+L10 10 0 12.5p
+R0 8 0 R=v(5)+1e-6
+R1 5 0 1
+V0 5 0 pwl(0 1e6 0.9ns 1e6 1ns 0)
+.model jjSFQ1 jj(rtype=0, cct=1, vg=2.8m, icrit=1u, cap= 5f, vshunt=0.25mV)
+.control
+set maxdata=2560000
+tran 10p 500n
+write ./dend_4jj_one_bias_plstc_cnst_drv_seek_dur_Ib134.00uA_Ip-9.338604uA_Ia09.378730.dat v(4)
+quit
+.endc

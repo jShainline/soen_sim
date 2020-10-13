@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 
 from _functions import read_wr_data, chi_squared_error
 
-from util import color_dictionary, physical_constants
+from _util import color_dictionary, physical_constants
 colors = color_dictionary()
 p = physical_constants()
 
@@ -20,7 +20,7 @@ t0 = 200e-12
 time_vec = np.arange(0,tf+dt,dt)
 
 L_spd1 = 100e-9
-L_spd2 = 100e-9
+L_spd2 = 1e-9
 L_1 = 6e-9
 L_tot = L_spd1+L_spd2+L_1
 
