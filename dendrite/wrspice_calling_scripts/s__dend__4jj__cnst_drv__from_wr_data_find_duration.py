@@ -16,7 +16,7 @@ plt.close('all')
 
 #%% inputs
 Ma = np.sqrt(400*12.5) # pH
-Mp = 77.5 # Ph
+Mp = 77.5 # pH
 
 num_steps = 20
 
@@ -42,14 +42,18 @@ min_peak_distance = 1 # units of samples
 
 #%%
 
+Phi_a__array = []
 time_off__array = []
 for qq in range(len(Ib_vec)):
     Ib = Ib_vec[qq]
     time_off__sub_array = []
+    Phi_a__sub_array = []
     for ii in range(len(Phi_p_list)):
+        Ip = Phi_p_list[ii]/Mp
         Phi_a_on_neg = Phi_a_on_neg__array[qq][ii]
         Phi_a_on_pos = Phi_a_on_pos__array[qq][ii]
         Phi_a_vec = np.concatenate( ( np.append(np.arange(-max_flux,Phi_a_on_neg,_fr),np.asarray([Phi_a_on_neg,Phi_a_on_neg+_fr])) , np.append(np.insert(np.arange(Phi_a_on_pos,max_flux,_fr),0,Phi_a_on_pos-_fr),max_flux) )  )
+        Phi_a__sub_array.append(Phi_a_vec)
         # print('Phi_a_vec = {}'.format(Phi_a_vec))
         # time.sleep(1)
         
@@ -59,7 +63,6 @@ for qq in range(len(Ib_vec)):
             print('qq = {} of {}; ii = {} of {}; jj = {} of {}'.format(qq+1,len(Ib_vec),ii+1,len(Phi_p_list),jj+1,len(Phi_a_vec)))
                 
             Ia = Phi_a_vec[jj]/Ma
-            Ip = Phi_p_list[ii]/Mp
     
             directory = 'wrspice_data/4jj'
             file_name = 'dend_4jj_one_bias_plstc_cnst_drv_seek_dur_Ib{:06.2f}uA_Ip{:09.6f}uA_Ia{:09.6f}.dat'.format(Ib,Ip,Ia)
@@ -88,6 +91,7 @@ for qq in range(len(Ib_vec)):
         
         time_off__sub_array.append(time_off)
     time_off__array.append(time_off__sub_array)
+    Phi_a__array.append(Phi_a__sub_array)
     
 #%% check that none are close to the end of sim time
 for qq in range(len(Ib_vec)):
@@ -96,11 +100,12 @@ for qq in range(len(Ib_vec)):
         
             
 #%% save data
-# save_string = 'dend_{:1d}jj__I_drive_array'.format(num_jjs)
-# data_array = dict()
-# data_array['I_de_list'] = I_de_list # uA
-# data_array['I_drive__array'] = I_drive__array # uA
-# save_session_data(data_array,save_string+'.soen',False)
+save_string = 'dend_4jj__flux_drive_arrays'
+data_array = dict()
+data_array['Ib_vec'] = Ib_vec # uA
+data_array['Phi_a__array'] = Phi_a__array # uA
+data_array['Phi_p_list'] = Phi_p_list # uA
+save_session_data(data_array,save_string+'.soen',False)
 
 #%% print for grumpy
 np.set_printoptions(precision=1)

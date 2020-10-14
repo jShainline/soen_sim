@@ -12,7 +12,7 @@ Phi0 = p['Phi0__pH_ns']
 
 colors = color_dictionary()
 
-plt.close('all')
+# plt.close('all')
 
 #%% inputs
 

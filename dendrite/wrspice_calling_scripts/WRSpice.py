@@ -108,7 +108,7 @@ class WRSpice:
         
     def run(self):
         cirFile=self.OutDatFile+ self.FilePrefix+ '.cir'
-        os.system(self.pathWRSSpice +' '+'./'+self.pathCir+ cirFile)
+        os.system(self.pathWRSSpice +' -m ./  '+'./'+self.pathCir+ cirFile)
         
     def runInSteps(self,No):
         stopTran=self.stopTran

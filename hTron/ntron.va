@@ -1,0 +1,70 @@
+// nTron
+
+`include "disciplines.vams"
+`include "constants.vams"
+
+
+module nTron(p,n,g);
+inout p,n,g;
+electrical p,n,g;
+branch (p, n) channel;
+branch (g, n) gate;
+
+parameter integer state_initial=0;
+parameter real I_gate_on=3e-6 from [0:inf);
+parameter real I_channel_on=16e-6 from [0:inf);
+parameter real I_channel_off=3.2e-6 from [0:inf);
+parameter real r_gate=100e3 from [0:inf);
+parameter real r_channel=5e6 from [0:inf);
+
+
+integer state;
+
+real V_channel;
+real V_gate;
+
+analog begin
+
+       
+    @(initial_step) begin
+      state = state_initial;
+    end 
+
+   if (state==0) begin
+        if ((I(gate)>=I_gate_on) &  (I(channel)>I_channel_on))
+	        state=1;    
+    end
+    else begin
+        if ((I(gate)<I_gate_on) &  (I(channel)<I_channel_off))
+	        state=0;
+    end
+    
+    if (state==1) begin
+    	 V_channel =r_channel*I(channel);
+	     V_gate = r_gate*I(gate);     
+    end
+    else begin
+        V_channel =0*I(channel);
+	      V_gate = 0*I(channel);         
+    end
+    
+    V(channel) <+ V_channel ;
+    V(gate) <+ V_gate ;
+end
+
+endmodule
+
+ //  if state_previous == 'off':
+ //       if I_gate >= I_gate_on and I_channel > I_channel_on:
+ //           state_next = 'on'
+ //           print('ii = {} (t = {:7.0}ns); state = on from off'.format(ii,time_vec[ii]))            
+ //   elif state_previous == 'on':
+ //       if I_gate < I_gate_on and I_channel < I_channel_off:
+ //           state_next = 'off'
+ //   
+ //   if state_next == 'on':
+ //       r2 = r_gate
+ //       r3 = r_channel
+ //   elif state_next == 'off':
+ //       r2 = 0
+ //       r3 = 0

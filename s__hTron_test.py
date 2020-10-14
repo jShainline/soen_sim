@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import time
 
-from util import color_dictionary, physical_constants
+from _util import color_dictionary, physical_constants
 from _functions import dendritic_drive__piecewise_linear, dendritic_drive__exp_pls_train__LR
 colors = color_dictionary()
 
