@@ -561,7 +561,23 @@ def neuron_time_stepper(neuron_object):
             
         elif n.threshold_circuit == 'hTron':
             
-            I_gate = n.threshold_I_1[ii]
+            n.synapses[sy_name].dt_spk = _pt - spike_times[n.synapses[sy_name].st_ind]                    
+                    
+            #this block to avoid spd drive going too low at the onset of each spike                    
+            tn = spd_response(n.synapses[sy_name].I_spd,n.synapses[sy_name].r1,n.synapses[sy_name].r2,n.synapses[sy_name].t0,n.synapses[sy_name].tau_plus,n.synapses[sy_name].tau_minus,n.synapses[sy_name].dt_spk)
+            if n.synapses[sy_name].st_ind - n.synapses[sy_name].st_ind_last == 1:                        
+                spd_current = np.max([n.synapses[sy_name].I_spd2_vec[ii-1],tn])
+                n.synapses[sy_name].spd_current_memory = spd_current
+            if n.synapses[sy_name].spd_current_memory > 0 and tn < n.synapses[sy_name].spd_current_memory:
+                spd_current = n.synapses[sy_name].spd_current_memory
+            else:
+                spd_current = tn
+                n.synapses[sy_name].spd_current_memory = 0
+            n.synapses[sy_name].I_spd2_vec[ii] = spd_current
+            
+            n.synapses[sy_name].st_ind_last = n.synapses[sy_name].st_ind
+            
+            I_gate = n.dendrites['{}__d'.format(n.name)].I_di_vec[ii+1] # n.threshold_I_1[ii]
             I_channel = n.threshold_Ib - n.threshold_I_3[ii]
             
             # print('ii = {}; I_gate = {}uA, I_channel = {}uA'.format(ii,I_gate,I_channel))
