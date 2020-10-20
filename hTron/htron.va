@@ -1,0 +1,41 @@
+// hTron
+
+`include "disciplines.vams"
+`include "constants.vams"
+
+
+module hTron(pg,ng,pc,nc);
+//inout pg,ng,pc,nc;
+electrical pg,ng,pc,nc;
+branch (pc, nc) channel;
+branch (pg, ng) gate;
+
+
+parameter real I_gate_c = 3e-6 from [0:inf);
+parameter real I_channel_c=16e-6 from [0:inf);
+
+parameter real r_gate_c=100e3 from [0:inf);
+parameter real r_channel_c=5e6 from [0:inf);
+
+
+
+real r_gate;
+real r_channel;
+
+analog begin
+
+    if (I(gate)>=I_gate_c) 
+    	r_gate=r_gate_c;    
+    else
+    	r_gate=0;
+    
+    if (I(gate)>=I_gate_c & I(channel)>=I_channel_c) 
+    	r_channel=r_channel_c;    
+    else
+    	r_channel=0;
+    
+    V(channel) <+ I(channel)*r_channel ;
+    V(gate) <+ I(gate)*r_gate ;
+end
+
+endmodule

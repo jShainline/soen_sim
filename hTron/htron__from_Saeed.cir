@@ -10,7 +10,7 @@ L2 3 0 1f
 L3 4 0 1f
 R0 2 0 100e3
 
-.model htron1 htron(I_gate_c = 3e-6,I_channel_c=16e-6, r_gate_c=100e3,r_channel_c=50e3)
+.model htron1 htron(I_gate_c = 3e-6,I_channel_c=16e-6, r_gate_c=100e3,r_channel_c=5e3)
 
 
 .control
