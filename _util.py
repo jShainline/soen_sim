@@ -57,6 +57,7 @@ def color_dictionary():
     
     #pure grays (white to black)
     gVec1 = np.array([256,256,256]); colors['grey1'] = gVec1/256;
+    colors['white'] = colors['grey1']
     gVec2 = np.array([242,242,242]); colors['grey2'] = gVec2/256;
     gVec3 = np.array([230,230,230]); colors['grey3'] = gVec3/256;
     gVec4 = np.array([204,204,204]); colors['grey4'] = gVec4/256;
@@ -80,7 +81,7 @@ def physical_constants():
          epsilon0 = 8.854187817e-12,#permittivity of free space in farads per meter
          mu0 = 4*np.pi*1e-7,#permeability of free space in volt seconds per amp meter
          kB = 1.3806e-23,#Boltzmann's constant
-         eE = 1.60217657e-19,#electron charge in coulombs
+         e = 1.60217657e-19,#electron charge in coulombs
          mE = 9.10938291e-31,#mass of electron in kg
          eV = 1.60217657e-19,#joules per eV
          Ry = 9.10938291e-31*1.60217657e-19**4/(8*8.854187817e-12**2*(6.62606957e-34/2/np.pi)**3*299792458),#13.3*eV;#Rydberg in joules

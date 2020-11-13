@@ -210,7 +210,7 @@ def plot_params():
 pp = plot_params()
 
 plt.rcParams['font.family'] = ['sans-serif']
-plt.rcParams['font.sans-serif'] = ['Computer Modern Sans serif']#'Computer Modern Sans Serif'
+plt.rcParams['font.sans-serif'] = ['computer modern sans serif']#'Computer Modern Sans Serif'
 
 plt.rcParams['figure.figsize'] = pp['fig_size']
 plt.rcParams['figure.titlesize'] = pp['title_font_size']
