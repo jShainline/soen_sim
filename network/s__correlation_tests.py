@@ -4,12 +4,13 @@ from _plotting_network import plot_network_spikes_raster
 
 #%% notes
 
-#%% time vector
+#%% time
 
 dt = 1 # ns
 tf = 1e5 # ns
 time_vec = np.arange(0,tf+dt,dt)
 nt = len(time_vec)
+t_ref = 50
 
 #%% make pretend time series of spike events for each neuron
 
@@ -32,5 +33,19 @@ neuron_spikes__times = []
 for ii in range(num_neurons):
     spike_indices = np.where(neuron_spikes__raster[ii,:] == 1)
     neuron_spikes__times.append(time_vec[spike_indices])
+    
+#%% correlation function 1: symmetrical spike time
+
+C1 = np.zeros([num_neurons,num_neurons])
+for ii in range(num_neurons):
+    spike_times__i = neuron_spikes__times[ii]
+    for jj in range(num_neurons):
+        spike_times__j = neuron_spikes__times[jj]
+        if jj != ii:
+            for kk in range(len(spike_times__i)):
+                _ind = np.abs( spike_times__i[kk] - spike_times__j[:] ).argmin()
+                C1[ii,jj] += ( np.abs(spike_times__i[kk] - spike_times__j[_ind]) + t_ref )**(-1)
+            
+        
     
 
