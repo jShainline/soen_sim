@@ -239,6 +239,11 @@ plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue2
 #                                                     colors['red1'],colors['red2'],colors['red3'],colors['red4'],colors['red5']])
 
 
+# color_list = [colors['blue2'],colors['blue3'],colors['blue4'],colors['blue5'],
+#               colors['green2'],colors['green3'],colors['green4'],colors['green5'],
+#               colors['yellow2'],colors['yellow3'],colors['yellow4'],colors['yellow5'],
+#               colors['red2'],colors['red3'],colors['red4'],colors['red5']]
+
 # for num in burst vs Isy _ num_jjs = 2
 # plt.rcParams['axes.prop_cycle'] = cycler('color', [colors['blue1'],colors['blue3'],
 #                                                     colors['green1'],colors['green3'],

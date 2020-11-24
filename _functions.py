@@ -2,6 +2,8 @@
 import numpy as np
 import pickle
 import time
+import csv
+import ltspice # https://pypi.org/project/ltspice/
 
 from _util import physical_constants
 
@@ -1035,6 +1037,29 @@ def read_wr_data(file_path):
     print('done reading wr data file.')
     
     return data_dict
+
+
+def read_lt_data(file_path,var_list):
+    
+    print('reading lt data file ...')
+    
+    var_list.append('time')
+    
+    l = ltspice.Ltspice(file_path)
+    l.parse()
+    # print(l)
+    data_dict = dict()
+    for ii in range(len(var_list)):
+        _ts = var_list[ii]
+        _var_array = []
+        for jj in range(l.case_count):
+            _var_array.append(l.get_data(_ts,jj))
+        data_dict[_ts] = _var_array
+        
+    print('done reading lt data file.')
+    
+    return data_dict, l
+
 
 def omega_LRC(L,R,C):
     
