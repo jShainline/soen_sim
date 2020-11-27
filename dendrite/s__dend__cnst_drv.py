@@ -22,7 +22,7 @@ plt.close('all')
 # plt.close('all')
 
 dt = 0.1
-tf = 50
+tf = 500
 
 num_jjs = 4
 I_drive_vec = np.asarray([14,14])
@@ -74,6 +74,8 @@ for kk in range(len(tau_di_vec)):
                           time_params = time_params)           
         
         neuron_1.run_sim()
+        dendrite_1.time_vec = neuron_1.time_vec
+        dendrite_1.I_di = neuron_1.dendrites['dendrite_under_test'].I_di_vec
                                         
         plot_dendritic_integration_loop_current(dendrite_1)            
 

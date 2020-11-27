@@ -1581,8 +1581,8 @@ def plot_dendritic_integration_loop_current(dendrite_instance):
     fig.suptitle('Current in dendritic integration loop')
     # plt.title(plot_save_string)
     
-    ax.plot(dendrite_instance.time_vec*1e6,dendrite_instance.I_di*1e6, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'])        
-    ax.set_xlabel(r'Time [$\mu$s]')
+    ax.plot(dendrite_instance.time_vec,dendrite_instance.I_di, '-', linewidth = pp['nominal_linewidth'], markersize = pp['nominal_markersize'])        
+    ax.set_xlabel(r'Time [ns]')
     ax.set_ylabel(r'$I_{di}$ [$\mu$A]')    
     
     plt.show() 
