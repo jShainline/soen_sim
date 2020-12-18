@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from _plotting import plot_wr_comparison__synapse, plot_wr_comparison__synapse__n_fq_vs_I_de, plot__syn__wr_cmpr__single_pulse, plot__syn__wr_cmpr__pulse_train
 from _functions import read_wr_data, chi_squared_error
 from soen_sim import input_signal, synapse, neuron # dendrite, 
-from util import physical_constants
+from _util import physical_constants
 
 p = physical_constants()
 
@@ -13,7 +13,7 @@ plt.close('all')
 #%%
 num_jjs = 4
 
-dt = 0.1 # 0.1
+dt = 1 # 0.1 # ns
 I_spd = 10
 
 #%% single pulse
