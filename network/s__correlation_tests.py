@@ -1,6 +1,9 @@
 import numpy as np
 
 from _plotting_network import plot_network_spikes_raster
+from matplotlib import pyplot as plt
+
+plt.close('all')
 
 #%% notes
 
@@ -45,7 +48,22 @@ for ii in range(num_neurons):
             for kk in range(len(spike_times__i)):
                 _ind = np.abs( spike_times__i[kk] - spike_times__j[:] ).argmin()
                 C1[ii,jj] += ( np.abs(spike_times__i[kk] - spike_times__j[_ind]) + t_ref )**(-1)
+                
+fig, ax = plt.subplots(1,1)
+correlation_matrix = ax.imshow(np.transpose(C1[:,:]), cmap = plt.cm.viridis, interpolation='none', extent=[0,num_neurons-1,0,num_neurons-1], aspect = 'auto', origin = 'lower')
+cbar = fig.colorbar(correlation_matrix, extend='both')
+cbar.minorticks_on()     
+fig.suptitle('Correlation Function 1: symmetrical spike time')
+ax.set_xlabel(r'neuron index 1')
+ax.set_ylabel(r'neuron index 2')   
+plt.show()                
             
-        
+#%% correlation function 2: rate based
+
+# neuron_rates = []
+# neuron_rates__time_coords = []
+# for ii in range(num_neurons):
+#     neuron_rates.append( np.diff(neuron_spikes__times[ii])**(-1) )
+#     neuron_rates__time_coords.append(  )
     
 
